@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forno — wood-fired pizza, delivered or ready for pickup</title>
+<meta name="description" content="Order wood-fired pizza from Forno for delivery or pickup. No account needed, live order tracking, pay by card or cash.">
+<meta name="theme-color" content="#C6362C">
+<meta property="og:title" content="Forno — wood-fired pizza">
+<meta property="og:description" content="Order wood-fired pizza for delivery or pickup. Live order tracking.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='15' fill='%23DC9E36'/><circle cx='11' cy='12' r='3' fill='%23C6362C'/><circle cx='21' cy='11' r='3' fill='%23C6362C'/><circle cx='20' cy='21' r='3' fill='%23C6362C'/><circle cx='11' cy='21' r='3' fill='%23C6362C'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://images.unsplash.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FDFBF7;--card:#FFF;--ink:#1A1614;--ink-2:#6B615A;--ink-3:#9A9089;
+    --line:#E8E1D7;--line-2:#D6CCBF;
+    --red:#C6362C;--red-dark:#A82B22;--red-tint:#FBEDEB;
+    --gold:#E0A02E;--green:#2E7D52;--green-tint:#E9F4EE;
+    --r:10px;--shadow:0 1px 2px rgba(26,22,20,.05);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:'Inter',system-ui,sans-serif;font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  h1,h2,h3{font-family:'Fraunces',Georgia,serif;font-weight:600;margin:0;letter-spacing:-.2px}
+  a{color:inherit;text-decoration:none}
+  button{font-family:inherit;font-size:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  :focus-visible{outline:2.5px solid var(--red);outline-offset:2px;border-radius:4px}
+  img{display:block;max-width:100%}
+  .wrap{max-width:1160px;margin:0 auto;padding:0 24px}
+  .screen{display:none}
+  .screen.active{display:block;animation:fade .22s ease-out}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}html{scroll-behavior:auto}}
+  .skip{position:absolute;left:-9999px;top:0;background:var(--ink);color:#fff;padding:12px 20px;z-index:200;border-radius:0 0 var(--r) 0}
+  .skip:focus{left:0}
+
+  /* TOP BAR */
+  .topbar{position:sticky;top:0;z-index:50;background:rgba(253,251,247,.97);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .topbar-in{display:flex;align-items:center;gap:20px;height:68px}
+  .brand{font-family:'Fraunces',Georgia,serif;font-size:21px;font-weight:600;flex:none}
+  .navl{display:flex;gap:2px}
+  .navl button{padding:8px 14px;border-radius:var(--r);font-size:15px;color:var(--ink-2);min-height:40px}
+  .navl button:hover{background:#F4EFE7;color:var(--ink)}
+  .navl button.on{color:var(--ink);font-weight:500;background:#F4EFE7}
+  .spacer{flex:1}
+  .cart-btn{display:flex;align-items:center;gap:9px;background:var(--ink);color:#fff;padding:11px 18px;border-radius:var(--r);font-weight:500;font-size:15px;min-height:44px;flex:none}
+  .cart-btn:hover{background:#2E2722}
+  .cart-count{background:var(--gold);color:#3A2A05;font-size:12.5px;font-weight:600;border-radius:20px;padding:1px 8px;min-width:22px;text-align:center}
+
+  /* BACK BAR */
+  .backbar{padding:18px 0 0}
+  .back{display:inline-flex;align-items:center;gap:7px;font-size:14.5px;font-weight:500;color:var(--ink-2);padding:9px 14px 9px 10px;border-radius:var(--r);min-height:44px}
+  .back:hover{background:#F1EBE1;color:var(--ink)}
+  .back svg{width:17px;height:17px;flex:none}
+
+  /* HERO */
+  .hero{display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center;padding:52px 0 48px}
+  .hero h1{font-size:52px;line-height:1.05;margin-bottom:18px}
+  .hero .lede{font-size:17.5px;color:var(--ink-2);max-width:440px;margin-bottom:26px}
+  .modepick{display:inline-flex;background:#F1EBE1;border-radius:12px;padding:4px;gap:4px;margin-bottom:18px}
+  .modepick button{padding:10px 22px;border-radius:9px;font-size:15px;font-weight:500;color:var(--ink-2);min-height:44px}
+  .modepick button.on{background:#fff;color:var(--ink);box-shadow:var(--shadow)}
+  .addrrow{display:flex;gap:10px;max-width:470px;margin-bottom:14px}
+  .addrrow input{flex:1;min-width:0;height:52px;border:1px solid var(--line-2);border-radius:var(--r);padding:0 16px;font-size:16px;font-family:inherit;background:#fff;color:var(--ink)}
+  .addrrow input:focus{outline:none;border-color:var(--ink);box-shadow:0 0 0 3px rgba(26,22,20,.07)}
+  .btn-red{background:var(--red);color:#fff;font-weight:600;border-radius:var(--r);padding:0 26px;height:52px;font-size:16px;white-space:nowrap}
+  .btn-red:hover{background:var(--red-dark)}
+  .eta{font-size:14.5px;color:var(--ink-2);display:flex;align-items:center;gap:7px}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex:none}
+  .heroimg{border-radius:18px;overflow:hidden;aspect-ratio:1/1;background:#F1E7D6}
+  .heroimg img{width:100%;height:100%;object-fit:cover}
+
+  .sec-head{display:flex;justify-content:space-between;align-items:baseline;gap:16px;margin-bottom:22px}
+  .sec-head h2{font-size:27px}
+  .sec-head .link{font-size:14.5px;color:var(--ink-2);border-bottom:1px solid var(--line-2);padding-bottom:2px;white-space:nowrap}
+
+  /* CARDS */
+  .grid3{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;padding-bottom:64px}
+  .pcard{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+  .pcard .pic{aspect-ratio:16/10;background:#F1E7D6;overflow:hidden;position:relative}
+  .pcard .pic img{width:100%;height:100%;object-fit:cover;transition:transform .35s ease}
+  .pcard:hover .pic img{transform:scale(1.035)}
+  .pcard .body{padding:16px 18px 18px;display:flex;flex-direction:column;flex:1}
+  .pcard .nm{font-family:'Fraunces',Georgia,serif;font-size:18.5px;font-weight:600;margin-bottom:4px}
+  .pcard .ds{font-size:14px;color:var(--ink-2);margin-bottom:14px;flex:1;line-height:1.45}
+  .rate{display:flex;align-items:center;gap:6px;font-size:13.5px;color:var(--ink-2);margin-bottom:10px}
+  .rate .st{color:var(--gold)}
+  .rate b{color:var(--ink);font-weight:600}
+  .sizes{display:flex;gap:6px;margin-bottom:14px}
+  .sizes button{flex:1;border:1px solid var(--line-2);border-radius:8px;padding:9px 0;font-size:13.5px;font-weight:500;color:var(--ink-2);min-height:42px}
+  .sizes button.on{border-color:var(--ink);background:var(--ink);color:#fff}
+  .addrow{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .price{font-size:18px;font-weight:600}
+  .btn-add{background:var(--red);color:#fff;font-weight:600;border-radius:9px;padding:12px 18px;font-size:14.5px;min-height:44px;transition:background .2s}
+  .btn-add:hover{background:var(--red-dark)}
+  .out .pic img{filter:grayscale(.85);opacity:.6}
+  .out .body{opacity:.6}
+  .btn-out{background:#EFEAE2;color:var(--ink-3);font-weight:500;border-radius:9px;padding:12px 16px;font-size:14px;cursor:not-allowed;min-height:44px}
+  .badge-out{position:absolute;top:12px;left:12px;background:rgba(26,22,20,.86);color:#fff;font-size:12px;font-weight:600;border-radius:6px;padding:5px 10px}
+
+  /* CHECKOUT */
+  .steps{display:flex;align-items:center;margin:26px 0 32px;max-width:640px}
+  .stp{display:flex;align-items:center;gap:10px}
+  .stp .n{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--line-2);display:flex;align-items:center;justify-content:center;font-size:13.5px;font-weight:600;color:var(--ink-3);flex:none}
+  .stp .l{font-size:14.5px;color:var(--ink-3);font-weight:500;white-space:nowrap}
+  .stp.on .n{background:var(--ink);border-color:var(--ink);color:#fff}
+  .stp.on .l{color:var(--ink)}
+  .stp.done .n{background:var(--green);border-color:var(--green);color:#fff}
+  .stp.done .l{color:var(--ink-2)}
+  .stpline{flex:1;height:1.5px;background:var(--line-2);margin:0 14px;min-width:16px}
+  .co{display:grid;grid-template-columns:1.35fr .85fr;gap:36px;padding-bottom:72px;align-items:start}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:24px}
+  .panel h3{font-size:19px;margin-bottom:4px}
+  .panel .sub{font-size:14px;color:var(--ink-2);margin:0 0 20px}
+  .field{margin-bottom:16px}
+  .field label{display:block;font-size:14px;font-weight:500;margin-bottom:7px}
+  .field input{width:100%;height:48px;border:1px solid var(--line-2);border-radius:var(--r);padding:0 14px;font-size:16px;font-family:inherit;background:#fff;color:var(--ink)}
+  .field input:focus{outline:none;border-color:var(--ink);box-shadow:0 0 0 3px rgba(26,22,20,.07)}
+  .field input.err{border-color:var(--red);box-shadow:0 0 0 3px var(--red-tint)}
+  .errmsg{display:none;color:var(--red);font-size:13.5px;margin-top:6px}
+  .errmsg.show{display:block}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .paylist{display:flex;flex-direction:column;gap:10px}
+  .pay{display:flex;align-items:center;gap:13px;border:1px solid var(--line-2);border-radius:var(--r);padding:15px 16px;cursor:pointer;min-height:44px;text-align:left;width:100%}
+  .pay.on{border-color:var(--ink);background:#FAF7F2}
+  .radio{width:19px;height:19px;border-radius:50%;border:1.5px solid var(--line-2);flex:none;position:relative}
+  .pay.on .radio{border-color:var(--ink)}
+  .pay.on .radio::after{content:'';position:absolute;inset:4px;border-radius:50%;background:var(--ink)}
+  .pay .pt{font-weight:500;font-size:15px}
+  .pay .ps{font-size:13.5px;color:var(--ink-2)}
+  .guestnote{background:#F6F2EA;border-radius:var(--r);padding:14px 16px;font-size:14px;color:var(--ink-2);margin-top:18px}
+  .summary{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px;position:sticky;top:88px}
+  .summary h3{font-size:17.5px;margin-bottom:16px}
+  .li{display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+  .li .qn{color:var(--ink-2)}
+  .tot{display:flex;justify-content:space-between;padding:9px 0;font-size:14.5px;color:var(--ink-2)}
+  .tot.grand{font-size:18px;font-weight:600;color:var(--ink);border-top:1px solid var(--line-2);margin-top:8px;padding-top:14px}
+  .btn-pay{width:100%;background:var(--red);color:#fff;font-weight:600;border-radius:var(--r);height:52px;font-size:16px;margin-top:16px}
+  .btn-pay:hover{background:var(--red-dark)}
+  .trust{font-size:13px;color:var(--ink-2);text-align:center;margin:12px 0 0;line-height:1.5}
+
+  /* TRACKER */
+  .track-hd{padding:26px 0 8px}
+  .track-hd h2{font-size:30px;margin-bottom:6px}
+  .track-hd p{color:var(--ink-2);margin:0 0 26px;font-size:16px}
+  .tracker{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:34px 30px 28px;margin-bottom:22px}
+  .tline{display:flex;align-items:flex-start;position:relative}
+  .tstep{flex:1;text-align:center;position:relative;z-index:2}
+  .tstep .cir{width:46px;height:46px;border-radius:50%;background:#F1EBE1;border:2px solid var(--line-2);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:18px;font-weight:600;color:var(--ink-3)}
+  .tstep.done .cir{background:var(--green);border-color:var(--green);color:#fff}
+  .tstep.now .cir{background:var(--red);border-color:var(--red);color:#fff;box-shadow:0 0 0 6px var(--red-tint)}
+  .tstep .tl{font-size:15px;font-weight:600;margin-bottom:3px}
+  .tstep.todo .tl{color:var(--ink-3);font-weight:500}
+  .tstep .tm{font-size:13.5px;color:var(--ink-2)}
+  .tstep.todo .tm{color:var(--ink-3)}
+  .tbar{position:absolute;top:23px;left:12%;right:12%;height:2px;background:var(--line-2);z-index:1}
+  .tbar .fill{height:100%;background:var(--green);width:50%}
+  .tfoot{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);margin-top:28px;padding-top:22px;gap:16px;flex-wrap:wrap}
+  .btn-ghost{border:1px solid var(--line-2);border-radius:var(--r);padding:12px 18px;font-size:14.5px;font-weight:500;min-height:44px}
+  .btn-ghost:hover{border-color:var(--ink)}
+  .ordersum{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin-bottom:80px}
+  .ordersum h3{font-size:17px;margin-bottom:14px}
+
+  footer{border-top:1px solid var(--line);padding:34px 0 46px;color:var(--ink-2);font-size:14px}
+  .fr{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+
+  /* MOBILE BOTTOM NAV */
+  .mobnav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:60;background:rgba(253,251,247,.98);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+  .mobnav-in{display:flex}
+  .mobnav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 2px;font-size:11.5px;font-weight:500;color:var(--ink-3);min-height:52px;border-radius:9px}
+  .mobnav button.on{color:var(--red)}
+  .mobnav svg{width:21px;height:21px}
+
+  @media(max-width:900px){
+    .hero{grid-template-columns:1fr;gap:26px;padding-top:30px}
+    .heroimg{order:-1;aspect-ratio:16/10}
+    .hero h1{font-size:36px}
+    .co{grid-template-columns:1fr;gap:22px}
+    .summary{position:static}
+    .navl{display:none}
+    .mobnav{display:block}
+    body{padding-bottom:70px}
+    .addrrow{flex-direction:column}
+    .addrrow .btn-red{width:100%}
+    .tline{flex-direction:column;gap:18px}
+    .tstep{display:flex;align-items:center;gap:14px;text-align:left}
+    .tstep .cir{margin:0}
+    .tbar{display:none}
+    .steps{overflow-x:auto;padding-bottom:4px}
+    .two{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<a href="#main" class="skip">Skip to content</a>
+
+<header class="topbar">
+  <div class="wrap topbar-in">
+    <button class="brand" data-go="home" aria-label="Forno — go to home">Forno</button>
+    <nav class="navl" aria-label="Main">
+      <button data-go="home">Home</button>
+      <button data-go="menu">Menu</button>
+      <button data-go="track">Track order</button>
+    </nav>
+    <span class="spacer"></span>
+    <button class="cart-btn" data-go="checkout">Cart <span class="cart-count" id="cc">0</span></button>
+  </div>
+</header>
+
+<main id="main">
+
+<!-- HOME -->
+<section class="screen" id="home" aria-label="Home">
+  <div class="wrap">
+    <div class="hero">
+      <div>
+        <h1>Hot pizza,<br>four taps away.</h1>
+        <p class="lede">Wood-fired, made to order, and ready when you are. No account needed to order.</p>
+        <div class="modepick" role="group" aria-label="Order type">
+          <button class="on" onclick="pickMode(this,'Delivery in 25–35 min to your address',0)">Delivery</button>
+          <button onclick="pickMode(this,'Ready for pickup in 15 min at F-7 Markaz',1)">Pickup</button>
+        </div>
+        <div class="addrrow">
+          <input type="text" id="addr" placeholder="Enter your delivery address" aria-label="Delivery address">
+          <button class="btn-red" data-go="menu">Start order</button>
+        </div>
+        <p class="eta"><span class="dot"></span><span id="etaText">Delivery in 25–35 min to your address</span></p>
+      </div>
+      <div class="heroimg">
+        <img src="https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=900&q=75&auto=format&fit=crop" alt="Freshly baked wood-fired pizza" width="900" height="900" fetchpriority="high">
+      </div>
+    </div>
+
+    <div class="sec-head" style="margin-top:8px">
+      <h2>Ready to order?</h2>
+      <button class="link" data-go="menu">See full menu</button>
+    </div>
+    <p style="color:var(--ink-2);font-size:15.5px;margin:-8px 0 60px;max-width:520px">Browse our pizzas, pick a size, and check out as a guest — no account needed.</p>
+  </div>
+</section>
+
+<!-- MENU -->
+<section class="screen" id="menu" aria-label="Menu">
+  <div class="wrap">
+    <div class="backbar"><button class="back" data-go="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Back to home</button></div>
+    <div class="sec-head" style="margin-top:20px">
+      <h2>Our pizzas</h2>
+      <span class="link">Pick a size, then add to cart</span>
+    </div>
+    <div class="grid3" id="menuGrid"></div>
+  </div>
+</section>
+
+<!-- CHECKOUT -->
+<section class="screen" id="checkout" aria-label="Checkout">
+  <div class="wrap">
+    <div class="backbar"><button class="back" data-go="menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Back to menu</button></div>
+    <div class="steps">
+      <div class="stp done"><span class="n">✓</span><span class="l">Your order</span></div>
+      <div class="stpline"></div>
+      <div class="stp on"><span class="n">2</span><span class="l">Details &amp; payment</span></div>
+      <div class="stpline"></div>
+      <div class="stp"><span class="n">3</span><span class="l">Confirm</span></div>
+    </div>
+    <div class="co">
+      <div>
+        <div class="panel" style="margin-bottom:20px">
+          <h3>Where should we bring it?</h3>
+          <p class="sub">Delivery in 25–35 min · No account required</p>
+          <div class="two">
+            <div class="field"><label for="f-name">Full name</label><input id="f-name" type="text" placeholder="Ayesha Khan" autocomplete="name"><span class="errmsg" id="e-name">Enter your name</span></div>
+            <div class="field"><label for="f-phone">Phone number</label><input id="f-phone" type="tel" placeholder="0300 1234567" autocomplete="tel"><span class="errmsg" id="e-phone">Enter a phone number</span></div>
+          </div>
+          <div class="field"><label for="f-addr">Delivery address</label><input id="f-addr" type="text" placeholder="House 12, Street 4, F-7/2, Islamabad" autocomplete="street-address"><span class="errmsg" id="e-addr">Enter a delivery address</span></div>
+          <div class="field" style="margin-bottom:0"><label for="f-note">Delivery notes <span style="color:var(--ink-3);font-weight:400">(optional)</span></label><input id="f-note" type="text" placeholder="Ring the bell, gate is on the left"></div>
+        </div>
+        <div class="panel">
+          <h3>Payment</h3>
+          <p class="sub">Cash only for now — pay when your order arrives, or at pickup</p>
+          <div class="pay on" style="cursor:default"><span class="radio"></span><span><span class="pt">Cash on delivery / pickup</span><br><span class="ps">Have the exact amount ready if possible</span></span></div>
+          <p class="guestnote">You're checking out as a guest. You can create an account after your order if you'd like to save your address.</p>
+        </div>
+      </div>
+      <aside class="summary" aria-label="Order summary">
+        <h3>Order summary</h3>
+        <div class="li"><span><span class="qn">1 ×</span> Classic pepperoni <span style="color:var(--ink-2)">(L)</span></span><span>$19.00</span></div>
+        <div class="li"><span><span class="qn">1 ×</span> Margherita <span style="color:var(--ink-2)">(M)</span></span><span>$14.00</span></div>
+        <div style="padding-top:10px">
+          <div class="tot"><span>Subtotal</span><span>$33.00</span></div>
+          <div class="tot"><span>Delivery fee</span><span>$2.50</span></div>
+          <div class="tot"><span>Tax</span><span>$2.84</span></div>
+          <div class="tot grand"><span>Total</span><span>$38.34</span></div>
+        </div>
+        <button class="btn-pay" onclick="placeOrder()">Place order · $38.34</button>
+        <p class="trust">Full price shown — no fees added later.<br>Pay in cash when it arrives. Cancel free within 5 minutes.</p>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- TRACK -->
+<section class="screen" id="track" aria-label="Order tracking">
+  <div class="wrap">
+    <div class="backbar"><button class="back" data-go="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Back to home</button></div>
+    <div class="track-hd">
+      <h2>Your order is in the oven</h2>
+      <p>Order #4821 · Placed at 7:42 PM · Arriving by 8:15 PM</p>
+    </div>
+    <div class="tracker">
+      <ol class="tline" style="list-style:none;margin:0;padding:0">
+        <div class="tbar" aria-hidden="true"><div class="fill"></div></div>
+        <li class="tstep done"><div class="cir" aria-hidden="true">✓</div><div><div class="tl">Order placed</div><div class="tm">7:42 PM</div></div></li>
+        <li class="tstep now" aria-current="step"><div class="cir" aria-hidden="true">●</div><div><div class="tl">Preparing</div><div class="tm">In the oven now</div></div></li>
+        <li class="tstep todo"><div class="cir" aria-hidden="true">3</div><div><div class="tl">Out for delivery</div><div class="tm">Around 8:05 PM</div></div></li>
+        <li class="tstep todo"><div class="cir" aria-hidden="true">4</div><div><div class="tl">Delivered</div><div class="tm">Around 8:15 PM</div></div></li>
+      </ol>
+      <div class="tfoot">
+        <div>Arriving by <b>8:15 PM</b> · House 12, Street 4, F-7/2</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <a class="btn-ghost" href="tel:+920000000000">Call the shop</a>
+          <button class="btn-ghost" data-go="menu">Order more</button>
+        </div>
+      </div>
+    </div>
+    <div class="ordersum">
+      <h3>What's coming</h3>
+      <div class="li"><span><span class="qn">1 ×</span> Classic pepperoni (L)</span><span>$19.00</span></div>
+      <div class="li"><span><span class="qn">1 ×</span> Margherita (M)</span><span>$14.00</span></div>
+      <div class="tot grand" style="border-top:none;margin-top:4px"><span>Cash on delivery</span><span>$38.34</span></div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap fr">
+    <div><b style="font-family:'Fraunces',Georgia,serif">Forno</b> · Open daily 12pm–11pm</div>
+    <div>Pickup &amp; delivery · F-7 Markaz, Islamabad</div>
+  </div>
+</footer>
+
+<nav class="mobnav" aria-label="Mobile">
+  <div class="mobnav-in">
+    <button data-go="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10l9-7 9 7v10a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>Home</button>
+    <button data-go="menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>Menu</button>
+    <button data-go="checkout"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.6"/><circle cx="18" cy="20" r="1.6"/><path d="M2 3h3l2.6 12.4a2 2 0 002 1.6h7.8a2 2 0 002-1.6L21 7H6"/></svg>Cart</button>
+    <button data-go="track"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Track</button>
+  </div>
+</nav>
+
+<script>
+const IMG="https://images.unsplash.com/";
+const PIES=[
+ {n:"Classic pepperoni",d:"San Marzano tomato, mozzarella, cup-and-char pepperoni",r:4.8,c:212,p:[14,19],img:"photo-1534308983496-4fabb1a015ee"},
+ {n:"Margherita",d:"Fresh mozzarella, basil, olive oil, sea salt",r:4.9,c:186,p:[12,17],img:"photo-1513104890138-7c749659a591"},
+ {n:"Smoked chicken",d:"Smoked chicken, caramelised onion, mozzarella, herb oil",r:4.7,c:143,p:[15,20],img:"photo-1604382354936-07c5d9983bd3",out:1},
+ {n:"Four cheese",d:"Mozzarella, cheddar, parmesan, blue cheese, thyme",r:4.6,c:98,p:[15,20],img:"photo-1593504049359-74330189a345"},
+ {n:"Spicy veggie",d:"Peppers, red onion, jalapeño, olives, chilli oil",r:4.5,c:76,p:[13,18],img:"photo-1555072956-7758afb20e8f"},
+ {n:"Garlic mushroom",d:"Roast mushroom, garlic cream, mozzarella, parsley",r:4.7,c:64,p:[14,19],img:"photo-1571066811602-716837d681de"}
+];
+const card=x=>`<article class="pcard${x.out?' out':''}">
+  <div class="pic">${x.out?'<span class="badge-out">Sold out</span>':''}
+    <img src="${IMG}${x.img}?w=600&q=72&auto=format&fit=crop" alt="${x.n} pizza" width="600" height="375" loading="lazy"></div>
+  <div class="body">
+    <h3 class="nm">${x.n}</h3>
+    <div class="rate"><span class="st">★</span> <b>${x.r}</b> <span>(${x.c} reviews)</span></div>
+    <p class="ds">${x.d}</p>
+    <div class="sizes" role="group" aria-label="Size for ${x.n}">
+      <button class="${x.out?'':'on'}" onclick="pickSize(this,${x.p[0]})" ${x.out?'disabled':''}>Medium</button>
+      <button onclick="pickSize(this,${x.p[1]})" ${x.out?'disabled':''}>Large</button>
+    </div>
+    <div class="addrow"><span class="price">$${x.p[0]}.00</span>
+      ${x.out?'<button class="btn-out" disabled>Unavailable</button>':`<button class="btn-add" onclick="addIt(this)">Add to cart</button>`}
+    </div>
+  </div></article>`;
+document.getElementById('menuGrid').innerHTML=PIES.map(card).join('');
+
+function pickSize(b,p){const box=b.closest('.body');box.querySelectorAll('.sizes button').forEach(x=>x.classList.remove('on'));b.classList.add('on');box.querySelector('.price').textContent='$'+p+'.00'}
+function pickMode(b,txt,i){b.parentNode.querySelectorAll('button').forEach(x=>x.classList.remove('on'));b.classList.add('on');document.getElementById('etaText').textContent=txt;document.getElementById('addr').placeholder=i?"We'll have it ready at F-7 Markaz":'Enter your delivery address'}
+let n=0;
+function addIt(b){n++;document.getElementById('cc').textContent=n;const o=b.textContent;b.textContent='Added ✓';b.style.background='#2E7D52';setTimeout(()=>{b.textContent=o;b.style.background=''},1100)}
+function placeOrder(){
+  let ok=true;
+  [['f-name','e-name'],['f-phone','e-phone'],['f-addr','e-addr']].forEach(([f,e])=>{
+    const el=document.getElementById(f),msg=document.getElementById(e);
+    if(!el.value.trim()){el.classList.add('err');msg.classList.add('show');ok=false}
+    else{el.classList.remove('err');msg.classList.remove('show')}
+  });
+  if(!ok){document.querySelector('.field input.err').focus();return}
+  location.hash='track';
+}
+['f-name','f-phone','f-addr'].forEach(id=>{
+  const el=document.getElementById(id);
+  el.addEventListener('input',()=>{el.classList.remove('err');el.nextElementSibling.classList.remove('show')});
+});
+
+const SCREENS=['home','menu','checkout','track'];
+function render(){
+  let id=(location.hash||'#home').slice(1);
+  if(!SCREENS.includes(id))id='home';
+  document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id===id));
+  document.querySelectorAll('.navl button,.mobnav button').forEach(b=>b.classList.toggle('on',b.dataset.go===id));
+  document.title=({home:'Forno — wood-fired pizza, delivered or ready for pickup',menu:'Menu · Forno',checkout:'Checkout · Forno',track:'Track your order · Forno'})[id];
+  window.scrollTo(0,0);
+}
+document.addEventListener('click',e=>{const t=e.target.closest('[data-go]');if(t){e.preventDefault();location.hash=t.dataset.go}});
+window.addEventListener('hashchange',render);
+render();
+</script>
+</body>
+</html>

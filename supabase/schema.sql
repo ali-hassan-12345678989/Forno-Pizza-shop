@@ -1,0 +1,339 @@
+-- Forno Pizza — Part 1 schema, RLS policies, and access helpers.
+-- Paste into the Supabase SQL Editor and run. Safe to re-run (idempotent).
+--
+-- Accounts live in Supabase's built-in auth.users — there is no public.users
+-- table. orders.user_id references auth.users(id); NULL means a guest order.
+
+-- ---------------------------------------------------------------------------
+-- TABLES
+-- ---------------------------------------------------------------------------
+
+create table if not exists public.menu_items (
+  id            uuid primary key default gen_random_uuid(),
+  name          text        not null,
+  description   text,
+  image_url     text,
+  is_active     boolean     not null default true,
+  is_sold_out   boolean     not null default false,
+  created_at    timestamptz not null default now()
+);
+
+create table if not exists public.menu_item_sizes (
+  id            uuid primary key default gen_random_uuid(),
+  menu_item_id  uuid        not null references public.menu_items(id) on delete cascade,
+  size          text        not null,
+  price         numeric(10,2) not null check (price >= 0),
+  sort_order    int         not null default 0,
+  created_at    timestamptz not null default now(),
+  unique (menu_item_id, size)
+);
+
+create table if not exists public.ingredients (
+  id                   uuid primary key default gen_random_uuid(),
+  name                 text        not null unique,
+  unit                 text        not null,
+  stock_quantity       numeric(12,3) not null default 0 check (stock_quantity >= 0),
+  low_stock_threshold  numeric(12,3) not null default 0 check (low_stock_threshold >= 0),
+  created_at           timestamptz not null default now()
+);
+
+-- The BOM: one row per (sellable size, ingredient) pair.
+create table if not exists public.recipes (
+  id                 uuid primary key default gen_random_uuid(),
+  menu_item_size_id  uuid        not null references public.menu_item_sizes(id) on delete cascade,
+  ingredient_id      uuid        not null references public.ingredients(id) on delete restrict,
+  quantity           numeric(12,3) not null check (quantity > 0),
+  created_at         timestamptz not null default now(),
+  unique (menu_item_size_id, ingredient_id)
+);
+
+create sequence if not exists public.order_number_seq start 1000;
+
+-- The client generates `id` and `access_token` itself (crypto.randomUUID()) and
+-- sends them with the INSERT. Guests have no SELECT policy here, so an
+-- INSERT ... RETURNING would come back empty — supplying both up front is what
+-- lets a guest keep hold of their own order without ever opening up reads.
+create table if not exists public.orders (
+  id               uuid primary key default gen_random_uuid(),
+  -- Short, human-readable reference shown to the customer. Guessable by design,
+  -- so it is never the thing that authorises access.
+  order_number     text        not null unique default lpad(nextval('public.order_number_seq')::text, 4, '0'),
+  -- The actual secret, and the only credential a guest needs to read their order.
+  access_token     uuid        not null unique default gen_random_uuid(),
+  user_id          uuid        references auth.users(id) on delete set null,
+  customer_name    text        not null,
+  customer_phone   text        not null,
+  fulfillment_type text        not null check (fulfillment_type in ('delivery','pickup')),
+  delivery_address text,
+  delivery_notes   text,
+  status           text        not null default 'placed'
+                     check (status in ('placed','preparing','out_for_delivery',
+                                       'ready_for_pickup','delivered','picked_up','cancelled')),
+  subtotal         numeric(10,2) not null default 0 check (subtotal >= 0),
+  delivery_fee     numeric(10,2) not null default 0 check (delivery_fee >= 0),
+  tax              numeric(10,2) not null default 0 check (tax >= 0),
+  total            numeric(10,2) not null default 0 check (total >= 0),
+  created_at       timestamptz not null default now(),
+  updated_at       timestamptz not null default now(),
+  constraint delivery_needs_address
+    check (fulfillment_type <> 'delivery' or delivery_address is not null)
+);
+
+create index if not exists orders_user_id_idx on public.orders (user_id);
+
+-- item_name/size_label are snapshots so past orders still read correctly after
+-- the Admin edits or retires a menu item.
+create table if not exists public.order_items (
+  id                 uuid primary key default gen_random_uuid(),
+  order_id           uuid        not null references public.orders(id) on delete cascade,
+  menu_item_id       uuid        not null references public.menu_items(id) on delete restrict,
+  menu_item_size_id  uuid        not null references public.menu_item_sizes(id) on delete restrict,
+  item_name          text        not null,
+  size_label         text        not null,
+  quantity           int         not null check (quantity > 0),
+  unit_price         numeric(10,2) not null check (unit_price >= 0),
+  line_total         numeric(10,2) not null check (line_total >= 0),
+  created_at         timestamptz not null default now()
+);
+
+create index if not exists order_items_order_id_idx on public.order_items (order_id);
+
+create table if not exists public.order_status_history (
+  id          uuid primary key default gen_random_uuid(),
+  order_id    uuid        not null references public.orders(id) on delete cascade,
+  status      text        not null,
+  created_at  timestamptz not null default now()
+);
+
+create index if not exists order_status_history_order_id_idx on public.order_status_history (order_id);
+
+-- menu_item_id NULL = a review of the overall order/delivery experience.
+create table if not exists public.reviews (
+  id            uuid primary key default gen_random_uuid(),
+  order_id      uuid        not null references public.orders(id) on delete cascade,
+  menu_item_id  uuid        references public.menu_items(id) on delete cascade,
+  user_id       uuid        references auth.users(id) on delete set null,
+  rating        int         not null check (rating between 1 and 5),
+  comment       text,
+  created_at    timestamptz not null default now()
+);
+
+create unique index if not exists reviews_one_per_item_per_order
+  on public.reviews (order_id, menu_item_id) where menu_item_id is not null;
+create unique index if not exists reviews_one_experience_per_order
+  on public.reviews (order_id) where menu_item_id is null;
+create index if not exists reviews_menu_item_id_idx on public.reviews (menu_item_id);
+
+create table if not exists public.stock_alerts (
+  id                uuid primary key default gen_random_uuid(),
+  ingredient_id     uuid        not null references public.ingredients(id) on delete cascade,
+  stock_at_trigger  numeric(12,3) not null,
+  triggered_at      timestamptz not null default now(),
+  resolved_at       timestamptz,
+  created_at        timestamptz not null default now()
+);
+
+create index if not exists stock_alerts_ingredient_id_idx on public.stock_alerts (ingredient_id);
+
+-- ---------------------------------------------------------------------------
+-- TRIGGERS
+-- ---------------------------------------------------------------------------
+
+create or replace function public.touch_updated_at()
+returns trigger language plpgsql as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_orders_touch_updated_at on public.orders;
+create trigger trg_orders_touch_updated_at
+  before update on public.orders
+  for each row execute function public.touch_updated_at();
+
+-- Keeps order_status_history authoritative without the client ever writing to it.
+create or replace function public.log_order_status()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if tg_op = 'INSERT' or new.status is distinct from old.status then
+    insert into public.order_status_history (order_id, status) values (new.id, new.status);
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_orders_log_status on public.orders;
+create trigger trg_orders_log_status
+  after insert or update of status on public.orders
+  for each row execute function public.log_order_status();
+
+-- ---------------------------------------------------------------------------
+-- ACCESS HELPERS
+--
+-- RLS policies that reference another table are still subject to that table's
+-- own RLS. orders has no SELECT policy for anon, so an inline EXISTS check on
+-- orders would always be false for a guest. These SECURITY DEFINER helpers do
+-- the ownership check instead.
+-- ---------------------------------------------------------------------------
+
+create or replace function public.can_write_order(p_order_id uuid)
+returns boolean language sql security definer set search_path = public stable as $$
+  select exists (
+    select 1 from public.orders o
+    where o.id = p_order_id
+      and o.status = 'placed'
+      and (o.user_id = auth.uid() or (o.user_id is null and auth.uid() is null))
+  );
+$$;
+
+create or replace function public.can_review(p_order_id uuid, p_menu_item_id uuid)
+returns boolean language sql security definer set search_path = public stable as $$
+  select exists (
+           select 1 from public.orders o
+           where o.id = p_order_id
+             and o.status in ('delivered','picked_up')
+             and (o.user_id = auth.uid() or (o.user_id is null and auth.uid() is null))
+         )
+     and (
+           p_menu_item_id is null
+           or exists (
+             select 1 from public.order_items oi
+             where oi.order_id = p_order_id and oi.menu_item_id = p_menu_item_id
+           )
+         );
+$$;
+
+-- The only way a guest reads their own order back: the unguessable token the
+-- client generated at creation. No SELECT policy on orders is opened for anon.
+create or replace function public.get_order_by_token(p_access_token uuid)
+returns jsonb language sql security definer set search_path = public stable as $$
+  select jsonb_build_object(
+    'order', to_jsonb(o) - 'access_token',
+    'items', coalesce((
+      select jsonb_agg(to_jsonb(oi) order by oi.created_at)
+      from public.order_items oi where oi.order_id = o.id
+    ), '[]'::jsonb),
+    'status_history', coalesce((
+      select jsonb_agg(jsonb_build_object('status', h.status, 'created_at', h.created_at) order by h.created_at)
+      from public.order_status_history h where h.order_id = o.id
+    ), '[]'::jsonb)
+  )
+  from public.orders o
+  where o.access_token = p_access_token;
+$$;
+
+grant execute on function public.get_order_by_token(uuid)       to anon, authenticated;
+grant execute on function public.can_write_order(uuid)          to anon, authenticated;
+grant execute on function public.can_review(uuid, uuid)         to anon, authenticated;
+grant usage   on sequence public.order_number_seq               to anon, authenticated;
+
+-- ---------------------------------------------------------------------------
+-- ROW LEVEL SECURITY
+-- ---------------------------------------------------------------------------
+
+alter table public.menu_items           enable row level security;
+alter table public.menu_item_sizes      enable row level security;
+alter table public.ingredients          enable row level security;
+alter table public.recipes              enable row level security;
+alter table public.orders               enable row level security;
+alter table public.order_items          enable row level security;
+alter table public.order_status_history enable row level security;
+alter table public.reviews              enable row level security;
+alter table public.stock_alerts         enable row level security;
+
+-- Menu: readable by anyone, active items only.
+drop policy if exists menu_items_public_read on public.menu_items;
+create policy menu_items_public_read on public.menu_items
+  for select to anon, authenticated
+  using (is_active = true);
+
+drop policy if exists menu_item_sizes_public_read on public.menu_item_sizes;
+create policy menu_item_sizes_public_read on public.menu_item_sizes
+  for select to anon, authenticated
+  using (exists (
+    select 1 from public.menu_items m
+    where m.id = menu_item_sizes.menu_item_id and m.is_active = true
+  ));
+
+-- Orders: anyone may place one; a guest may only create a guest order, and a
+-- signed-in customer may only create their own. No SELECT policy for anon —
+-- guests read their order back through get_order_by_token() instead.
+-- Pinning status to 'placed' stops a client self-promoting to 'delivered',
+-- which would otherwise unlock review submission on an order never fulfilled.
+drop policy if exists orders_insert on public.orders;
+create policy orders_insert on public.orders
+  for insert to anon, authenticated
+  with check (
+    (user_id is null or user_id = auth.uid())
+    and status = 'placed'
+  );
+
+drop policy if exists orders_select_own on public.orders;
+create policy orders_select_own on public.orders
+  for select to authenticated
+  using (user_id = auth.uid());
+
+drop policy if exists order_items_insert on public.order_items;
+create policy order_items_insert on public.order_items
+  for insert to anon, authenticated
+  with check (public.can_write_order(order_id));
+
+drop policy if exists order_items_select_own on public.order_items;
+create policy order_items_select_own on public.order_items
+  for select to authenticated
+  using (exists (
+    select 1 from public.orders o
+    where o.id = order_items.order_id and o.user_id = auth.uid()
+  ));
+
+-- Status history is written only by the trigger; customers read their own.
+drop policy if exists order_status_history_select_own on public.order_status_history;
+create policy order_status_history_select_own on public.order_status_history
+  for select to authenticated
+  using (exists (
+    select 1 from public.orders o
+    where o.id = order_status_history.order_id and o.user_id = auth.uid()
+  ));
+
+-- Reviews: world-readable, but only writable against an order you actually
+-- received — and, for item reviews, an item that was actually in it.
+drop policy if exists reviews_public_read on public.reviews;
+create policy reviews_public_read on public.reviews
+  for select to anon, authenticated
+  using (true);
+
+drop policy if exists reviews_insert on public.reviews;
+create policy reviews_insert on public.reviews
+  for insert to anon, authenticated
+  with check (
+    public.can_review(order_id, menu_item_id)
+    and (user_id is null or user_id = auth.uid())
+  );
+
+-- ---------------------------------------------------------------------------
+-- TABLE GRANTS
+--
+-- RLS only narrows what a role can already reach. Without a GRANT, Postgres
+-- refuses at the privilege layer first and the policies never run — so the two
+-- have to agree. Granting the minimum that each policy needs means a mistake in
+-- a policy still can't expose a table nobody was granted in the first place.
+-- ---------------------------------------------------------------------------
+
+grant select on public.menu_items      to anon, authenticated;
+grant select on public.menu_item_sizes to anon, authenticated;
+
+-- Guests may create an order but are never granted SELECT on it; they read it
+-- back through get_order_by_token(), which is SECURITY DEFINER.
+grant insert on public.orders      to anon, authenticated;
+grant select on public.orders      to authenticated;
+grant insert on public.order_items to anon, authenticated;
+grant select on public.order_items to authenticated;
+
+grant select on public.order_status_history to authenticated;
+
+grant select, insert on public.reviews to anon, authenticated;
+
+-- ingredients, recipes and stock_alerts get NO grant and NO policy: denied at
+-- both layers for every customer-side role. Manager / Admin access is added
+-- deliberately in Part 4.
