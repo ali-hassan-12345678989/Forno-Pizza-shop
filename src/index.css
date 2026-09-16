@@ -1,5 +1,72 @@
-/* Minimal base only. Part 2 replaces this with the Forno design system
-   from design-reference/Forno_Website.html. */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap');
+
+/* Palette, type and radii come from design-reference/Forno_Website.html —
+   that file is the approved visual spec, so these are copied, not reinvented. */
+:root {
+  --paper: #fdfbf7;
+  --card: #fff;
+  --ink: #1a1614;
+  --ink-2: #6b615a;
+  --ink-3: #9a9089;
+
+  --line: #e8e1d7;
+  --line-2: #d6ccbf;
+
+  --red: #c6362c;
+  --red-dark: #a82b22;
+  --red-tint: #fbedeb;
+
+  --gold: #e0a02e;
+  --gold-tint: #fdf4e3;
+  --green: #2e7d52;
+  --green-tint: #e9f4ee;
+
+  --r: 10px;
+  --r-lg: 14px;
+  --shadow: 0 1px 2px rgba(var(--ink-rgb), 0.05);
+  --shadow-lift: 0 4px 16px rgba(var(--ink-rgb), 0.08);
+
+  --sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --serif: 'Fraunces', Georgia, serif;
+
+  /* Warm neutral washes, lightest to deepest. These values are all in
+     design-reference/Forno_Website.html — they were simply never named, so the
+     same beige got retyped in nine stylesheets. Numbered rather than named by
+     role because most of them carry more than one role. */
+  --wash-1: #faf7f2; /* inset panels: auth panel, payment method, cart destination */
+  --wash-2: #f6f2ea; /* notice strips */
+  --wash-3: #f4efe7; /* hover, active nav item, field prefix */
+  --wash-4: #f1ebe1; /* segmented-control tracks and small chips */
+  --wash-5: #efeae2; /* outline button face */
+
+  /* Deeper sands, used behind imagery rather than behind text. */
+  --sand-1: #f1e7d6; /* image and skeleton backing */
+  --sand-2: #ece4d8; /* skeleton lines */
+  --sand-3: #e6d8c2; /* far end of the image-placeholder gradient */
+
+  /* Foreground colours for dark or saturated grounds. --on-dark resolves to the
+     same white as --card; they are kept apart because one is a surface and the
+     other is text, and only one of them would follow a theme change. */
+  --on-dark: #fff;
+  --on-ink: #f3ece4; /* body text on the near-black util bar */
+  --on-ink-muted: #bcb1a6; /* secondary text on the same */
+  --on-gold: #3a2a05; /* text on a gold badge */
+  --on-red-muted: #f6e3d9; /* subdued text on the red menu banner */
+
+  --ink-hover: #2e2722; /* the ink button, one step lighter, on hover */
+  --red-deep: #7d1f18; /* the far end of the menu banner gradient */
+  --red-line: #f3d5d1; /* border of an error notice */
+  --gold-deep: #8a6416; /* gold dark enough to read on --gold-tint */
+  --inert: #f1eee9; /* a cancelled or inactive badge */
+
+  /* Channel triplets, so a translucent variant never restates the colour.
+     Change --ink and every rgba() built from it follows. */
+  --ink-rgb: 26, 22, 20;
+  --paper-rgb: 253, 251, 247;
+  --red-rgb: 198, 54, 44;
+  --gold-rgb: 224, 160, 46;
+  --white-rgb: 255, 255, 255;
+}
 
 *,
 *::before,
@@ -9,12 +76,449 @@
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 16px;
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--serif);
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: -0.2px;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
 }
 
 img {
   display: block;
   max-width: 100%;
+}
+
+:focus-visible {
+  outline: 2.5px solid var(--red);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+.wrap {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding-inline: 24px;
+}
+
+.skip {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--ink);
+  color: var(--on-dark);
+  padding: 12px 20px;
+  z-index: 200;
+  border-radius: 0 0 var(--r) 0;
+}
+.skip:focus {
+  left: 0;
+}
+
+/* ---------------------------------------------------------------------------
+   Shared primitives
+   Buttons, panels, form fields and money rows are used by the cart, checkout
+   and order pages alike. They live here rather than in whichever page happened
+   to need them first, so there is one definition of each to change.
+   --------------------------------------------------------------------------- */
+
+.btn-solid {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--red);
+  color: var(--on-dark);
+  font-weight: 600;
+  border-radius: var(--r);
+  padding: 0 24px;
+  height: 52px;
+  font-size: 16px;
+  transition: background 0.15s;
+}
+.btn-solid:hover {
+  background: var(--red-dark);
+}
+.btn-solid.full {
+  width: 100%;
+  margin-top: 14px;
+}
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  padding: 0 24px;
+  height: 52px;
+  font-size: 16px;
+  font-weight: 600;
+  background: var(--card);
+  color: var(--ink);
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+.btn-ghost:hover {
+  border-color: var(--ink);
+  background: var(--paper);
+}
+.btn-ghost.full {
+  width: 100%;
+  margin-top: 14px;
+}
+
+.cart-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 0;
+  font-size: 14.5px;
+  color: var(--ink-2);
+}
+.cart-row-total {
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--ink);
+  border-top: 1px solid var(--line-2);
+  margin-top: 8px;
+  padding-top: 14px;
+}
+
+.panel {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 24px;
+}
+.panel h2 {
+  font-size: 20px;
+  margin-bottom: 4px;
+}
+.panel-sub {
+  font-size: 14px;
+  color: var(--ink-2);
+  margin: 0 0 18px;
+}
+
+.acct-line {
+  background: var(--wash-2);
+  border-radius: var(--r);
+  padding: 12px 14px;
+  font-size: 14px;
+  color: var(--ink-2);
+  margin: 0 0 20px;
+}
+.acct-line strong {
+  color: var(--ink);
+}
+.acct-line button {
+  display: inline-flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--red);
+  padding: 0 2px;
+  /* Not 44px — it sits inline in a sentence and would break the line box —
+     but never below the 24px WCAG 2.5.8 minimum either. */
+  min-height: 24px;
+}
+.acct-line button:hover {
+  text-decoration: underline;
+}
+
+.field {
+  margin-bottom: 18px;
+}
+.field label {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 7px;
+}
+.field-optional {
+  color: var(--ink-3);
+  font-weight: 400;
+}
+.field-counter {
+  margin-left: auto;
+  font-size: 12.5px;
+  color: var(--ink-3);
+  font-weight: 400;
+}
+
+.field-input {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  background: var(--card);
+  overflow: hidden;
+}
+.field-input:focus-within {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px rgba(var(--ink-rgb), 0.07);
+}
+.field-input:has(.err) {
+  border-color: var(--red);
+  box-shadow: 0 0 0 3px var(--red-tint);
+}
+
+.field-prefix {
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  background: var(--wash-3);
+  border-right: 1px solid var(--line-2);
+  font-size: 15px;
+  color: var(--ink-2);
+  font-weight: 500;
+}
+
+.field input {
+  flex: 1;
+  min-width: 0;
+  height: 48px;
+  border: none;
+  outline: none;
+  padding: 0 14px;
+  font-size: 16px;
+  font-family: inherit;
+  background: transparent;
+  color: var(--ink);
+}
+.field input::placeholder {
+  color: var(--ink-3);
+}
+
+/* Leading / trailing adornments inside a field — an icon on the left, a control
+   such as show-password on the right. Modifiers of .field-input, so they live
+   beside it rather than in whichever component reached for them first. */
+.field-input.has-lead .field-lead {
+  display: flex;
+  align-items: center;
+  padding-left: 13px;
+  color: var(--ink-3);
+}
+.field-input.has-lead .field-lead svg {
+  width: 17px;
+  height: 17px;
+}
+.field-input.has-lead input {
+  padding-left: 10px;
+}
+.field-trail {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 44px;
+  color: var(--ink-3);
+}
+.field-trail:hover {
+  color: var(--ink);
+}
+.field-trail svg {
+  width: 17px;
+  height: 17px;
+}
+
+.errmsg {
+  display: block;
+  color: var(--red);
+  font-size: 13.5px;
+  margin-top: 6px;
+}
+.field-hint {
+  display: block;
+  color: var(--ink-3);
+  font-size: 13px;
+  margin-top: 6px;
+}
+
+.two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.form-alert {
+  color: var(--red-dark);
+  background: var(--red-tint);
+  border: 1px solid var(--red-line);
+  border-radius: var(--r);
+  padding: 12px 14px;
+  font-size: 14px;
+  margin: 16px 0 0;
+}
+
+.pay-panel {
+  margin-top: 18px;
+}
+
+.pay-method {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  border: 1.5px solid var(--ink);
+  background: var(--wash-1);
+  border-radius: var(--r);
+  padding: 15px 16px;
+}
+.pay-icon {
+  display: flex;
+  flex: none;
+  color: var(--red);
+}
+.pay-icon svg {
+  width: 22px;
+  height: 22px;
+}
+.pay-method strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 600;
+}
+.pay-body {
+  display: block;
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+.pay-check {
+  margin-left: auto;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--green);
+  color: var(--on-dark);
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pay-amount {
+  margin: 14px 0 0;
+  font-size: 14.5px;
+  color: var(--ink-2);
+}
+
+.checkout-submit {
+  margin-top: 18px;
+}
+
+.checkout-trust {
+  text-align: center;
+  font-size: 13px;
+  color: var(--ink-3);
+  line-height: 1.5;
+  margin: 12px 0 0;
+}
+
+.checkout-summary {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 22px;
+  position: sticky;
+  top: 88px;
+}
+.checkout-summary h2 {
+  font-size: 19px;
+  margin-bottom: 2px;
+}
+.checkout-count {
+  margin: 0 0 14px;
+  font-size: 13.5px;
+  color: var(--ink-3);
+}
+
+.sum-lines {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+}
+.sum-lines li {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 8px;
+  align-items: baseline;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 14.5px;
+}
+.sum-qty {
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.sum-size {
+  color: var(--ink-2);
+}
+.sum-price {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Panels tighten up on a phone, wherever they are used. */
+@media (max-width: 560px) {
+  .panel {
+    padding: 18px;
+  }
+}
+
+/* Present to assistive tech, absent to everything else. Not display:none,
+   which removes it from the accessibility tree along with everything else. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Chosen extras, under the item they belong to, wherever a line is listed. */
+.sum-extras {
+  display: block;
+  font-size: 12.5px;
+  color: var(--ink-3);
 }

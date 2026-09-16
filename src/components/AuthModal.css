@@ -1,0 +1,127 @@
+.authmodal {
+  border: none;
+  padding: 0;
+  background: transparent;
+  max-width: 100%;
+  max-height: 100%;
+  overflow: visible;
+}
+.authmodal::backdrop {
+  background: rgba(var(--ink-rgb), 0.5);
+  backdrop-filter: blur(3px);
+  animation: authmodal-fade 0.2s ease;
+}
+
+.authmodal-panel {
+  position: relative;
+  width: min(420px, calc(100vw - 32px));
+  background: var(--card);
+  border-radius: var(--r-lg);
+  box-shadow: 0 20px 60px rgba(var(--ink-rgb), 0.28);
+  padding: 30px 28px 22px;
+  animation: authmodal-rise 0.24s cubic-bezier(0.2, 0.9, 0.35, 1);
+}
+
+.authmodal-panel h2 {
+  font-size: 25px;
+  margin-bottom: 18px;
+}
+
+/* The shop's own name, so a login box that appears over a dimmed page still
+   says whose account you are signing in to. */
+.authmodal-brand {
+  font-family: var(--serif);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--red);
+  margin: 0 0 4px;
+}
+
+.authmodal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  color: var(--ink-3);
+}
+.authmodal-close:hover {
+  background: var(--wash-3);
+  color: var(--ink);
+}
+.authmodal-close svg {
+  width: 18px;
+  height: 18px;
+}
+
+.authmodal-foot {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  text-align: center;
+}
+.authmodal-guest {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+  text-decoration: underline;
+  min-height: 40px;
+}
+.authmodal-guest:hover {
+  color: var(--ink);
+}
+.authmodal-note {
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+
+@keyframes authmodal-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes authmodal-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+}
+
+/* On a phone it becomes a sheet anchored to the bottom, where a thumb already
+   is, rather than a small box floating in the middle of the screen. */
+@media (max-width: 560px) {
+  .authmodal {
+    margin: 0;
+    top: auto;
+    bottom: 0;
+    width: 100%;
+  }
+  .authmodal-panel {
+    width: 100vw;
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
+    padding: 26px 20px calc(22px + env(safe-area-inset-bottom, 0px));
+    animation-name: authmodal-sheet;
+  }
+  .authmodal-panel h2 {
+    font-size: 22px;
+  }
+}
+
+@keyframes authmodal-sheet {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .authmodal::backdrop,
+  .authmodal-panel {
+    animation: none;
+  }
+}

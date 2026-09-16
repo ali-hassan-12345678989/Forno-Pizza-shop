@@ -1,0 +1,202 @@
+.pcard {
+  position: relative;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition:
+    box-shadow 0.2s,
+    transform 0.2s;
+}
+.pcard:hover {
+  box-shadow: var(--shadow-lift);
+}
+
+.pcard-pic {
+  aspect-ratio: 16/10;
+  background: var(--sand-1);
+  overflow: hidden;
+  position: relative;
+}
+.pcard-pic img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.35s ease;
+}
+.pcard:hover .pcard-pic img {
+  transform: scale(1.035);
+}
+.pcard-noimg {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--sand-1), var(--sand-3));
+}
+
+.badge-out {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: rgba(var(--ink-rgb), 0.86);
+  color: var(--on-dark);
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 5px 10px;
+  z-index: 1;
+}
+
+/* Colour-coded so the badge reads at a glance without being decoration for its
+   own sake: red = spicy, green = veggie, gold = bestseller, ink = new. */
+.tag {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 1;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  border-radius: 999px;
+  padding: 5px 11px;
+  color: var(--on-dark);
+  box-shadow: 0 2px 6px rgba(var(--ink-rgb), 0.22);
+}
+.tag-hot {
+  background: var(--red);
+}
+.tag-vegetarian {
+  background: var(--green);
+}
+.tag-best-seller {
+  background: var(--gold);
+  color: var(--on-gold);
+}
+.tag-new {
+  background: var(--ink);
+}
+
+.pcard-body {
+  padding: 16px 18px 18px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.pcard-name {
+  font-size: 18.5px;
+  margin-bottom: 5px;
+}
+
+.pcard-desc {
+  font-size: 14px;
+  color: var(--ink-2);
+  margin: 0 0 14px;
+  flex: 1;
+  line-height: 1.45;
+}
+
+.sizes {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.sizes button {
+  flex: 1;
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
+  padding: 9px 0;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--ink-2);
+  min-height: 42px;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+}
+.sizes button:hover:not(:disabled) {
+  border-color: var(--ink);
+}
+.sizes button.on {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--on-dark);
+}
+.sizes button:disabled {
+  cursor: not-allowed;
+}
+
+.pcard-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.price {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.btn-add {
+  background: var(--red);
+  color: var(--on-dark);
+  font-weight: 600;
+  border-radius: 9px;
+  padding: 12px 18px;
+  font-size: 14.5px;
+  min-height: 44px;
+  transition: background 0.2s;
+}
+.btn-add:hover {
+  background: var(--red-dark);
+}
+.btn-add.is-added {
+  background: var(--green);
+}
+
+.btn-out {
+  background: var(--wash-5);
+  color: var(--ink-3);
+  font-weight: 500;
+  border-radius: 9px;
+  padding: 12px 16px;
+  font-size: 14px;
+  cursor: not-allowed;
+  min-height: 44px;
+}
+
+.pcard.out .pcard-pic img {
+  filter: grayscale(0.85);
+  opacity: 0.6;
+}
+.pcard.out .pcard-body {
+  opacity: 0.6;
+}
+
+/* The whole card is the target; only the item name is the accessible name. */
+.pcard-open {
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  padding: 0;
+}
+.pcard-open::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+.pcard:not(.out):hover {
+  border-color: var(--line-2);
+  box-shadow: var(--shadow-lift);
+}
+.pcard:has(.pcard-open:focus-visible) {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+.pcard-open:focus-visible {
+  outline: none;
+}

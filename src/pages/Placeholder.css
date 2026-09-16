@@ -1,0 +1,19 @@
+.placeholder {
+  padding-block: 72px;
+  text-align: center;
+}
+.placeholder h1 {
+  font-size: 30px;
+  margin-bottom: 10px;
+}
+.placeholder p {
+  color: var(--ink-2);
+  margin: 0 0 24px;
+}
+.placeholder a {
+  color: var(--red);
+  font-weight: 600;
+}
+.placeholder a:hover {
+  text-decoration: underline;
+}

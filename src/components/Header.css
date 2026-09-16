@@ -1,0 +1,133 @@
+.utilbar {
+  background: var(--ink);
+  color: var(--on-ink);
+  font-size: 13.5px;
+}
+.utilbar-in {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  height: 38px;
+}
+.utilbar-hours {
+  color: var(--on-ink-muted);
+}
+.utilbar-phone {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  /* The bar is only 38px tall, so 44px will not fit without redrawing it.
+     Padding to 30px clears the 24px WCAG 2.5.8 minimum comfortably. */
+  min-height: 30px;
+  padding: 0 2px;
+}
+.utilbar-phone svg {
+  width: 15px;
+  height: 15px;
+  color: var(--gold);
+}
+.utilbar-phone strong {
+  color: var(--on-dark);
+  font-weight: 600;
+}
+.utilbar-phone:hover strong {
+  text-decoration: underline;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(var(--paper-rgb), 0.97);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+}
+.topbar-in {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  height: 68px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--serif);
+  font-size: 23px;
+  font-weight: 700;
+  flex: none;
+  letter-spacing: -0.4px;
+  min-height: 44px;
+}
+
+.navl {
+  display: flex;
+  gap: 2px;
+}
+.navl a {
+  padding: 8px 14px;
+  border-radius: var(--r);
+  font-size: 15px;
+  color: var(--ink-2);
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+}
+.navl a:hover {
+  background: var(--wash-3);
+  color: var(--ink);
+}
+.navl a.active {
+  color: var(--ink);
+  font-weight: 500;
+  background: var(--wash-3);
+}
+
+.spacer {
+  flex: 1;
+}
+
+.cart-btn {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: var(--ink);
+  color: var(--on-dark);
+  padding: 11px 18px;
+  border-radius: var(--r);
+  font-weight: 500;
+  font-size: 15px;
+  min-height: 44px;
+  flex: none;
+}
+.cart-btn:hover {
+  background: var(--ink-hover);
+}
+.cart-btn svg {
+  width: 18px;
+  height: 18px;
+}
+.cart-count {
+  background: var(--gold);
+  color: var(--on-gold);
+  font-size: 12.5px;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 1px 8px;
+  min-width: 22px;
+  text-align: center;
+}
+
+@media (max-width: 760px) {
+  .utilbar-hours {
+    display: none;
+  }
+  .utilbar-in {
+    justify-content: center;
+  }
+  .navl {
+    display: none;
+  }
+}

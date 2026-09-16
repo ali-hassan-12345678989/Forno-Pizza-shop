@@ -2,8 +2,8 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import { randomUUID } from 'node:crypto'
 import {
   anonClient,
-  newGuestOrder,
-  newOrderItem,
+  placeOrder,
+  placeOrderOrThrow,
   isReadDenied,
   isWriteDenied,
 } from './helpers/supabase.js'
@@ -12,33 +12,25 @@ import {
 // find that order again — without any policy that would also hand them somebody
 // else's. The whole design rests on one idea: orders are write-only to guests,
 // and readable only through a token they already hold.
+//
+// How an order gets priced and validated is tested in place-order.test.js; this
+// file is about what a guest can and cannot see afterwards.
 describe('guest checkout', () => {
   const anon = anonClient()
-  const order = newGuestOrder()
+  let order
 
   beforeAll(async () => {
-    const { error } = await anon.from('orders').insert(order)
-    if (error) throw new Error(`guest order insert failed: ${error.message}`)
-
-    const { error: itemError } = await anon
-      .from('order_items')
-      .insert(newOrderItem(order.id))
-    if (itemError) throw new Error(`order item insert failed: ${itemError.message}`)
+    order = await placeOrderOrThrow(anon)
   })
 
   it('a guest can place an order with no session', async () => {
-    const fresh = newGuestOrder()
-    const { error } = await anon.from('orders').insert(fresh)
+    const { error } = await placeOrder(anon)
 
     expect(error).toBeNull()
   })
 
-  it('a guest can add line items to their own order', async () => {
-    const { error } = await anon
-      .from('order_items')
-      .insert(newOrderItem(order.id, { size_label: 'Large', unit_price: 19.0, line_total: 19.0 }))
-
-    expect(error).toBeNull()
+  it('the order comes back with its line items attached', async () => {
+    expect(order.items.length).toBe(1)
   })
 
   it('orders are not listable by a guest', async () => {
@@ -49,7 +41,7 @@ describe('guest checkout', () => {
 
   it('a guest cannot read back even their OWN order by id', async () => {
     // This is the point of the design: holding the id is not authorisation.
-    const result = await anon.from('orders').select('*').eq('id', order.id)
+    const result = await anon.from('orders').select('*').eq('id', order.order.id)
 
     expect(isReadDenied(result)).toBe(true)
   })
@@ -66,7 +58,17 @@ describe('guest checkout', () => {
     const { error, data } = await anon
       .from('orders')
       .update({ status: 'delivered' })
-      .eq('id', order.id)
+      .eq('id', order.order.id)
+      .select()
+
+    expect(isWriteDenied(error) || (data ?? []).length === 0).toBe(true)
+  })
+
+  it('a guest cannot rewrite the total of an order they placed', async () => {
+    const { error, data } = await anon
+      .from('orders')
+      .update({ total: 1 })
+      .eq('id', order.order.id)
       .select()
 
     expect(isWriteDenied(error) || (data ?? []).length === 0).toBe(true)
@@ -75,11 +77,10 @@ describe('guest checkout', () => {
 
 describe('token retrieval is the only guest read path', () => {
   const anon = anonClient()
-  const order = newGuestOrder()
+  let order
 
   beforeAll(async () => {
-    await anon.from('orders').insert(order)
-    await anon.from('order_items').insert(newOrderItem(order.id))
+    order = await placeOrderOrThrow(anon)
   })
 
   it('the right token returns the order', async () => {
@@ -88,8 +89,8 @@ describe('token retrieval is the only guest read path', () => {
     })
 
     expect(error).toBeNull()
-    expect(data.order.id).toBe(order.id)
-    expect(data.order.customer_name).toBe(order.customer_name)
+    expect(data.order.id).toBe(order.order.id)
+    expect(data.order.customer_name).toBe(order.order.customer_name)
   })
 
   it('the response carries the line items', async () => {
@@ -98,7 +99,7 @@ describe('token retrieval is the only guest read path', () => {
     })
 
     expect(data.items.length).toBe(1)
-    expect(data.items[0].item_name).toBe('Classic pepperoni')
+    expect(data.items[0].item_name).toBe(order.items[0].item_name)
   })
 
   it('the response never echoes the token back', async () => {
@@ -139,50 +140,21 @@ describe('token retrieval is the only guest read path', () => {
   })
 
   it('one guest cannot read another guest order with their own token', async () => {
-    const other = newGuestOrder()
-    await anon.from('orders').insert(other)
+    const other = await placeOrderOrThrow(anon)
 
     const { data } = await anon.rpc('get_order_by_token', {
       p_access_token: order.access_token,
     })
 
-    expect(data.order.id).not.toBe(other.id)
-  })
-})
-
-describe('order tampering is rejected', () => {
-  const anon = anonClient()
-
-  it('an order cannot be created already marked delivered', async () => {
-    // Otherwise anyone could self-promote an order and unlock reviewing.
-    const { error } = await anon
-      .from('orders')
-      .insert(newGuestOrder({ status: 'delivered' }))
-
-    expect(isWriteDenied(error)).toBe(true)
+    expect(data.order.id).not.toBe(other.order.id)
   })
 
-  it('a guest cannot file an order under a real account', async () => {
-    const { error } = await anon
-      .from('orders')
-      .insert(newGuestOrder({ user_id: randomUUID() }))
+  it('the order id is not a substitute for the token', async () => {
+    // Someone who saw an id over a shoulder still has nothing.
+    const { data } = await anon.rpc('get_order_by_token', {
+      p_access_token: order.order.id,
+    })
 
-    expect(error).not.toBeNull()
-  })
-
-  it('a delivery order cannot be created without an address', async () => {
-    const { address, ...noAddress } = { address: null, ...newGuestOrder() }
-    delete noAddress.delivery_address
-
-    const { error } = await anon.from('orders').insert(noAddress)
-
-    expect(error).not.toBeNull()
-  })
-
-  it('line items cannot be attached to an order that is not yours', async () => {
-    // A fabricated order id must not accept items.
-    const { error } = await anon.from('order_items').insert(newOrderItem(randomUUID()))
-
-    expect(error).not.toBeNull()
+    expect(data).toBeNull()
   })
 })

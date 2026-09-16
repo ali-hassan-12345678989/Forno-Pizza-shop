@@ -1,0 +1,357 @@
+.itemmodal {
+  border: none;
+  padding: 0;
+  background: transparent;
+  max-width: 100%;
+  max-height: 100%;
+  overflow: visible;
+}
+.itemmodal::backdrop {
+  background: rgba(var(--ink-rgb), 0.55);
+  backdrop-filter: blur(3px);
+  animation: itemmodal-fade 0.2s ease;
+}
+
+.itemmodal-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(520px, calc(100vw - 32px));
+  max-height: min(88vh, 860px);
+  background: var(--card);
+  border-radius: var(--r-lg);
+  box-shadow: 0 20px 60px rgba(var(--ink-rgb), 0.3);
+  overflow: hidden;
+  animation: itemmodal-rise 0.24s cubic-bezier(0.2, 0.9, 0.35, 1);
+}
+
+.itemmodal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(var(--white-rgb), 0.92);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+}
+.itemmodal-close:hover {
+  background: var(--card);
+}
+.itemmodal-close svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* The photo sells the pizza, but the choices are what the customer came for —
+   capped so the size and topping steps are not pushed into a narrow scroll
+   window on a laptop, or a three-row keyhole on a phone. */
+.itemmodal-pic {
+  width: 100%;
+  aspect-ratio: 2 / 1;
+  max-height: 32vh;
+  object-fit: cover;
+  background: var(--sand-1);
+  flex: none;
+}
+
+.itemmodal-head {
+  flex: none;
+  padding: 18px 22px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.itemmodal-head h2 {
+  font-size: 24px;
+}
+.itemmodal-head p {
+  margin: 5px 0 0;
+  font-size: 14.5px;
+  color: var(--ink-2);
+}
+.itemmodal-price {
+  display: block;
+  margin-top: 10px;
+  font-size: 22px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The only scrolling region, so the header and the add button stay put. */
+.itemmodal-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 18px 22px 8px;
+}
+
+.itemmodal-step {
+  margin-bottom: 22px;
+}
+
+/* The two-tone step label from the brief: a dark ordinal against a red title. */
+.steprow {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 14px;
+  font-size: 14px;
+}
+.steprow-n {
+  background: var(--ink);
+  color: var(--on-dark);
+  font-weight: 700;
+  padding: 7px 12px;
+  border-radius: 8px 0 0 8px;
+}
+.steprow-t {
+  background: var(--red);
+  color: var(--on-dark);
+  font-weight: 700;
+  padding: 7px 14px;
+  border-radius: 0 8px 8px 0;
+}
+.steprow-req {
+  margin-left: auto;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+.steprow-opt {
+  color: var(--ink-3);
+}
+
+.sizegrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+}
+.sizeopt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 14px 10px;
+  min-height: 44px;
+  border: 1.5px solid var(--line-2);
+  border-radius: var(--r);
+  background: var(--card);
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+.sizeopt:hover:not(:disabled) {
+  border-color: var(--ink-3);
+}
+.sizeopt.on {
+  border-color: var(--red);
+  background: var(--red-tint);
+}
+.sizeopt-name {
+  font-weight: 700;
+  font-size: 15.5px;
+}
+.sizeopt-price {
+  font-size: 14.5px;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.sizeopt.on .sizeopt-price {
+  color: var(--red-dark);
+}
+.sizeopt-serves {
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+
+.topgroup {
+  display: grid;
+  gap: 8px;
+}
+.topopt {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 52px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--wash-1);
+  text-align: left;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+.topopt:hover:not(:disabled) {
+  border-color: var(--line-2);
+}
+.topopt.on {
+  border-color: var(--red);
+  background: var(--red-tint);
+}
+.topopt-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border: 1.5px solid var(--line-2);
+  border-radius: 50%;
+  background: var(--card);
+  color: var(--on-dark);
+}
+.topopt.on .topopt-box {
+  background: var(--red);
+  border-color: var(--red);
+}
+.topopt-box svg {
+  width: 13px;
+  height: 13px;
+  stroke-width: 3;
+}
+.topopt-name {
+  font-weight: 600;
+  font-size: 15px;
+}
+.topopt-price {
+  margin-left: auto;
+  font-size: 14px;
+  color: var(--ink-2);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.itemmodal-foot {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 22px;
+  border-top: 1px solid var(--line);
+  background: var(--card);
+}
+
+.itemmodal-qty {
+  display: flex;
+  align-items: center;
+  flex: none;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  overflow: hidden;
+}
+.itemmodal-qty button {
+  width: 44px;
+  height: 48px;
+  font-size: 19px;
+  color: var(--ink);
+}
+.itemmodal-qty button:hover:not(:disabled) {
+  background: var(--wash-3);
+}
+.itemmodal-qty button:disabled {
+  color: var(--ink-3);
+  cursor: not-allowed;
+}
+.itemmodal-qty span {
+  min-width: 26px;
+  text-align: center;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.itemmodal-add {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex: 1;
+  height: 48px;
+  padding: 0 18px;
+  border-radius: var(--r);
+  background: var(--red);
+  color: var(--on-dark);
+  font-size: 15.5px;
+  font-weight: 700;
+  transition: background 0.15s;
+}
+.itemmodal-add:hover:not(:disabled) {
+  background: var(--red-dark);
+}
+.itemmodal-add:disabled {
+  background: var(--ink-3);
+  cursor: not-allowed;
+}
+.itemmodal-total {
+  font-variant-numeric: tabular-nums;
+}
+
+.itemmodal-max {
+  flex: none;
+  margin: 0;
+  padding: 0 22px 12px;
+  font-size: 12.5px;
+  color: var(--ink-3);
+  text-align: right;
+}
+
+@keyframes itemmodal-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes itemmodal-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+}
+
+/* A sheet on a phone: anchored to the bottom, where the thumb already is. */
+@media (max-width: 560px) {
+  .itemmodal {
+    margin: 0;
+    top: auto;
+    bottom: 0;
+    width: 100%;
+  }
+  .itemmodal-panel {
+    width: 100vw;
+    max-height: 92vh;
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
+    animation-name: itemmodal-sheet;
+  }
+  .itemmodal-head,
+  .itemmodal-body,
+  .itemmodal-foot {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .itemmodal-foot {
+    padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+  }
+  .itemmodal-head h2 {
+    font-size: 21px;
+  }
+  .itemmodal-pic {
+    max-height: 24vh;
+  }
+}
+
+@keyframes itemmodal-sheet {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .itemmodal::backdrop,
+  .itemmodal-panel {
+    animation: none;
+  }
+}

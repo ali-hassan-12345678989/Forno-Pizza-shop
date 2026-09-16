@@ -49,16 +49,65 @@ export async function signedInClient(email) {
 }
 
 /**
- * Builds a valid guest order payload. The client generates `id` and
- * `access_token` itself because guests have no SELECT policy on orders, so an
- * insert cannot return them — see the comment in supabase/schema.sql.
+ * A distinct valid Pakistani mobile per call.
+ *
+ * place_order() rate-limits by phone number, so tests that shared one would
+ * start failing each other once the suite ran twice inside two minutes.
+ */
+export function randomPhone() {
+  let digits = ''
+  for (let i = 0; i < 9; i += 1) digits += Math.floor(Math.random() * 10)
+  return `03${digits}`
+}
+
+/** A valid checkout payload. Note there is no price in it — there cannot be. */
+export function newOrderDetails(overrides = {}) {
+  return {
+    fulfillmentType: 'delivery',
+    name: 'Integration Test',
+    phone: randomPhone(),
+    address: 'House 12, Street 4, F-7/2, Islamabad',
+    notes: null,
+    ...overrides,
+  }
+}
+
+/** One line of the fixture pizza, Medium. */
+export function newItems(overrides = {}) {
+  return [{ size_id: FIXTURES.sizeMediumId, quantity: 1, ...overrides }]
+}
+
+/** Calls place_order and hands back the raw result, so failures can be asserted. */
+export function placeOrder(client, details = {}, items = newItems()) {
+  const full = newOrderDetails(details)
+
+  return client.rpc('place_order', {
+    p_fulfillment_type: full.fulfillmentType,
+    p_customer_name: full.name,
+    p_customer_phone: full.phone,
+    p_delivery_address: full.address,
+    p_delivery_notes: full.notes,
+    p_items: items,
+  })
+}
+
+/** Places an order that is expected to succeed, and returns it. */
+export async function placeOrderOrThrow(client, details = {}, items = newItems()) {
+  const { data, error } = await placeOrder(client, details, items)
+  if (error) throw new Error(`place_order failed: ${error.message}`)
+  return data
+}
+
+/**
+ * Part 1 shapes, kept only so the tests that prove the direct-insert path is
+ * CLOSED have something realistic to try. Nothing should expect these to work.
  */
 export function newGuestOrder(overrides = {}) {
   return {
     id: randomUUID(),
     access_token: randomUUID(),
     customer_name: 'Integration Test',
-    customer_phone: '03001234567',
+    customer_phone: randomPhone(),
     fulfillment_type: 'delivery',
     delivery_address: 'House 12, Street 4, F-7/2, Islamabad',
     subtotal: 14.0,
@@ -83,6 +132,42 @@ export function newOrderItem(orderId, overrides = {}) {
   }
 }
 
+/** The extras this item actually offers, read at test time rather than pinned. */
+export async function toppingsFor(client, menuItemId) {
+  const { data } = await client
+    .from('menu_item_toppings')
+    .select('toppings(id, name, price)')
+    .eq('menu_item_id', menuItemId)
+
+  return (data ?? [])
+    .map((row) => row.toppings)
+    .filter(Boolean)
+    .map((t) => ({ ...t, price: Number(t.price) }))
+}
+
+/** An item in a category that deliberately offers no extras (burgers, sides). */
+export async function itemWithoutToppings(client) {
+  const { data } = await client
+    .from('menu_items')
+    .select('id, name, category, menu_item_sizes(id)')
+    .in('category', ['Burgers', 'Sides'])
+    .limit(1)
+
+  return data?.[0] ?? null
+}
+
+/** Looks up a genuinely sold-out size rather than pinning one by id, which the
+ *  Manager panel in Part 4 will be able to change at any time. */
+export async function findSoldOutSizeId(client) {
+  const { data } = await client
+    .from('menu_items')
+    .select('id, is_sold_out, menu_item_sizes(id)')
+    .eq('is_sold_out', true)
+    .limit(1)
+
+  return data?.[0]?.menu_item_sizes?.[0]?.id ?? null
+}
+
 /**
  * A read is legitimately blocked two different ways: RLS returns an empty set,
  * while a missing GRANT raises 42501. Both mean "you cannot see this", so a
@@ -96,8 +181,5 @@ export function isReadDenied({ data, error }) {
 /** Postgres codes returned when a write is refused by RLS or by privileges. */
 export function isWriteDenied(error) {
   if (!error) return false
-  return (
-    error.code === '42501' ||
-    /row-level security|permission denied/i.test(error.message)
-  )
+  return error.code === '42501' || /row-level security|permission denied/i.test(error.message)
 }

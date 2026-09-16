@@ -49,10 +49,10 @@ create table if not exists public.recipes (
 
 create sequence if not exists public.order_number_seq start 1000;
 
--- The client generates `id` and `access_token` itself (crypto.randomUUID()) and
--- sends them with the INSERT. Guests have no SELECT policy here, so an
--- INSERT ... RETURNING would come back empty — supplying both up front is what
--- lets a guest keep hold of their own order without ever opening up reads.
+-- Orders are created only through public.place_order() (supabase/place_order.sql),
+-- which prices them from the database. Clients have no INSERT privilege here.
+-- Guests have no SELECT policy either — place_order() hands back the access
+-- token once, and get_order_by_token() is the only way to read the order after.
 create table if not exists public.orders (
   id               uuid primary key default gen_random_uuid(),
   -- Short, human-readable reference shown to the customer. Guessable by design,
@@ -177,6 +177,8 @@ create trigger trg_orders_log_status
 -- the ownership check instead.
 -- ---------------------------------------------------------------------------
 
+-- Unused by any policy since Part 2 moved order creation into place_order();
+-- kept for Part 3, where cancelling an order needs the same ownership test.
 create or replace function public.can_write_order(p_order_id uuid)
 returns boolean language sql security definer set search_path = public stable as $$
   select exists (
@@ -226,7 +228,6 @@ $$;
 grant execute on function public.get_order_by_token(uuid)       to anon, authenticated;
 grant execute on function public.can_write_order(uuid)          to anon, authenticated;
 grant execute on function public.can_review(uuid, uuid)         to anon, authenticated;
-grant usage   on sequence public.order_number_seq               to anon, authenticated;
 
 -- ---------------------------------------------------------------------------
 -- ROW LEVEL SECURITY
@@ -256,28 +257,19 @@ create policy menu_item_sizes_public_read on public.menu_item_sizes
     where m.id = menu_item_sizes.menu_item_id and m.is_active = true
   ));
 
--- Orders: anyone may place one; a guest may only create a guest order, and a
--- signed-in customer may only create their own. No SELECT policy for anon —
--- guests read their order back through get_order_by_token() instead.
--- Pinning status to 'placed' stops a client self-promoting to 'delivered',
--- which would otherwise unlock review submission on an order never fulfilled.
-drop policy if exists orders_insert on public.orders;
-create policy orders_insert on public.orders
-  for insert to anon, authenticated
-  with check (
-    (user_id is null or user_id = auth.uid())
-    and status = 'placed'
-  );
+-- Orders: no INSERT policy and no INSERT grant for any client role. Writes go
+-- through place_order(), which sets status, user_id and every price itself.
+-- These drops matter on a database that ran an earlier version of this file —
+-- re-running schema.sql must close the old path, not reopen it.
+drop policy if exists orders_insert      on public.orders;
+drop policy if exists order_items_insert on public.order_items;
 
+-- No SELECT policy for anon either; guests read their order back through
+-- get_order_by_token() instead.
 drop policy if exists orders_select_own on public.orders;
 create policy orders_select_own on public.orders
   for select to authenticated
   using (user_id = auth.uid());
-
-drop policy if exists order_items_insert on public.order_items;
-create policy order_items_insert on public.order_items
-  for insert to anon, authenticated
-  with check (public.can_write_order(order_id));
 
 drop policy if exists order_items_select_own on public.order_items;
 create policy order_items_select_own on public.order_items
@@ -323,12 +315,16 @@ create policy reviews_insert on public.reviews
 grant select on public.menu_items      to anon, authenticated;
 grant select on public.menu_item_sizes to anon, authenticated;
 
--- Guests may create an order but are never granted SELECT on it; they read it
--- back through get_order_by_token(), which is SECURITY DEFINER.
-grant insert on public.orders      to anon, authenticated;
-grant select on public.orders      to authenticated;
-grant insert on public.order_items to anon, authenticated;
-grant select on public.order_items to authenticated;
+-- Customers read their own orders; nobody writes one except place_order(),
+-- which is SECURITY DEFINER and so needs no grant of its own. The revokes are
+-- here so that re-running this file on a database set up under Part 1 takes the
+-- old privilege away rather than leaving it behind.
+revoke insert  on public.orders      from anon, authenticated;
+revoke insert  on public.order_items from anon, authenticated;
+revoke usage   on sequence public.order_number_seq from anon, authenticated;
+
+grant  select  on public.orders      to authenticated;
+grant  select  on public.order_items to authenticated;
 
 grant select on public.order_status_history to authenticated;
 

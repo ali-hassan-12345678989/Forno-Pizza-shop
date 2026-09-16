@@ -2,8 +2,7 @@ import { describe, it, expect, beforeAll } from 'vitest'
 import {
   anonClient,
   signedInClient,
-  newGuestOrder,
-  newOrderItem,
+  placeOrderOrThrow,
   isReadDenied,
   isWriteDenied,
 } from './helpers/supabase.js'
@@ -22,17 +21,15 @@ describe('accounts can only ever see their own orders', () => {
     ;({ client: alice, userId: aliceId } = await signedInClient(process.env.TEST_USER_A_EMAIL))
     ;({ client: bob, userId: bobId } = await signedInClient(process.env.TEST_USER_B_EMAIL))
 
-    aliceOrder = newGuestOrder({
-      user_id: aliceId,
-      customer_name: 'Alice Test',
-      fulfillment_type: 'pickup',
-      delivery_address: null,
+    // Placed through place_order(), which reads user_id from Alice's own JWT —
+    // there is no way to ask for an order to be filed under a chosen account.
+    const placed = await placeOrderOrThrow(alice, {
+      name: 'Alice Test',
+      fulfillmentType: 'pickup',
+      address: null,
     })
 
-    const { error } = await alice.from('orders').insert(aliceOrder)
-    if (error) throw new Error(`alice order insert failed: ${error.message}`)
-
-    await alice.from('order_items').insert(newOrderItem(aliceOrder.id))
+    aliceOrder = { id: placed.order.id, user_id: placed.order.user_id }
   })
 
   it('the two test accounts are genuinely different users', async () => {
@@ -72,10 +69,7 @@ describe('accounts can only ever see their own orders', () => {
   })
 
   it('bob cannot read alice status history', async () => {
-    const result = await bob
-      .from('order_status_history')
-      .select('*')
-      .eq('order_id', aliceOrder.id)
+    const result = await bob.from('order_status_history').select('*').eq('order_id', aliceOrder.id)
 
     expect(isReadDenied(result)).toBe(true)
   })
@@ -90,10 +84,17 @@ describe('accounts can only ever see their own orders', () => {
     expect(data[0].status).toBe('placed')
   })
 
-  it('bob cannot place an order in alice name', async () => {
-    const { error } = await bob.from('orders').insert(newGuestOrder({ user_id: aliceId }))
+  it('an order bob places is filed under bob, never alice', async () => {
+    // place_order() takes no user_id argument at all, so misattribution is not
+    // something bob can attempt — see place-order.test.js for the direct-insert
+    // path being closed off entirely.
+    const placed = await placeOrderOrThrow(bob, {
+      fulfillmentType: 'pickup',
+      address: null,
+    })
 
-    expect(isWriteDenied(error)).toBe(true)
+    expect(placed.order.user_id).toBe(bobId)
+    expect(placed.order.user_id).not.toBe(aliceId)
   })
 
   it('bob cannot modify alice order', async () => {
@@ -110,11 +111,14 @@ describe('accounts can only ever see their own orders', () => {
     // A guest order has user_id NULL; the policy matches on user_id = auth.uid()
     // so a NULL must never match a real account.
     const anon = anonClient()
-    const guestOrder = newGuestOrder({ customer_name: 'Passing Guest' })
-    await anon.from('orders').insert(guestOrder)
+    const guestOrder = await placeOrderOrThrow(anon, {
+      name: 'Passing Guest',
+      fulfillmentType: 'pickup',
+      address: null,
+    })
 
     const { data } = await alice.from('orders').select('id')
 
-    expect(data.every((o) => o.id !== guestOrder.id)).toBe(true)
+    expect(data.every((o) => o.id !== guestOrder.order.id)).toBe(true)
   })
 })

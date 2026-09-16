@@ -1,0 +1,47 @@
+.authform-modes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  background: var(--wash-4);
+  border-radius: var(--r);
+  margin-bottom: 16px;
+}
+.authform-modes button {
+  height: 44px;
+  border-radius: 7px;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+.authform-modes button:hover {
+  color: var(--ink);
+}
+.authform-modes button.on {
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+}
+
+.authform-sub {
+  margin: 0 0 18px;
+  font-size: 14px;
+  color: var(--ink-2);
+}
+
+.authform-server {
+  color: var(--red-dark);
+  background: var(--red-tint);
+  border: 1px solid var(--red-line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 13.5px;
+  margin: 0 0 14px;
+}
+
+.authform .btn-solid.full {
+  margin-top: 4px;
+}
