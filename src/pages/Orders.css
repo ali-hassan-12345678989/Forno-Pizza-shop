@@ -1,0 +1,215 @@
+.orders-page {
+  max-width: 680px;
+  padding-top: 20px;
+  padding-bottom: 56px;
+}
+
+.orders-head {
+  margin-bottom: 20px;
+}
+.orders-head h1 {
+  font-size: 30px;
+}
+
+.orders-account {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+  margin: 8px 0 0;
+  font-size: 14.5px;
+  color: var(--ink-2);
+}
+.orders-account button {
+  display: inline-flex;
+  align-items: center;
+  color: var(--red);
+  font-weight: 600;
+  text-decoration: underline;
+  font-size: 14.5px;
+  padding: 0 2px;
+  min-height: 24px;
+}
+
+.orders-msg {
+  color: var(--ink-2);
+  text-align: center;
+  padding: 48px 0;
+}
+
+.orders-count {
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin: 0 0 10px;
+}
+
+.orders-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.orders-link {
+  display: grid;
+  gap: 10px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 16px 18px;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+.orders-link:hover {
+  border-color: var(--line-2);
+  box-shadow: var(--shadow-lift);
+}
+
+.orders-row-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.orders-number {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--serif);
+  font-size: 19px;
+  font-variant-numeric: tabular-nums;
+}
+.orders-number svg {
+  width: 16px;
+  height: 16px;
+  color: var(--ink-3);
+}
+
+/* Status carries the same meaning at a glance as it does on the tracker, so the
+   colour is keyed to the stage rather than being decorative. */
+.orders-status {
+  flex: none;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--gold-tint);
+  color: var(--gold-deep);
+}
+.orders-status.is-out_for_delivery,
+.orders-status.is-ready_for_pickup {
+  background: var(--red-tint);
+  color: var(--red-dark);
+}
+.orders-status.is-delivered,
+.orders-status.is-picked_up {
+  background: var(--green-tint);
+  color: var(--green);
+}
+.orders-status.is-cancelled {
+  background: var(--inert);
+  color: var(--ink-3);
+}
+
+.orders-items {
+  font-size: 14.5px;
+  color: var(--ink-2);
+  /* A long order must not stretch the card; two lines then ellipsis. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.orders-row-bottom {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+.orders-when {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13.5px;
+  color: var(--ink-3);
+}
+.orders-when svg {
+  width: 14px;
+  height: 14px;
+}
+.orders-type {
+  color: var(--ink-3);
+}
+.orders-total {
+  font-weight: 700;
+  font-size: 17px;
+  white-space: nowrap;
+}
+
+.orders-empty {
+  text-align: center;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 48px 24px;
+}
+.orders-empty strong {
+  display: block;
+  font-family: var(--serif);
+  font-size: 21px;
+  margin-bottom: 6px;
+}
+.orders-empty p {
+  color: var(--ink-2);
+  margin: 0 0 20px;
+}
+
+.orders-signedout-lede {
+  color: var(--ink-2);
+  margin: 0 0 16px;
+}
+
+.orders-guest-note {
+  margin-top: 22px;
+  padding: 16px 18px;
+  border: 1px dashed var(--line-2);
+  border-radius: var(--r-lg);
+}
+.orders-guest-note strong {
+  font-size: 15px;
+}
+.orders-guest-note p {
+  margin: 4px 0 8px;
+  font-size: 14.5px;
+  color: var(--ink-2);
+}
+.orders-guest-note a {
+  display: inline-flex;
+  align-items: center;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--red);
+  text-decoration: underline;
+  /* 17px of text is below the 24px WCAG 2.5.8 floor for a tap target. */
+  min-height: 44px;
+}
+
+@media (max-width: 560px) {
+  .orders-head h1 {
+    font-size: 25px;
+  }
+  .orders-row-bottom {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+}

@@ -1,33 +1,40 @@
-import { useEffect, useState } from 'react'
-import { supabase } from './supabaseClient'
+import { Routes, Route } from 'react-router-dom'
+import Header from './components/Header'
+import Footer from './components/Footer'
+import MobileNav from './components/MobileNav'
+import ScrollToTop from './components/ScrollToTop'
+import Home from './pages/Home'
+import Menu from './pages/Menu'
+import Cart from './pages/Cart'
+import Checkout from './pages/Checkout'
+import Track from './pages/Track'
+import Orders from './pages/Orders'
+import Placeholder from './pages/Placeholder'
+import { COPY } from './content/copy'
+import { ROUTES } from './config/routes'
 
-function App() {
-  const [items, setItems] = useState(null)
-  const [error, setError] = useState(null)
-
-  useEffect(() => {
-    supabase
-      .from('menu_items')
-      .select('id, name, description, menu_item_sizes(size, price)')
-      .then(({ data, error }) => (error ? setError(error.message) : setItems(data)))
-  }, [])
-
+export default function App() {
   return (
-    <div style={{ fontFamily: 'sans-serif', padding: '2rem' }}>
-      <h1>Forno Pizza</h1>
-      <p data-testid="status">
-        {error ? `Supabase error: ${error}` : items ? `Loaded ${items.length} menu item(s)` : 'Loading…'}
-      </p>
-      <ul>
-        {items?.map((item) => (
-          <li key={item.id}>
-            {item.name} —{' '}
-            {item.menu_item_sizes.map((s) => `${s.size} $${s.price}`).join(', ')}
-          </li>
-        ))}
-      </ul>
-    </div>
+    <>
+      <a href="#main" className="skip">
+        {COPY.common.skipToContent}
+      </a>
+      <ScrollToTop />
+      <Header />
+      <main id="main">
+        <Routes>
+          <Route path={ROUTES.home} element={<Home />} />
+          <Route path={ROUTES.menu} element={<Menu />} />
+          <Route path={ROUTES.cart} element={<Cart />} />
+          <Route path={ROUTES.checkout} element={<Checkout />} />
+          <Route path={ROUTES.track} element={<Track />} />
+          <Route path={ROUTES.trackOrder} element={<Track />} />
+          <Route path={ROUTES.orders} element={<Orders />} />
+          <Route path={ROUTES.notFound} element={<Placeholder />} />
+        </Routes>
+      </main>
+      <Footer />
+      <MobileNav />
+    </>
   )
 }
-
-export default App

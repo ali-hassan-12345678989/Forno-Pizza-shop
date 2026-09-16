@@ -1,0 +1,172 @@
+.acctmenu-placeholder {
+  display: block;
+  width: 96px;
+  height: 44px;
+}
+
+.acctmenu-auth {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+}
+
+.acctmenu-login {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 12px;
+  min-height: 44px;
+  border-radius: var(--r);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink-2);
+}
+.acctmenu-login:hover {
+  background: var(--wash-3);
+  color: var(--ink);
+}
+.acctmenu-login svg {
+  width: 18px;
+  height: 18px;
+}
+
+.acctmenu-signup {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 16px;
+  min-height: 44px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  font-size: 15px;
+  font-weight: 600;
+  background: var(--card);
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+.acctmenu-signup:hover {
+  border-color: var(--ink);
+  background: var(--wash-3);
+}
+
+.acctmenu {
+  position: relative;
+  flex: none;
+}
+
+.acctmenu-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 6px 3px 3px;
+  border-radius: 999px;
+  border: 1px solid var(--line-2);
+  background: var(--card);
+  min-height: 44px;
+}
+.acctmenu-trigger:hover {
+  border-color: var(--ink);
+}
+.acctmenu-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--red);
+  color: var(--on-dark);
+  font-weight: 700;
+  font-size: 15px;
+}
+.acctmenu-chev {
+  width: 15px;
+  height: 15px;
+  color: var(--ink-3);
+}
+
+.acctmenu-pop {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 60;
+  min-width: 232px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lift);
+  padding: 6px;
+  animation: acctmenu-drop 0.16s ease;
+}
+
+.acctmenu-who {
+  margin: 0;
+  padding: 10px 12px 12px;
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+  color: var(--ink-3);
+}
+.acctmenu-who strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  word-break: break-all;
+}
+
+.acctmenu-pop a,
+.acctmenu-pop button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 0 12px;
+  min-height: 44px;
+  border-radius: 8px;
+  font-size: 14.5px;
+  color: var(--ink);
+  text-align: left;
+}
+.acctmenu-pop a:first-of-type {
+  margin-top: 6px;
+}
+.acctmenu-pop a:hover,
+.acctmenu-pop button:hover {
+  background: var(--wash-3);
+}
+.acctmenu-pop svg {
+  width: 16px;
+  height: 16px;
+  color: var(--ink-3);
+}
+
+@keyframes acctmenu-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .acctmenu-pop {
+    animation: none;
+  }
+}
+
+/* The header gets tight once the nav collapses, so "Log in" loses its label and
+   "Sign up" gives way entirely — the modal is still one tap from the icon, and
+   the same two routes are on the orders tab. */
+@media (max-width: 760px) {
+  .acctmenu-login span {
+    display: none;
+  }
+  .acctmenu-login {
+    padding: 0 10px;
+  }
+  .acctmenu-signup {
+    display: none;
+  }
+  .acctmenu-placeholder {
+    width: 40px;
+  }
+}

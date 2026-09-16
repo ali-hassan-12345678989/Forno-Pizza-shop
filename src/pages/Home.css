@@ -1,0 +1,283 @@
+.hero {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: 56px;
+  align-items: center;
+  padding-block: 52px 48px;
+}
+
+.hero h1 {
+  font-size: 52px;
+  line-height: 1.05;
+  margin-bottom: 18px;
+}
+
+.hero .lede {
+  font-size: 17.5px;
+  color: var(--ink-2);
+  max-width: 460px;
+  margin-bottom: 26px;
+}
+
+.modepick {
+  display: inline-flex;
+  background: var(--wash-4);
+  border-radius: 12px;
+  padding: 4px;
+  gap: 4px;
+  margin-bottom: 18px;
+}
+.modepick button {
+  padding: 10px 26px;
+  border-radius: 9px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink-2);
+  min-height: 44px;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+.modepick button.on {
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+  font-weight: 600;
+}
+
+.addrrow {
+  display: flex;
+  gap: 10px;
+  max-width: 490px;
+  margin-bottom: 14px;
+}
+.addrrow input {
+  flex: 1;
+  min-width: 0;
+  height: 52px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  padding: 0 16px;
+  font-size: 16px;
+  font-family: inherit;
+  background: var(--card);
+  color: var(--ink);
+}
+.addrrow input::placeholder {
+  color: var(--ink-3);
+}
+.addrrow input:focus {
+  outline: none;
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px rgba(var(--ink-rgb), 0.07);
+}
+
+.pickup-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  max-width: 490px;
+  margin-bottom: 14px;
+  background: var(--card);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  padding: 10px 10px 10px 16px;
+}
+.pickup-label {
+  display: block;
+  font-size: 12.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--ink-3);
+}
+.pickup-box strong {
+  font-size: 15.5px;
+}
+
+.btn-red {
+  background: var(--red);
+  color: var(--on-dark);
+  font-weight: 600;
+  border-radius: var(--r);
+  padding: 0 26px;
+  height: 52px;
+  font-size: 16px;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.btn-red:hover {
+  background: var(--red-dark);
+}
+
+.eta {
+  font-size: 14.5px;
+  color: var(--ink-2);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+}
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  flex: none;
+}
+.eta-sep {
+  color: var(--ink-3);
+}
+
+.microcopy {
+  font-size: 13.5px;
+  color: var(--ink-3);
+  margin: 8px 0 0;
+}
+
+.heroimg {
+  border-radius: 18px;
+  overflow: hidden;
+  aspect-ratio: 1/1;
+  background: var(--sand-1);
+}
+.heroimg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.trust {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
+  border-top: 1px solid var(--line);
+  padding-top: 32px;
+}
+.trust li {
+  display: flex;
+  gap: 13px;
+  align-items: flex-start;
+}
+.trust svg {
+  width: 21px;
+  height: 21px;
+  color: var(--red);
+  flex: none;
+  margin-top: 3px;
+}
+.trust strong {
+  display: block;
+  font-size: 15.5px;
+}
+.trust span {
+  font-size: 14px;
+  color: var(--ink-2);
+}
+
+.steps-sec {
+  padding-top: 56px;
+}
+.steps-sec h2 {
+  font-size: 27px;
+  margin-bottom: 22px;
+}
+.steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 18px;
+}
+.steps li {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 22px;
+}
+.step-n {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--red-tint);
+  color: var(--red);
+  font-weight: 700;
+  font-size: 14.5px;
+  margin-bottom: 12px;
+}
+.steps strong {
+  display: block;
+  font-family: var(--serif);
+  font-size: 18px;
+  margin-bottom: 4px;
+}
+.steps li span:last-child {
+  font-size: 14.5px;
+  color: var(--ink-2);
+}
+
+@media (max-width: 900px) {
+  .hero {
+    grid-template-columns: 1fr;
+    gap: 26px;
+    padding-top: 30px;
+  }
+  .heroimg {
+    order: -1;
+    aspect-ratio: 16/10;
+  }
+  .hero h1 {
+    font-size: 34px;
+  }
+  .addrrow {
+    flex-direction: column;
+  }
+  /* flex:1 is for the row layout's horizontal fill. Once the axis flips it
+     becomes flex-basis:0 on the vertical axis and collapses the input. */
+  .addrrow input {
+    flex: none;
+    width: 100%;
+  }
+  .addrrow .btn-red {
+    width: 100%;
+  }
+}
+
+/* Deliberately quiet: same size as the microcopy above it, with only the two
+   actions carrying weight. An account is an offer on this page, not a gate. */
+.hero-auth {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 14px 0 0;
+  font-size: 14px;
+  color: var(--ink-2);
+}
+.hero-auth button {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--red);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  /* Inline links in a sentence, but still the entry point to an account — a
+     36px target is under the 44px guideline for something this important. */
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 2px;
+}
+.hero-auth button:hover {
+  color: var(--red-dark);
+}
+.hero-auth-sep {
+  color: var(--ink-3);
+  margin: 0 2px;
+}

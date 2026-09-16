@@ -8,7 +8,10 @@
 
 -- order_items, order_status_history and reviews all cascade from orders.
 delete from public.orders
-where customer_name in ('Integration Test', 'Alice Test', 'Passing Guest');
+where customer_name in (
+  'Integration Test', 'Alice Test', 'Passing Guest', 'Probe',
+  'Retest Guest', 'Retest Pickup', 'Probe Enter'
+);
 
 -- What's left should only be orders you placed by hand.
 select order_number, customer_name, status, created_at

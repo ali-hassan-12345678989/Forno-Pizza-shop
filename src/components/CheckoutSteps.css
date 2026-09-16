@@ -1,0 +1,80 @@
+.steps-bar {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin: 0 0 26px;
+  padding: 0;
+  max-width: 620px;
+}
+
+.stp {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.stp:not(:last-child)::after {
+  content: '';
+  flex: 1;
+  height: 1.5px;
+  background: var(--line-2);
+  margin: 0 14px;
+  min-width: 18px;
+}
+.stp:not(:last-child) {
+  flex: 1;
+}
+
+.stp-n {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1.5px solid var(--line-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink-3);
+  flex: none;
+}
+.stp-l {
+  font-size: 14.5px;
+  color: var(--ink-3);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.stp.on .stp-n {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--on-dark);
+}
+.stp.on .stp-l {
+  color: var(--ink);
+}
+
+.stp.done .stp-n {
+  background: var(--green);
+  border-color: var(--green);
+  color: var(--on-dark);
+}
+.stp.done .stp-l {
+  color: var(--ink-2);
+}
+
+@media (max-width: 560px) {
+  .steps-bar {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .steps-bar::-webkit-scrollbar {
+    display: none;
+  }
+  .stp-l {
+    font-size: 13.5px;
+  }
+  .stp:not(:last-child)::after {
+    margin: 0 8px;
+  }
+}
