@@ -25,7 +25,13 @@ function normaliseItem(row) {
     name: row.name,
     description: row.description ?? '',
     imageUrl: row.image_url ?? null,
-    isSoldOut: Boolean(row.is_sold_out),
+    /* Two flags in the database, one answer here.
+       `is_sold_out` is the shop's own decision — we are not making this today.
+       `out_of_stock` is the inventory engine's — an ingredient it needs is at
+       zero. They are kept apart so a delivery of mozzarella cannot quietly put
+       back a dish the Admin deliberately pulled. A customer does not need the
+       distinction: either way they cannot order it. */
+    isSoldOut: Boolean(row.is_sold_out) || Boolean(row.out_of_stock),
     category: row.category ?? null,
     badge: row.badge ?? null,
     sortOrder: row.sort_order ?? 0,

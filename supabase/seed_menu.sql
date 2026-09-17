@@ -67,9 +67,15 @@ values
   ('a1000000-0000-4000-8000-00000000000b', 'Cheese Lover',
    'Mozzarella, cheddar, parmesan, cream cheese, thyme',
    'https://images.unsplash.com/photo-1593504049359-74330189a345', 'Signature', 'best-seller', 11, true, false),
+  -- Seeded sold out in Part 2, when there was nothing to drive that flag and a
+  -- hand-set one was the only way to see the disabled card on the menu. Part 3
+  -- task 7 gives the job to the engine: out_of_stock now tracks real stock, and
+  -- is_sold_out means only what a person deliberately decided. So this goes
+  -- back to false — leaving it would be the shop permanently refusing to make a
+  -- pizza it has every ingredient for.
   ('a1000000-0000-4000-8000-00000000000c', 'Chicken Mushroom',
    'Tikka chunks, sautéed mushroom, onion, garlic cream',
-   'https://images.unsplash.com/photo-1571066811602-716837d681de', 'Signature', null, 12, true, true),
+   'https://images.unsplash.com/photo-1571066811602-716837d681de', 'Signature', null, 12, true, false),
   ('a1000000-0000-4000-8000-00000000000d', 'Only Veggie',
    'Olives, mushroom, tomato, onion, green pepper, sweetcorn',
    'https://images.unsplash.com/photo-1590947132387-155cc02f3212', 'Signature', 'vegetarian', 13, true, false),

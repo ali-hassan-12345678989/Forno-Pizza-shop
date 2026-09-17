@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { fetchMenu, categoriesOf } from '../api/menu'
+import { fetchReviewSummary } from '../api/reviews'
 import MenuCard from '../components/MenuCard'
 import ItemModal from '../components/ItemModal'
 import BackLink from '../components/BackLink'
@@ -13,12 +14,21 @@ export default function Menu() {
   const [failed, setFailed] = useState(false)
   const [activeCategory, setActiveCategory] = useState(null)
   const [openItem, setOpenItem] = useState(null)
+  // Empty until the ratings land, so a card renders without stars rather than
+  // waiting for them.
+  const [ratings, setRatings] = useState(() => new Map())
   const t = COPY.menu
 
   useDocumentTitle(t.title)
 
   useEffect(() => {
     let cancelled = false
+
+    // The ratings are fetched alongside the menu, not inside each card: one
+    // request for the lot rather than seventeen. They are also allowed to fail
+    // on their own — a menu without stars is still a menu, but no stars at all
+    // is better than no menu.
+    fetchReviewSummary().then((summary) => !cancelled && setRatings(summary))
 
     fetchMenu()
       .then((data) => !cancelled && setItems(data))
@@ -101,13 +111,23 @@ export default function Menu() {
         {visible.length > 0 && (
           <div className="menu-grid">
             {visible.map((item) => (
-              <MenuCard key={item.id} item={item} onOpen={setOpenItem} />
+              <MenuCard
+                key={item.id}
+                item={item}
+                rating={ratings.get(item.id) ?? null}
+                onOpen={setOpenItem}
+              />
             ))}
           </div>
         )}
       </section>
 
-      <ItemModal item={openItem} open={openItem !== null} onClose={() => setOpenItem(null)} />
+      <ItemModal
+        item={openItem}
+        rating={openItem ? (ratings.get(openItem.id) ?? null) : null}
+        open={openItem !== null}
+        onClose={() => setOpenItem(null)}
+      />
     </>
   )
 }

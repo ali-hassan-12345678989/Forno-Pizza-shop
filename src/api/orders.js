@@ -27,6 +27,14 @@ const ORDER_ERRORS = {
   item_unavailable: 'item_unavailable',
   rate_limited: 'rate_limited',
   settings_missing: 'settings_missing',
+  // deduct_order_stock(), reached through place_order()
+  out_of_stock: 'out_of_stock',
+  recipe_missing: 'recipe_missing',
+  ingredient_missing: 'ingredient_missing',
+  // cancel_order()
+  order_not_found: 'order_not_found',
+  already_cancelled: 'already_cancelled',
+  cancel_window_closed: 'cancel_window_closed',
 }
 
 /** Thrown with a `code` the checkout form can map to a message. */
@@ -81,6 +89,26 @@ export async function fetchOrderByToken(token) {
 
   if (error) throw new OrderError(errorCodeFrom(error), error)
   if (!data) return null
+
+  return normaliseOrder(data)
+}
+
+/**
+ * FR-3.3: the customer calling their own order off.
+ *
+ * The token is the credential here for the same reason it is on the way in —
+ * an order id is not proof of anything. The window (before the kitchen starts)
+ * is enforced inside cancel_order(), not here: a check in the browser decides
+ * what to show, never what is allowed.
+ *
+ * Returns the cancelled order in the same shape as every other read, so the
+ * tracking page re-renders from the result instead of fetching again.
+ */
+export async function cancelOrder(token) {
+  const { data, error } = await supabase.rpc('cancel_order', { p_access_token: token })
+
+  if (error) throw new OrderError(errorCodeFrom(error), error)
+  if (!data) throw new OrderError('unknown')
 
   return normaliseOrder(data)
 }
@@ -154,6 +182,11 @@ function normaliseOrder(payload) {
     id: order.id,
     orderNumber: order.order_number,
     status: order.status,
+    /* Both forms, deliberately. isDelivery is the question almost every screen
+       actually asks; fulfillmentType is what the status ladder is keyed by, and
+       deriving it back from a boolean would invent a value the database never
+       sent. */
+    fulfillmentType: order.fulfillment_type,
     isDelivery: order.fulfillment_type === ORDER_TYPES.delivery,
     customerName: order.customer_name,
     customerPhone: order.customer_phone,
@@ -165,6 +198,10 @@ function normaliseOrder(payload) {
     placedAt: order.created_at,
     items: (payload.items ?? []).map((item) => ({
       id: item.id,
+      /* The line's own id is unique per line; this is the dish behind it. Two
+         Larges and a Medium of the same pizza are three lines but one thing to
+         have an opinion about, which is what the review panel keys on. */
+      menuItemId: item.menu_item_id,
       name: item.item_name,
       sizeLabel: item.size_label,
       quantity: item.quantity,

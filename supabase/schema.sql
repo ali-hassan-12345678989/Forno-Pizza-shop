@@ -189,29 +189,15 @@ returns boolean language sql security definer set search_path = public stable as
   );
 $$;
 
-create or replace function public.can_review(p_order_id uuid, p_menu_item_id uuid)
-returns boolean language sql security definer set search_path = public stable as $$
-  select exists (
-           select 1 from public.orders o
-           where o.id = p_order_id
-             and o.status in ('delivered','picked_up')
-             and (o.user_id = auth.uid() or (o.user_id is null and auth.uid() is null))
-         )
-     and (
-           p_menu_item_id is null
-           or exists (
-             select 1 from public.order_items oi
-             where oi.order_id = p_order_id and oi.menu_item_id = p_menu_item_id
-           )
-         );
-$$;
+-- can_review() used to live here, called by the reviews INSERT policy. Both are
+-- gone: see the reviews note further down, and supabase/reviews.sql.
 
 -- The only way a guest reads their own order back: the unguessable token the
 -- client generated at creation. No SELECT policy on orders is opened for anon.
 create or replace function public.get_order_by_token(p_access_token uuid)
 returns jsonb language sql security definer set search_path = public stable as $$
   select jsonb_build_object(
-    'order', to_jsonb(o) - 'access_token',
+    'order', to_jsonb(o) - 'access_token' - 'stock_deducted',
     'items', coalesce((
       select jsonb_agg(to_jsonb(oi) order by oi.created_at)
       from public.order_items oi where oi.order_id = o.id
@@ -227,7 +213,7 @@ $$;
 
 grant execute on function public.get_order_by_token(uuid)       to anon, authenticated;
 grant execute on function public.can_write_order(uuid)          to anon, authenticated;
-grant execute on function public.can_review(uuid, uuid)         to anon, authenticated;
+
 
 -- ---------------------------------------------------------------------------
 -- ROW LEVEL SECURITY
@@ -288,20 +274,20 @@ create policy order_status_history_select_own on public.order_status_history
     where o.id = order_status_history.order_id and o.user_id = auth.uid()
   ));
 
--- Reviews: world-readable, but only writable against an order you actually
--- received — and, for item reviews, an item that was actually in it.
+-- Reviews: no policy at all, for either direction. Part 3 moved both reading
+-- and writing behind functions in supabase/reviews.sql.
+--
+-- The policy that used to live here allowed a direct INSERT guarded by
+-- can_review(), whose guest branch — `o.user_id is null and auth.uid() is null`
+-- — was true for every anonymous visitor against every guest order. Holding an
+-- order id was enough to review a stranger's dinner. The SELECT policy was
+-- world-readable over a table carrying order_id and user_id, which is enough to
+-- tie reviews to an account and to each other.
+--
+-- These drops matter on a database that ran the earlier version of this file:
+-- re-running schema.sql has to close that path, not reopen it.
 drop policy if exists reviews_public_read on public.reviews;
-create policy reviews_public_read on public.reviews
-  for select to anon, authenticated
-  using (true);
-
-drop policy if exists reviews_insert on public.reviews;
-create policy reviews_insert on public.reviews
-  for insert to anon, authenticated
-  with check (
-    public.can_review(order_id, menu_item_id)
-    and (user_id is null or user_id = auth.uid())
-  );
+drop policy if exists reviews_insert      on public.reviews;
 
 -- ---------------------------------------------------------------------------
 -- TABLE GRANTS
@@ -328,7 +314,9 @@ grant  select  on public.order_items to authenticated;
 
 grant select on public.order_status_history to authenticated;
 
-grant select, insert on public.reviews to anon, authenticated;
+-- Reviews are read and written only through the functions in reviews.sql, which
+-- are SECURITY DEFINER and need no grant of their own.
+revoke select, insert on public.reviews from anon, authenticated;
 
 -- ingredients, recipes and stock_alerts get NO grant and NO policy: denied at
 -- both layers for every customer-side role. Manager / Admin access is added

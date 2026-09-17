@@ -7,14 +7,14 @@ import {
   FIXTURES,
 } from './helpers/supabase.js'
 
-// ingredients, recipes and stock_alerts are Manager/Admin data. Until Part 4
+// ingredients, recipes, topping_recipes and stock_alerts are Manager/Admin data. Until Part 4
 // grants those roles deliberately, no customer-side role may touch them.
 //
 // These tables carry no GRANT *and* no policy. That is two independent layers,
 // and this file exists to catch either one being loosened by accident — most
 // likely in Part 4, when the staff grants land and the GRANT layer stops
 // covering for a policy mistake.
-const STAFF_TABLES = ['ingredients', 'recipes', 'stock_alerts']
+const STAFF_TABLES = ['ingredients', 'recipes', 'topping_recipes', 'stock_alerts']
 
 // Negative control. Every other assertion in this file claims "denied", and a
 // helper that answered "denied" to everything would make all of them pass while
@@ -78,6 +78,24 @@ describe('staff tables are invisible to guests', () => {
   it('a guest cannot read the recipe/BOM', async () => {
     // The BOM is commercially sensitive — it is the shop's actual costings.
     const result = await anon.from('recipes').select('quantity, ingredient_id')
+
+    expect(isReadDenied(result)).toBe(true)
+  })
+
+  it('a guest cannot read what an extra topping really costs the shop', async () => {
+    // topping_recipes arrived after the others and is the same class of data:
+    // it says an Extra Cheese is 70g of mozzarella. A table added later is
+    // exactly the one that gets forgotten when the lockdown is reviewed.
+    const result = await anon.from('topping_recipes').select('quantity, ingredient_id')
+
+    expect(isReadDenied(result)).toBe(true)
+  })
+
+  it('and cannot reach it through the toppings it CAN read', async () => {
+    // toppings itself is public — the menu needs it. The embed is the way in:
+    // PostgREST will happily join a readable table to a locked one unless the
+    // locked side is denied in its own right.
+    const result = await anon.from('toppings').select('name, topping_recipes(quantity)')
 
     expect(isReadDenied(result)).toBe(true)
   })
