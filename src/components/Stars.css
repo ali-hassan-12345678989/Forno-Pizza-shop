@@ -1,0 +1,59 @@
+.stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  line-height: 1;
+}
+.stars svg {
+  width: 15px;
+  height: 15px;
+  fill: var(--line-2);
+}
+.stars svg.is-filled {
+  fill: var(--gold);
+}
+
+/* Interactive. The radios themselves are visually hidden but still focusable,
+   so the ring has to be drawn on the label instead. */
+.stars-input {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  gap: 4px;
+  display: inline-flex;
+}
+.stars-input label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* 24px is the WCAG 2.5.8 minimum for a target; five of them in a row is
+     exactly the kind of control that gets built at 14px and is unusable. */
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.stars-input label:hover {
+  background: var(--gold-tint);
+}
+.stars-input label:has(input:focus-visible) {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+.stars-input svg {
+  width: 26px;
+  height: 26px;
+  transition: transform 0.12s ease;
+}
+.stars-input label:hover svg {
+  transform: scale(1.12);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stars-input svg {
+    transition: none;
+  }
+  .stars-input label:hover svg {
+    transform: none;
+  }
+}

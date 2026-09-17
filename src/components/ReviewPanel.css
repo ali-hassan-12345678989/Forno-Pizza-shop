@@ -1,0 +1,90 @@
+/* The review forms, on the tracking page once the food has arrived. */
+.reviewpanel {
+  margin-bottom: 16px;
+}
+
+.reviewrow {
+  padding: 16px 0;
+  border-top: 1px solid var(--line);
+}
+.reviewrow:first-of-type {
+  border-top: 0;
+  padding-top: 8px;
+}
+
+.reviewrow-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.reviewrow-head strong {
+  font-size: 15.5px;
+}
+
+.reviewrow-hint {
+  font-size: 13px;
+  color: var(--ink-3);
+  text-align: right;
+}
+
+.reviewrow-comment {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  background: var(--card);
+  font-family: inherit;
+  font-size: 14.5px;
+  color: var(--ink);
+  resize: vertical;
+}
+.reviewrow-comment:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
+}
+
+.reviewrow-error {
+  margin: 10px 0 0;
+  font-size: 14px;
+  color: var(--red-dark);
+}
+
+.reviewrow-post {
+  margin-top: 10px;
+}
+.reviewrow-post:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Already reviewed: their own words, read back. */
+.reviewrow.is-done {
+  color: var(--ink-2);
+}
+.reviewrow-said {
+  margin: 0;
+  font-size: 14.5px;
+}
+.reviewrow-note {
+  display: block;
+  margin-top: 6px;
+  font-size: 12.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+@media (max-width: 560px) {
+  /* The hint stops earning its place next to the dish name on a narrow screen. */
+  .reviewrow-head {
+    flex-direction: column;
+    gap: 2px;
+  }
+  .reviewrow-hint {
+    text-align: left;
+  }
+}

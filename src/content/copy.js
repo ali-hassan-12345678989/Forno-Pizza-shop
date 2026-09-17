@@ -273,6 +273,20 @@ export const COPY = {
       item_unavailable: 'Something in your cart just sold out. Check your cart and try again.',
       rate_limited: 'That is a lot of orders at once. Give it a minute and try again.',
       settings_missing: 'We could not reach the kitchen. Please try again.',
+      /* Raised when the kitchen has run out of something the order needs. It
+         deliberately does not say which ingredient — that is the shop's recipe,
+         and it is not something a customer could act on anyway. Pointing them
+         back at the menu is, because the sold-out items there are the answer. */
+      out_of_stock:
+        'The kitchen has just run out of something on your order. Check the menu — anything sold out is marked.',
+      /* A menu item with no recipe behind it. A customer can do nothing about
+         this, so it reads as our problem, which it is. */
+      /* Both of these mean the menu and the store room disagree. Nothing the
+         customer can do about either, so they read the same way. */
+      ingredient_missing:
+        'Something on your order is not available right now. Please remove it and try again.',
+      recipe_missing:
+        'Something on your order is not available right now. Please remove it and try again.',
       unknown: 'We could not place your order. Please try again.',
     },
   },
@@ -347,7 +361,6 @@ export const COPY = {
     title: 'Your order',
     documentTitle: (orderNumber) => `Order #${orderNumber}`,
     ariaLabel: 'Order tracking',
-    statusLabel: 'Status',
     statuses: {
       placed: 'Order placed',
       preparing: 'In the oven',
@@ -357,7 +370,58 @@ export const COPY = {
       picked_up: 'Picked up',
       cancelled: 'Cancelled',
     },
-    liveNote: 'Live status updates arrive in the next build.',
+    liveNote: 'This page keeps itself up to date — leave it open.',
+
+    /* The four-stage trail. Stage names come from `statuses` above so the badge
+       in order history and the step in the trail can never drift apart; these
+       are only the things the trail alone needs. */
+    trail: {
+      heading: 'Progress',
+      /* Read out by screen readers in place of the marker shape, which carries
+         the same meaning visually. */
+      stateDone: 'Done',
+      stateCurrent: 'Happening now',
+      statePending: 'Still to come',
+      /* Shown under the stage the order is actually on, and nowhere else — a
+         note on every row turns a glanceable trail into a paragraph. */
+      notes: {
+        placed: 'We have your order and the kitchen has it on screen.',
+        preparing: 'Hand-stretched, topped, and into the wood oven.',
+        out_for_delivery: 'On the way to you now.',
+        ready_for_pickup: 'Waiting for you at the counter.',
+        delivered: 'Enjoy it while it is hot.',
+        picked_up: 'Enjoy it while it is hot.',
+      },
+      cancelledTitle: 'Order cancelled',
+      cancelledBody: 'Nothing is being prepared and there is nothing to pay.',
+    },
+
+    cancel: {
+      action: 'Cancel this order',
+      /* Says the rule before they tap, so "too late" is never the first they
+         hear of it. */
+      note: 'You can cancel any time before the kitchen starts your order.',
+
+      confirmTitle: (orderNumber) => `Cancel order #${orderNumber}?`,
+      confirmBody:
+        'The kitchen has not started it yet, so nothing is wasted — but this cannot be undone.',
+      confirmKeep: 'Keep my order',
+      confirmCancel: 'Yes, cancel it',
+      working: 'Cancelling…',
+
+      /* Every one of these is a state the database can actually return. The
+         window closing mid-tap is the realistic one: the kitchen pressed start
+         while the confirmation was open. */
+      errors: {
+        cancel_window_closed: 'Too late — the kitchen has already started this one.',
+        already_cancelled: 'This order is already cancelled.',
+        order_not_found: 'We could not find that order.',
+        unknown: 'Something went wrong cancelling that.',
+      },
+      /* A failed cancellation is the one moment a phone number beats a retry
+         button: the pizza is being made either way. */
+      callInstead: (phone) => `Call the shop on ${phone}`,
+    },
 
     deliveringTo: 'Delivering to',
     collectingFrom: 'Collecting from',
@@ -413,6 +477,51 @@ export const COPY = {
     guestNoteTitle: 'Ordered as a guest?',
     guestNoteBody: 'Guest orders are not listed here — open them with your tracking link.',
     guestNoteAction: 'Find a guest order',
+  },
+
+  /**
+   * Reviews. FR-4.1 to FR-4.3 — leaving one, and reading them on a dish.
+   */
+  reviews: {
+    /* On the tracking page, once the food has actually arrived. */
+    heading: 'How was it?',
+    sub: 'Only you can leave this — it is tied to your order.',
+    experienceLabel: 'The order overall',
+    experienceHint: 'Delivery, timing, how it turned up',
+    itemHint: 'How was this one?',
+
+    ratingLabel: (n) => `${n} out of 5`,
+    ratingLegend: 'Rating',
+    commentLabel: 'Anything to add? (optional)',
+    commentPlaceholder: 'What was good, what was not…',
+    submit: 'Post review',
+    submitting: 'Posting…',
+    posted: 'Thanks — posted',
+    /* Shown in place of the form once this one is done. */
+    yours: 'Your rating',
+
+    errors: {
+      invalid_rating: 'Pick a rating from 1 to 5.',
+      invalid_comment: 'That comment is too long — keep it under 500 characters.',
+      order_not_found: 'We could not find that order.',
+      order_not_delivered: 'You can review once your order has arrived.',
+      item_not_on_order: 'That was not on this order.',
+      already_reviewed: 'You have already reviewed this.',
+      unknown: 'We could not post that. Please try again.',
+    },
+
+    /* On the menu card and inside the item popup. */
+    none: 'No reviews yet',
+    summary: (average, count) => `${average} (${count})`,
+    countLabel: (n) => `${n} review${n === 1 ? '' : 's'}`,
+    listHeading: 'What people said',
+    anonymous: 'A customer',
+    loadError: 'We could not load the reviews.',
+    /* A star rating is a picture; this is what a screen reader hears instead. */
+    starsLabel: (average, count) =>
+      count === 0
+        ? 'No reviews yet'
+        : `Rated ${average} out of 5, from ${count} review${count === 1 ? '' : 's'}`,
   },
 
   placeholder: {

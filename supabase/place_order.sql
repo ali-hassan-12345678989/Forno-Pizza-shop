@@ -14,9 +14,14 @@
 --   * delivery fee  <- shop_settings.delivery_fee
 --   * line totals and the order total are derived, never accepted.
 --
--- RUN ORDER: schema.sql, seed_menu.sql, shop_settings.sql, toppings.sql, then
--- this file. It supersedes get_order_by_token() from schema.sql, which predates
--- toppings, so this file is always the last one run. Safe to re-run.
+-- Part 3 added one more thing it does: the ingredients the order consumes come
+-- out of stock here too, in the same transaction, so an order that cannot be
+-- made is never confirmed.
+--
+-- RUN ORDER: schema.sql, seed_menu.sql, shop_settings.sql, toppings.sql,
+-- seed_recipes.sql, recipes.sql, deduct_stock.sql, then this file. It supersedes
+-- get_order_by_token() from schema.sql, which predates toppings, and it calls
+-- deduct_order_stock(), so both of those have to exist first. Safe to re-run.
 
 -- ---------------------------------------------------------------------------
 -- READING AN ORDER BACK
@@ -38,10 +43,12 @@ returns jsonb language sql security definer set search_path = public stable as $
 $$;
 
 
+-- `stock_deducted` is stripped alongside the token: it is the inventory
+-- engine's own bookkeeping and no business of the customer's.
 create or replace function public.get_order_by_token(p_access_token uuid)
 returns jsonb language sql security definer set search_path = public stable as $$
   select jsonb_build_object(
-    'order', to_jsonb(o) - 'access_token',
+    'order', to_jsonb(o) - 'access_token' - 'stock_deducted',
     'items', coalesce((
       select jsonb_agg(
         to_jsonb(oi) || jsonb_build_object('toppings', public.order_item_toppings_json(oi.id))
@@ -221,10 +228,12 @@ begin
     join public.menu_items mi on mi.id = ms.menu_item_id
     where ms.id = v_line.size_id
       and mi.is_active
-      and not mi.is_sold_out;
+      and not mi.is_sold_out
+      and not mi.out_of_stock;
 
-    -- Covers an unknown size, a sold-out item, and a line with no size_id at
-    -- all — none of which may quietly become an order with missing food on it.
+    -- Covers an unknown size, an item pulled by hand, an item the engine has
+    -- flagged as having no ingredients left, and a line with no size_id at all
+    -- — none of which may quietly become an order with missing food on it.
     if not found then
       raise exception 'item_unavailable';
     end if;
@@ -305,12 +314,33 @@ begin
    where id = v_order.id
   returning * into v_order;
 
+  -- -------------------------------------------------------------------------
+  -- THE STOCK
+  --
+  -- Last, on purpose. Every ingredient this order needs is locked here and the
+  -- locks are held until the transaction commits, so the less that happens
+  -- afterwards the less time two orders for the same shelf spend queued behind
+  -- each other. Everything above this point — validation, pricing, the rate
+  -- limit — can fail without ever having touched a lock.
+  --
+  -- Same transaction, so a shortage unwinds the order rather than confirming an
+  -- order the kitchen cannot make. That is Part 3's "an order should never
+  -- confirm if the stock update fails", and it costs one line because plpgsql
+  -- already works that way.
+  -- -------------------------------------------------------------------------
+
+  perform public.deduct_order_stock(v_order.id);
+
   -- Same shape as get_order_by_token(), so one client-side reader handles both.
   -- access_token is returned exactly once, here, to whoever just placed the
   -- order — it is never included in any later read.
   return jsonb_build_object(
     'access_token', v_order.access_token,
-    'order', to_jsonb(v_order) - 'access_token',
+    -- Stripped for two reasons: it is internal bookkeeping, and here it would
+    -- also be STALE — v_order was captured before deduct_order_stock() ran, so
+    -- it still says false about something that has just happened. A field that
+    -- lies is worse than a field that is absent.
+    'order', to_jsonb(v_order) - 'access_token' - 'stock_deducted',
     'items', coalesce((
       select jsonb_agg(
         to_jsonb(oi) || jsonb_build_object('toppings', public.order_item_toppings_json(oi.id))

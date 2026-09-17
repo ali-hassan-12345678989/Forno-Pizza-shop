@@ -1,0 +1,156 @@
+/* The four-stage trail on the tracking page.
+   A vertical rail rather than a horizontal stepper: the stage names here are
+   sentences ("Out for delivery"), and four of those side by side either wrap
+   into a mess or get truncated on a phone. */
+.trail {
+  margin-bottom: 16px;
+}
+
+.trail-list {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+}
+
+.trail-step {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding-bottom: 22px;
+}
+.trail-step:last-child {
+  padding-bottom: 0;
+}
+
+/* The connecting rail is drawn by each step except the last, so it always ends
+   on the final marker rather than running past it. */
+.trail-step::before {
+  content: '';
+  position: absolute;
+  left: 13px;
+  top: 26px;
+  bottom: 0;
+  width: 2px;
+  background: var(--line);
+}
+.trail-step:last-child::before {
+  display: none;
+}
+.trail-step.is-done::before {
+  background: var(--green);
+}
+
+.trail-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--line-2);
+  background: var(--card);
+  color: var(--on-dark);
+}
+.trail-marker svg {
+  width: 15px;
+  height: 15px;
+  stroke-width: 3;
+}
+
+.trail-step.is-done .trail-marker {
+  background: var(--green);
+  border-color: var(--green);
+}
+
+/* The live stage. A ring rather than a fill, so the eye lands on the step that
+   is happening rather than on the ones already finished. */
+.trail-step.is-current .trail-marker {
+  border-color: var(--red);
+  background: var(--card);
+  box-shadow: 0 0 0 4px rgba(var(--red-rgb), 0.14);
+}
+.trail-step.is-current .trail-marker::after {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--red);
+  animation: trail-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes trail-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .trail-step.is-current .trail-marker::after {
+    animation: none;
+  }
+}
+
+.trail-step.is-cancelled .trail-marker {
+  background: var(--red);
+  border-color: var(--red);
+}
+
+.trail-body {
+  flex: 1;
+  min-width: 0;
+  padding-top: 3px;
+}
+
+.trail-label {
+  display: block;
+  font-size: 15.5px;
+  font-weight: 600;
+}
+.trail-step.is-pending .trail-label {
+  color: var(--ink-3);
+  font-weight: 500;
+}
+.trail-step.is-current .trail-label {
+  color: var(--red);
+}
+.trail-step.is-cancelled .trail-label {
+  color: var(--red);
+}
+
+.trail-note {
+  display: block;
+  margin-top: 3px;
+  font-size: 14px;
+  color: var(--ink-2);
+}
+
+.trail-time {
+  flex: none;
+  padding-top: 5px;
+  font-size: 13.5px;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* A cancelled order's earlier stages are history, not progress — the green rail
+   would otherwise read as "still going". */
+.trail-list.is-cancelled .trail-step.is-done .trail-marker {
+  background: var(--ink-3);
+  border-color: var(--ink-3);
+}
+.trail-list.is-cancelled .trail-step.is-done::before {
+  background: var(--line);
+}
+.trail-list.is-cancelled .trail-step.is-done .trail-label {
+  color: var(--ink-2);
+}
+
+@media (max-width: 560px) {
+  .trail-step {
+    gap: 11px;
+  }
+  .trail-label {
+    font-size: 15px;
+  }
+}

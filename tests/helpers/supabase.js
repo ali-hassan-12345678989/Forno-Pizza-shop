@@ -77,11 +77,17 @@ export function newItems(overrides = {}) {
   return [{ size_id: FIXTURES.sizeMediumId, quantity: 1, ...overrides }]
 }
 
+/**
+ * Every order this test file placed, with the token needed to call it off
+ * again. See releasePlacedOrders() for why that matters.
+ */
+const placed = []
+
 /** Calls place_order and hands back the raw result, so failures can be asserted. */
-export function placeOrder(client, details = {}, items = newItems()) {
+export async function placeOrder(client, details = {}, items = newItems()) {
   const full = newOrderDetails(details)
 
-  return client.rpc('place_order', {
+  const result = await client.rpc('place_order', {
     p_fulfillment_type: full.fulfillmentType,
     p_customer_name: full.name,
     p_customer_phone: full.phone,
@@ -89,6 +95,38 @@ export function placeOrder(client, details = {}, items = newItems()) {
     p_delivery_notes: full.notes,
     p_items: items,
   })
+
+  if (result.data?.access_token) {
+    placed.push({ client, token: result.data.access_token })
+  }
+
+  return result
+}
+
+/**
+ * Gives back everything this file's orders took out of stock.
+ *
+ * Since Part 3 task 4 an order is not just a row — it draws real ingredients
+ * out of `ingredients`, and a test order is indistinguishable from a real one
+ * as far as the engine is concerned. That is correct, and it is also why the
+ * suite cannot simply leave its orders lying around: roughly a hundred orders a
+ * run, at 250g of dough for a Medium, is 26kg of the 40kg the shop stocks. Two
+ * runs and every pizza on the menu refuses to be ordered.
+ *
+ * Cancelling is the honest way to undo it. cancel_order() is the customer's own
+ * action, it is reachable with the anon key the suite already uses, and it
+ * restores stock through exactly the path a real cancellation takes — so the
+ * clean-up exercises the refund rather than working around it.
+ *
+ * Errors are ignored on purpose: an order a test already cancelled comes back
+ * 'already_cancelled', which is a success as far as this is concerned.
+ */
+export async function releasePlacedOrders() {
+  const pending = placed.splice(0)
+
+  await Promise.all(
+    pending.map(({ client, token }) => client.rpc('cancel_order', { p_access_token: token })),
+  )
 }
 
 /** Places an order that is expected to succeed, and returns it. */
@@ -159,10 +197,16 @@ export async function itemWithoutToppings(client) {
 /** Looks up a genuinely sold-out size rather than pinning one by id, which the
  *  Manager panel in Part 4 will be able to change at any time. */
 export async function findSoldOutSizeId(client) {
+  // Either flag makes a dish unorderable: is_sold_out is the shop's own
+  // decision, out_of_stock is the inventory engine's. Before Part 3 only the
+  // first existed, and it was permanently set on one seeded pizza — which is
+  // what this used to find. That flag is gone now (a shop does not refuse to
+  // make a pizza it has the ingredients for), so on a healthy menu this
+  // correctly returns null and the callers say so rather than pretending.
   const { data } = await client
     .from('menu_items')
-    .select('id, is_sold_out, menu_item_sizes(id)')
-    .eq('is_sold_out', true)
+    .select('id, is_sold_out, out_of_stock, menu_item_sizes(id)')
+    .or('is_sold_out.eq.true,out_of_stock.eq.true')
     .limit(1)
 
   return data?.[0]?.menu_item_sizes?.[0]?.id ?? null

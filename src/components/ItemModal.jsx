@@ -4,6 +4,7 @@ import { COPY } from '../content/copy'
 import { sizedImage, IMAGE_SIZES } from '../content/images'
 import { formatPrice } from '../lib/format'
 import { useDialog } from '../lib/useDialog'
+import ItemReviews from './ItemReviews'
 import { CloseIcon, CheckIcon } from './icons'
 import './ItemModal.css'
 
@@ -17,7 +18,7 @@ import './ItemModal.css'
  * same numbers the menu was loaded with; place_order() prices the order again
  * from the database on submit.
  */
-export default function ItemModal({ item, open, onClose }) {
+export default function ItemModal({ item, rating = null, open, onClose }) {
   const { addLine } = useCart()
   const t = COPY.item
 
@@ -150,6 +151,11 @@ export default function ItemModal({ item, open, onClose }) {
               </div>
             </section>
           )}
+
+          {/* Last in the body, below the choices. Somebody who has already
+              decided should not have to scroll past other people's opinions to
+              pick a size — but somebody still deciding will scroll for them. */}
+          <ItemReviews menuItemId={item.id} summary={rating} />
         </div>
 
         <div className="itemmodal-foot">

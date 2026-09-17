@@ -1,19 +1,95 @@
--- Forno Pizza — clears rows left behind by the integration test suite.
+-- Forno Pizza — clears rows left behind by the integration test suite, and puts
+-- back the stock those orders consumed.
 -- Run in the Supabase SQL Editor whenever the orders table gets noisy.
 --
 -- The suite creates real orders on every run, by design: RLS can only be
 -- meaningfully tested against real Postgres policies, and there is deliberately
 -- no DELETE policy for customers, so the tests cannot tidy up after themselves.
 -- Cleaning up is a staff action, which is exactly why it lives here.
+--
+-- SINCE PART 3 TASK 4 THIS ALSO MATTERS FOR STOCK.
+-- Every order now draws real ingredients out of `ingredients`, and a test order
+-- is indistinguishable from a real one as far as the engine is concerned — as
+-- it should be, or the tests would not be testing anything. But it means a few
+-- suite runs quietly eat the shop's inventory: roughly fifty orders a run, and
+-- a Medium pizza is 250g of dough and 150g of mozzarella. Four or five runs
+-- without a clean-up and the pizzas start refusing to be ordered at all.
+--
+-- So deleting the rows is not enough. The stock goes back first — but ONLY for
+-- orders that actually took some. See the note above that block; getting that
+-- wrong is how a test database ends up with 588kg of pizza dough.
 
--- order_items, order_status_history and reviews all cascade from orders.
-delete from public.orders
+-- ---------------------------------------------------------------------------
+-- WHO COUNTS AS A TEST ORDER
+-- ---------------------------------------------------------------------------
+
+create temporary table if not exists test_orders (
+  id uuid primary key,
+  status text,
+  stock_deducted boolean
+);
+delete from test_orders;
+
+insert into test_orders (id, status, stock_deducted)
+select id, status, stock_deducted from public.orders
 where customer_name in (
+  -- Part 1 and 2
   'Integration Test', 'Alice Test', 'Passing Guest', 'Probe',
-  'Retest Guest', 'Retest Pickup', 'Probe Enter'
+  'Retest Guest', 'Retest Pickup', 'Probe Enter',
+  -- Part 3
+  'Status Probe', 'Trail Probe', 'Guard Check', 'Cancel Probe',
+  'Lookup Probe', 'Recipe Check', 'Stock Check', 'Stock Probe',
+  'Atomicity Check', 'Diag Probe', 'Topping Check', 'Flag Probe',
+  'Race Probe', 'Alert Check', 'Sold Out Check',
+  'Review Probe', 'Review Check', 'Sold Out Probe'
 );
 
--- What's left should only be orders you placed by hand.
-select order_number, customer_name, status, created_at
-from public.orders
-order by created_at desc;
+-- ---------------------------------------------------------------------------
+-- GIVE THE STOCK BACK
+--
+-- Only orders that actually took stock, and orders.stock_deducted is the only
+-- thing that knows. The first version of this block used "status <> cancelled"
+-- as a proxy and was badly wrong: almost every order in the table predates the
+-- deduction entirely, so it refunded hundreds of orders that had never taken
+-- anything. Mozzarella went up thirteenfold.
+--
+-- restore_order_stock() now checks the flag itself and clears it afterwards, so
+-- this loop cannot over-refund even if this file is run twice in a row. The
+-- filter here is only to save the round trips.
+-- ---------------------------------------------------------------------------
+
+do $$
+declare
+  v_id uuid;
+begin
+  for v_id in select id from test_orders where stock_deducted loop
+    perform public.restore_order_stock(v_id);
+  end loop;
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- THEN DELETE THEM
+-- order_items, order_item_toppings, order_status_history and reviews all
+-- cascade. This has to come after the refund: once the lines are gone there is
+-- no way to know what the order consumed.
+-- ---------------------------------------------------------------------------
+
+delete from public.orders where id in (select id from test_orders);
+
+-- ---------------------------------------------------------------------------
+-- WHERE THINGS STAND
+-- ---------------------------------------------------------------------------
+
+select
+  i.name,
+  i.unit,
+  i.stock_quantity,
+  i.low_stock_threshold,
+  case
+    when i.stock_quantity <= 0                      then '*** EMPTY ***'
+    when i.stock_quantity < i.low_stock_threshold   then '*** LOW ***'
+    else ''
+  end as flag
+from public.ingredients i
+order by i.stock_quantity / nullif(i.low_stock_threshold, 0) nulls first, i.name;

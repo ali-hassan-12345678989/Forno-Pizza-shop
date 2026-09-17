@@ -1,9 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import BackLink from '../components/BackLink'
-import { CashIcon, CheckIcon, ClockIcon, CopyIcon, PinIcon, ReceiptIcon } from '../components/icons'
+import CancelOrder from '../components/CancelOrder'
+import OrderStatusTrail from '../components/OrderStatusTrail'
+import ReviewPanel from '../components/ReviewPanel'
+import { CashIcon, CheckIcon, ClockIcon, CopyIcon, PinIcon } from '../components/icons'
 import { COPY } from '../content/copy'
 import { ROUTES, trackPath, tokenFromInput } from '../config/routes'
+import { STATUS_POLL_MS, isCancelled, isFinal } from '../config/orderStatus'
 import { STORAGE_KEYS, readStored } from '../config/storage'
 import { useShop } from '../context/SettingsContext'
 import { useAuth } from '../context/AuthContext'
@@ -47,12 +51,53 @@ function TrackedOrder({ token }) {
     }
   }, [token])
 
+  // The same read, without the loading state. A poll that blanked the page
+  // every twenty seconds would be worse than not polling at all.
+  const refresh = useCallback(async () => {
+    try {
+      const found = await fetchOrderByToken(token)
+      if (found) setOrder(found)
+    } catch {
+      // A dropped poll is not worth an error screen over an order that is
+      // already on screen and still correct. The next one will pick it up.
+    }
+  }, [token])
+
   useEffect(() => {
     if (!handedOver) load()
     // handedOver is read once on mount; re-running on it would refetch an order
     // we were just given.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [load])
+
+  /**
+   * Keeping a live order current.
+   *
+   * Two triggers, because they answer different moments. The interval covers
+   * the customer who leaves the page open on the counter; the visibility
+   * listener covers the one who switched to WhatsApp and came back, which is
+   * exactly when they want to know and exactly when an interval is least
+   * likely to have just fired.
+   *
+   * Depends on the status rather than the order object: a poll that returns the
+   * same stage should not restart the clock it was scheduled by.
+   */
+  const settled = !order || isFinal(order.status)
+
+  useEffect(() => {
+    if (settled) return
+
+    const timer = setInterval(refresh, STATUS_POLL_MS)
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') refresh()
+    }
+    document.addEventListener('visibilitychange', onVisible)
+
+    return () => {
+      clearInterval(timer)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
+  }, [settled, refresh])
 
   if (state === 'loading') {
     return (
@@ -78,10 +123,10 @@ function TrackedOrder({ token }) {
     )
   }
 
-  return <OrderDetail order={order} token={token} justPlaced={justPlaced} />
+  return <OrderDetail order={order} token={token} justPlaced={justPlaced} onCancelled={setOrder} />
 }
 
-function OrderDetail({ order, token, justPlaced }) {
+function OrderDetail({ order, token, justPlaced, onCancelled }) {
   useDocumentTitle(COPY.track.documentTitle(order.orderNumber))
 
   const shop = useShop()
@@ -90,6 +135,7 @@ function OrderDetail({ order, token, justPlaced }) {
   const tt = COPY.track
 
   const eta = order.isDelivery ? shop.deliveryEta : shop.pickupEta
+  const cancelled = isCancelled(order.status)
 
   return (
     <section className="wrap track-page" aria-label={justPlaced ? t.ariaLabel : tt.ariaLabel}>
@@ -113,23 +159,27 @@ function OrderDetail({ order, token, justPlaced }) {
         </div>
 
         <ul className="track-facts">
-          <Fact icon={<ClockIcon />}>
-            {order.isDelivery ? t.etaDelivery(eta) : t.etaPickup(eta)}
-          </Fact>
-          <Fact icon={<ReceiptIcon />}>
-            <span className="track-fact-label">{tt.statusLabel}</span>
-            {tt.statuses[order.status] ?? order.status}
-          </Fact>
+          {/* An estimate is a promise. A cancelled order has nothing arriving,
+              so it does not get one — and the trail below says why. */}
+          {!cancelled && (
+            <Fact icon={<ClockIcon />}>
+              {order.isDelivery ? t.etaDelivery(eta) : t.etaPickup(eta)}
+            </Fact>
+          )}
+          {/* The status itself is not repeated here: the trail directly below
+              shows it, along with how the order got there. */}
           <Fact icon={<PinIcon />}>
             <span className="track-fact-label">
               {order.isDelivery ? tt.deliveringTo : tt.collectingFrom}
             </span>
             {order.isDelivery ? order.address : shop.address}
           </Fact>
-          <Fact icon={<CashIcon />}>
-            <span className="track-fact-label">{t.payHeading(order.isDelivery)}</span>
-            {t.payAmount(formatPrice(order.total))}
-          </Fact>
+          {!cancelled && (
+            <Fact icon={<CashIcon />}>
+              <span className="track-fact-label">{t.payHeading(order.isDelivery)}</span>
+              {t.payAmount(formatPrice(order.total))}
+            </Fact>
+          )}
         </ul>
 
         {order.notes && (
@@ -139,6 +189,19 @@ function OrderDetail({ order, token, justPlaced }) {
           </p>
         )}
       </div>
+
+      <OrderStatusTrail
+        status={order.status}
+        fulfillmentType={order.fulfillmentType}
+        history={order.statusHistory}
+      />
+
+      <CancelOrder order={order} token={token} onCancelled={onCancelled} />
+
+      {/* Appears only once the order has actually arrived. The token already in
+          this page's URL is what proves the order is theirs, so nothing extra
+          has to be built to decide who may review what. */}
+      <ReviewPanel order={order} token={token} />
 
       {justPlaced && <TrackingLink token={token} savedToAccount={isSignedIn} />}
 
@@ -181,7 +244,7 @@ function OrderDetail({ order, token, justPlaced }) {
         </p>
       </div>
 
-      <p className="track-live-note">{tt.liveNote}</p>
+      {!isFinal(order.status) && <p className="track-live-note">{tt.liveNote}</p>}
 
       <Link to={ROUTES.menu} className="btn-ghost full">
         {t.backToMenu}

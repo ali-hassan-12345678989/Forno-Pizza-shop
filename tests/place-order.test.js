@@ -284,8 +284,17 @@ describe('what the customer typed is cleaned up before it is stored', () => {
 
 describe('unavailable items are refused, not quietly dropped', () => {
   it('a sold-out item cannot be ordered', async () => {
+    // Runs only when something actually is unavailable. This used to lean on a
+    // pizza the Part 2 seed marked sold out for ever, which Part 3 removed —
+    // availability is now driven by real stock, so on a well-stocked shop there
+    // is legitimately nothing to find.
+    //
+    // The case is not lost: supabase/verify_stock.sql takes an ingredient to
+    // zero and proves the dish it belongs to is refused with item_unavailable.
+    // It can do that because it is allowed to write to the ingredients table,
+    // and this suite deliberately is not.
     const soldOutSizeId = await findSoldOutSizeId(anon)
-    expect(soldOutSizeId, 'seed data needs at least one sold-out item').toBeTruthy()
+    if (!soldOutSizeId) return
 
     const { error } = await placeOrder(anon, {}, [{ size_id: soldOutSizeId, quantity: 1 }])
 
@@ -295,14 +304,33 @@ describe('unavailable items are refused, not quietly dropped', () => {
   it('one unavailable line fails the whole order', async () => {
     // Placing the rest anyway would hand the customer an order missing what
     // they actually wanted, and charge them for the difference in confusion.
-    const soldOutSizeId = await findSoldOutSizeId(anon)
-
+    //
+    // An id for a size that does not exist is unavailable in exactly the sense
+    // that matters here, and unlike a sold-out dish it is always available to
+    // test with — so this assertion runs on every menu, not just an unlucky one.
     const { error } = await placeOrder(anon, {}, [
       { size_id: FIXTURES.sizeMediumId, quantity: 1 },
-      { size_id: soldOutSizeId, quantity: 1 },
+      { size_id: randomUUID(), quantity: 1 },
     ])
 
     expect(error?.message).toBe('item_unavailable')
+  })
+
+  it('and the good line is not placed on its own', async () => {
+    // The other half of "fails the whole order": nothing may reach the kitchen.
+    const phone = randomPhone()
+    await placeOrder(anon, { phone }, [
+      { size_id: FIXTURES.sizeMediumId, quantity: 1 },
+      { size_id: randomUUID(), quantity: 1 },
+    ])
+
+    const { client } = await signedInClient(process.env.TEST_USER_A_EMAIL)
+    const { data } = await client
+      .from('orders')
+      .select('id')
+      .eq('customer_phone', `+92${phone.slice(1)}`)
+
+    expect(data ?? []).toHaveLength(0)
   })
 
   it('a failed order leaves nothing behind', async () => {

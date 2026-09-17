@@ -1,3 +1,4 @@
+import Stars from './Stars'
 import { COPY } from '../content/copy'
 import { sizedImage, IMAGE_SIZES } from '../content/images'
 import { formatPrice } from '../lib/format'
@@ -12,7 +13,7 @@ import './MenuCard.css'
  * stretches over the card with a pseudo-element rather than wrapping the
  * heading, which would flatten it out of the page outline.
  */
-export default function MenuCard({ item, onOpen }) {
+export default function MenuCard({ item, rating = null, onOpen }) {
   const t = COPY.menu
   const sizes = item.sizes ?? []
   const soldOut = item.isSoldOut || sizes.length === 0
@@ -50,6 +51,15 @@ export default function MenuCard({ item, onOpen }) {
         </h2>
 
         {item.description && <p className="pcard-desc">{item.description}</p>}
+
+        {/* Only shown once somebody has actually rated it. "No reviews yet" on
+            every card would be seventeen apologies and no information. */}
+        {rating && rating.count > 0 && (
+          <span className="pcard-rating">
+            <Stars value={rating.average} count={rating.count} />
+            <span aria-hidden="true">{COPY.reviews.summary(rating.average, rating.count)}</span>
+          </span>
+        )}
 
         <div className="pcard-foot">
           {from !== null && <span className="price">{t.fromPrice(formatPrice(from))}</span>}

@@ -1,0 +1,149 @@
+/* Cancelling. Deliberately quiet: it sits under a trail that is telling the
+   customer their food is on its way, and it should not compete with that. */
+.cancelorder {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.cancelorder-open {
+  min-height: 40px;
+  padding: 0 14px;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+  text-decoration: underline;
+  border-radius: var(--r);
+}
+.cancelorder-open:hover {
+  color: var(--red);
+  background: var(--red-tint);
+  text-decoration: none;
+}
+
+.cancelorder-note {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+/* The confirmation. Same native <dialog> treatment as the auth modal — focus
+   trapping, an inert background and Escape all come from the platform. */
+.cancelorder-dialog {
+  border: none;
+  padding: 0;
+  background: transparent;
+  max-width: 100%;
+  max-height: 100%;
+  overflow: visible;
+}
+.cancelorder-dialog::backdrop {
+  background: rgba(var(--ink-rgb), 0.5);
+  backdrop-filter: blur(3px);
+  animation: cancelorder-fade 0.2s ease;
+}
+
+.cancelorder-panel {
+  width: min(400px, calc(100vw - 32px));
+  background: var(--card);
+  border-radius: var(--r-lg);
+  box-shadow: 0 20px 60px rgba(var(--ink-rgb), 0.28);
+  padding: 28px 26px 22px;
+  text-align: left;
+  animation: cancelorder-rise 0.24s cubic-bezier(0.2, 0.9, 0.35, 1);
+}
+.cancelorder-panel h2 {
+  font-size: 22px;
+  margin: 0 0 8px;
+}
+
+.cancelorder-body {
+  margin: 0 0 20px;
+  font-size: 15px;
+  color: var(--ink-2);
+}
+
+.cancelorder-error {
+  display: block;
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  border: 1px solid var(--red-line);
+  border-radius: var(--r);
+  background: var(--red-tint);
+  font-size: 14px;
+}
+.cancelorder-error strong {
+  display: block;
+  color: var(--red-dark);
+  margin-bottom: 4px;
+}
+.cancelorder-error a {
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.cancelorder-actions {
+  display: grid;
+  gap: 8px;
+}
+.cancelorder-actions .btn-solid {
+  width: 100%;
+}
+
+/* The destructive answer is a plain text button, not a red one. A red button
+   reads as "press me"; this should read as the thing you have to mean. */
+.cancelorder-confirm {
+  min-height: 44px;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--red);
+  border-radius: var(--r);
+}
+.cancelorder-confirm:hover:not(:disabled) {
+  background: var(--red-tint);
+}
+.cancelorder-confirm:disabled,
+.cancelorder-actions .btn-solid:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@keyframes cancelorder-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes cancelorder-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+}
+
+@media (max-width: 560px) {
+  .cancelorder-dialog {
+    margin: 0;
+    top: auto;
+    bottom: 0;
+    width: 100%;
+  }
+  .cancelorder-panel {
+    width: 100vw;
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
+    padding: 24px 20px calc(22px + env(safe-area-inset-bottom, 0px));
+    animation-name: cancelorder-sheet;
+  }
+}
+
+@keyframes cancelorder-sheet {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cancelorder-dialog::backdrop,
+  .cancelorder-panel {
+    animation: none;
+  }
+}
