@@ -1,0 +1,124 @@
+/* Stock table. Every colour is a token from index.css — see the Part 3 audit:
+   raw literals here would drift from the rest of the site the first time the
+   palette moves. */
+
+.stock-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.stock-head h2 {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 1.15rem;
+  color: var(--ink);
+}
+
+.stock-summary {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--ink-3);
+}
+
+.stock-healthy {
+  margin: 0 0 0.75rem;
+  padding: 0.6rem 0.8rem;
+  font-size: 0.875rem;
+  color: var(--ink-2);
+  background: var(--green-tint);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+}
+
+.stock-empty {
+  color: var(--ink-3);
+}
+
+/* The table is wider than a phone. Scrolling it beats stacking 32 rows into
+   cards nobody can scan. */
+.stock-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--card);
+}
+
+.stock-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.stock-table th,
+.stock-table td {
+  padding: 0.65rem 0.9rem;
+  text-align: left;
+  border-bottom: 1px solid var(--line-2);
+  white-space: nowrap;
+}
+
+.stock-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--sand-1);
+  color: var(--ink-2);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.stock-table tbody th {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.stock-table tbody tr:last-child th,
+.stock-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.stock-table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.stock-table .muted {
+  color: var(--ink-3);
+}
+
+.stock-table tr.is-low {
+  background: var(--gold-tint);
+}
+
+.stock-table tr.is-out {
+  background: var(--red-tint);
+}
+
+.stock-pill {
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.stock-pill.ok {
+  color: var(--green);
+  background: var(--green-tint);
+}
+
+.stock-pill.low {
+  color: var(--gold-deep);
+  background: var(--gold-tint);
+}
+
+.stock-pill.out {
+  color: var(--red-deep);
+  background: var(--red-tint);
+}

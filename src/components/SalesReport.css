@@ -1,0 +1,149 @@
+/* Sales report, shared by both panels. */
+
+.sales {
+  margin-top: 2rem;
+}
+
+.sales-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sales-head h2 {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 1.15rem;
+  color: var(--ink);
+}
+
+.sales-periods {
+  display: inline-flex;
+  padding: 0.15rem;
+  background: var(--sand-1);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+
+.sales-periods button {
+  padding: 0.3rem 0.85rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-3);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.sales-periods button.on {
+  background: var(--card);
+  color: var(--ink);
+  font-weight: 600;
+  box-shadow: var(--shadow);
+}
+
+.sales-window {
+  margin: 0.35rem 0 1rem;
+  font-size: 0.82rem;
+  color: var(--ink-3);
+}
+
+.sales-empty {
+  color: var(--ink-3);
+}
+
+.sales-totals {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0.75rem;
+  margin: 0 0 1rem;
+}
+
+.sales-totals > div {
+  padding: 0.7rem 0.85rem;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+}
+
+.sales-totals > div.warn {
+  background: var(--red-tint);
+}
+
+.sales-totals dt {
+  font-size: 0.75rem;
+  color: var(--ink-3);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.sales-totals dd {
+  margin: 0.2rem 0 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.sales-scroll {
+  overflow-x: auto;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+}
+
+.sales-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.sales-table th,
+.sales-table td {
+  padding: 0.6rem 0.9rem;
+  text-align: left;
+  border-bottom: 1px solid var(--line-2);
+  white-space: nowrap;
+}
+
+.sales-table thead th {
+  background: var(--sand-1);
+  color: var(--ink-2);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.sales-table tbody th {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.sales-table tbody tr:last-child th,
+.sales-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.sales-table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.sales-table .muted {
+  color: var(--ink-3);
+}
+
+.sales-table .warn {
+  color: var(--red-deep);
+  font-weight: 600;
+}
+
+.sales-note {
+  margin: 0.6rem 0 0;
+  font-size: 0.78rem;
+  color: var(--ink-3);
+}

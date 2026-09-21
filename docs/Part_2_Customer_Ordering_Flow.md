@@ -1,7 +1,7 @@
 # Part 2 of 4 — Customer Ordering Flow
 *(Cash on delivery/pickup only — no payment gateway)*
 
-**Goal:** A customer can land on the site, browse the menu, build a cart, check out as a guest or with an account, and pay by cash — end to end. Runs entirely on the free Render + Supabase setup from Part 1.
+**Goal:** A customer can land on the site, browse the menu, build a cart, check out as a guest or with an account, and pay by cash — end to end. Runs entirely on the free Cloudflare + Supabase setup from Part 1.
 
 ## Tasks
 

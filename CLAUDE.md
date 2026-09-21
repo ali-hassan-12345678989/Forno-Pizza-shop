@@ -9,9 +9,9 @@ A single-location pizza shop ordering website — customer ordering, order track
 - **Frontend:** React, set up with Vite
 - **Backend:** No custom server. Supabase provides the database, auth, and Postgres functions (called via `supabase.rpc(...)`) for logic like atomic stock deduction.
 - **Database:** Supabase (free tier for now)
-- **Hosting:** Render **Static Site** (not Web Service) — the built React app is static files, so this avoids cold starts entirely
+- **Hosting:** Cloudflare **Workers static assets** — the built React app is static files, so there are no cold starts. (Render was the original choice; it was dropped because its free tier now requires a credit card.)
 - **Payment:** Cash on delivery/pickup only. No payment gateway in this version.
-- **Domain:** None yet — using the free `*.onrender.com` subdomain during testing
+- **Domain:** None yet — the free `*.workers.dev` subdomain during testing. Live test URL: https://forno-pizza-shop.forno-pizza-dev.workers.dev
 
 ## Build order — follow this sequence, one part at a time
 1. `docs/Part_1_Foundation_Setup.md` — database schema, Supabase Auth, RLS, project scaffolding

@@ -1,0 +1,141 @@
+/* Manager and Admin chrome. Deliberately plainer than the customer site: these
+   are tools used daily by two people, not a shopfront. Every colour is a token
+   from index.css so the panels follow the same palette in one place. */
+
+.staff-gate {
+  display: grid;
+  place-items: center;
+  gap: 0.75rem;
+  min-height: 70vh;
+  padding: 2rem 1rem;
+}
+
+.staff-spinner {
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid var(--line);
+  border-top-color: var(--red);
+  border-radius: 50%;
+  animation: staff-spin 0.7s linear infinite;
+}
+
+@keyframes staff-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .staff-spinner {
+    animation: none;
+  }
+}
+
+.staff-deny {
+  max-width: 26rem;
+  padding: 2rem;
+  text-align: center;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow);
+}
+
+.staff-deny h1 {
+  margin: 0 0 0.5rem;
+  font-family: var(--serif);
+  font-size: 1.25rem;
+  color: var(--ink);
+}
+
+.staff-deny p {
+  margin: 0 0 1.25rem;
+  color: var(--ink-2);
+}
+
+.staff-login {
+  width: min(24rem, 100%);
+}
+
+.staff-login h1 {
+  margin: 0 0 0.25rem;
+  font-family: var(--serif);
+  font-size: 1.35rem;
+  color: var(--ink);
+}
+
+.staff-submit {
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.staff {
+  max-width: 68rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
+
+.staff-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.staff-head h1 {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 1.6rem;
+  color: var(--ink);
+}
+
+.staff-sub {
+  margin: 0.15rem 0 0;
+  color: var(--ink-3);
+  font-size: 0.9rem;
+}
+
+.staff-who {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.staff-email {
+  color: var(--ink-3);
+  font-size: 0.85rem;
+}
+
+.staff-email strong {
+  color: var(--ink-2);
+  font-weight: 600;
+}
+
+.staff-body {
+  padding-top: 1.5rem;
+}
+
+@media (max-width: 34rem) {
+  .staff-head {
+    flex-direction: column;
+  }
+}
+
+/* Admin's read-only inventory section. */
+.admin-inventory {
+  margin-top: 2rem;
+}
+
+.admin-readonly {
+  margin: 0 0 0.6rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.82rem;
+  color: var(--ink-2);
+  background: var(--sand-1);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+}

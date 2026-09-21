@@ -1,6 +1,6 @@
 # Part 4 of 4 — Manager & Admin Panels + Test Deployment
 
-**Goal:** Give the Manager and Admin their own tools, lock down access properly, and get a working test version live on your free `*.onrender.com` URL.
+**Goal:** Give the Manager and Admin their own tools, lock down access properly, and get a working test version live on your free `*.workers.dev` URL.
 
 ## Tasks
 
@@ -27,7 +27,7 @@
 **Test deployment** *(not a real go-live yet — this is the $0 test plan)*
 - [ ] Final cross-browser and mobile QA pass
 - [ ] Real-ish menu content, prices, and recipe/BOM values loaded for testing (doesn't need to be final)
-- [ ] Deploy to the free `*.onrender.com` URL — HTTPS is automatic, no DNS or SSL setup needed at this stage
+- [x] Deploy to the free `*.workers.dev` URL — HTTPS is automatic, no DNS or SSL setup needed at this stage. Done: https://forno-pizza-shop.forno-pizza-dev.workers.dev
 - [ ] Smoke test: one full test order end-to-end on the live test URL, checked by both Manager and Admin views
 
 ## Reference (from the PRD)
@@ -41,7 +41,7 @@ Parts 1–3 (the inventory engine and order data must already exist for these pa
 - A low-stock alert is actually visible on screen to the Manager (and/or Admin), not just sitting in the database
 - Admin can edit the menu and see order/sales reports, but cannot touch stock
 - Both panels are behind separate logins with backend-enforced permissions
-- A full test order completes successfully on the live `*.onrender.com` test URL
+- A full test order completes successfully on the live `*.workers.dev` test URL
 
 ## Engineering Standards (apply throughout this part)
 - **Test each task as you build it** — test Manager's add-stock flow before starting Admin's menu editor; test Admin's menu editor before starting reports; test role-blocking as soon as both logins exist, not just at the end.
@@ -51,7 +51,7 @@ Parts 1–3 (the inventory engine and order data must already exist for these pa
 - **Keep it simple:** two single-user panels don't need a full permissions system with granular roles — a simple "is this the Manager / is this the Admin" check is enough for this scale. Don't build for staff accounts that don't exist yet.
 
 ## Realistic time estimate
-**Medium — 4 to 6 days.** Lighter than a real go-live would be, since there's no domain, DNS, or SSL setup to do — Render's free subdomain handles HTTPS automatically. Most of the time here goes to the two panels' screens and making sure role permissions are actually enforced, not just hidden.
+**Medium — 4 to 6 days.** Lighter than a real go-live would be, since there's no domain, DNS, or SSL setup to do — Cloudflare's free subdomain handles HTTPS automatically. Most of the time here goes to the two panels' screens and making sure role permissions are actually enforced, not just hidden.
 
 ## When you're ready to go live for real
-This test deployment doesn't need to be rebuilt — just upgraded: buy the domain and point it at your Render Static Site (still free, or a small paid plan only if bandwidth needs grow), and load the client's real menu/recipe data in place of test data.
+This test deployment doesn't need to be rebuilt — just upgraded: buy the domain and point it at your Cloudflare Worker (still free, or a small paid plan only if bandwidth needs grow), and load the client's real menu/recipe data in place of test data.

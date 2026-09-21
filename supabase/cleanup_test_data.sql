@@ -41,7 +41,9 @@ where customer_name in (
   'Lookup Probe', 'Recipe Check', 'Stock Check', 'Stock Probe',
   'Atomicity Check', 'Diag Probe', 'Topping Check', 'Flag Probe',
   'Race Probe', 'Alert Check', 'Sold Out Check',
-  'Review Probe', 'Review Check', 'Sold Out Probe'
+  'Review Probe', 'Review Check', 'Sold Out Probe',
+  -- Part 4. Browser and API probes used while building the staff panels.
+  'Final QA', 'Live Smoke Test', 'Fix Probe', 'Seq Probe', 'Smoke Test'
 );
 
 -- ---------------------------------------------------------------------------
@@ -93,3 +95,30 @@ select
   end as flag
 from public.ingredients i
 order by i.stock_quantity / nullif(i.low_stock_threshold, 0) nulls first, i.name;
+
+-- ---------------------------------------------------------------------------
+-- WHAT THIS FILE COULD NOT IDENTIFY
+--
+-- The name list above is maintained by hand, so it will always lag behind
+-- whatever was typed into a browser last week. Anything still sitting open is
+-- holding real stock, so rather than guess, this reports it and leaves the
+-- decision to a person. Nothing below deletes anything.
+--
+-- To clear one, copy its access_token and run:
+--   select public.cancel_order('<token>');
+-- which unwinds it through the real refund path rather than deleting the row
+-- out from under the stock it took.
+-- ---------------------------------------------------------------------------
+
+select
+  o.order_number,
+  o.customer_name,
+  o.status,
+  o.fulfillment_type,
+  o.created_at::date                  as placed_on,
+  (current_date - o.created_at::date) as days_old,
+  o.stock_deducted,
+  o.access_token
+from public.orders o
+where public.order_is_active(o.status, o.fulfillment_type)
+order by o.created_at;

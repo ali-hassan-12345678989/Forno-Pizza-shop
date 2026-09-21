@@ -1,0 +1,210 @@
+/* Admin menu editor. Dense on purpose: this is a tool, not a shopfront. */
+
+.amenu {
+  margin-top: 2rem;
+}
+
+.amenu-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.9rem;
+}
+
+.amenu-head h2 {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 1.15rem;
+  color: var(--ink);
+}
+
+.amenu-count,
+.amenu-empty {
+  margin: 0.15rem 0 0;
+  font-size: 0.85rem;
+  color: var(--ink-3);
+}
+
+.amenu-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  background: var(--card);
+}
+
+.amenu-item + .amenu-item {
+  border-top: 1px solid var(--line-2);
+}
+
+.amenu-item.hidden-item .amenu-id strong {
+  color: var(--ink-3);
+}
+
+.amenu-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 0.9rem;
+  align-items: center;
+  padding: 0.7rem 0.9rem;
+}
+
+.amenu-id {
+  flex: 1 1 12rem;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.amenu-id strong {
+  color: var(--ink);
+  font-size: 0.95rem;
+}
+
+.amenu-meta {
+  font-size: 0.78rem;
+  color: var(--ink-3);
+}
+
+.amenu-flags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.amenu-pill {
+  padding: 0.12rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.amenu-pill.live {
+  color: var(--green);
+  background: var(--green-tint);
+}
+
+.amenu-pill.hidden {
+  color: var(--ink-3);
+  background: var(--sand-2);
+}
+
+.amenu-pill.sold {
+  color: var(--gold-deep);
+  background: var(--gold-tint);
+}
+
+.amenu-pill.auto {
+  color: var(--red-deep);
+  background: var(--red-tint);
+}
+
+.amenu-edit {
+  padding: 0.25rem 0.9rem 1rem;
+  border-top: 1px dashed var(--line-2);
+  background: var(--sand-1);
+}
+
+.amenu-edit .field {
+  margin-top: 0.7rem;
+}
+
+.amenu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  gap: 0 0.75rem;
+}
+
+.amenu-check {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 0.7rem;
+  font-size: 0.875rem;
+  color: var(--ink-2);
+}
+
+.amenu-auto {
+  margin: 0.7rem 0 0;
+  padding: 0.6rem 0.8rem;
+  font-size: 0.82rem;
+  color: var(--ink-2);
+  background: var(--red-tint);
+  border-radius: var(--r);
+}
+
+.amenu-sizes {
+  margin-top: 1.1rem;
+}
+
+.amenu-sizes h4 {
+  margin: 0 0 0.4rem;
+  font-size: 0.8rem;
+  color: var(--ink-2);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.amenu-nosizes {
+  margin: 0 0 0.5rem;
+  font-size: 0.82rem;
+  color: var(--red-deep);
+}
+
+.amenu-sizes ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.amenu-size {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+  padding: 0.35rem 0;
+}
+
+.amenu-size input {
+  flex: 1 1 6rem;
+  min-width: 0;
+  padding: 0.35rem 0.5rem;
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--ink);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+}
+
+.amenu-size-note {
+  font-size: 0.75rem;
+  color: var(--ink-3);
+}
+
+.amenu-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.amenu-note {
+  font-size: 0.75rem;
+  color: var(--ink-3);
+}
+
+.btn-ghost.danger {
+  color: var(--red-deep);
+}
+
+.btn-ghost.danger:disabled {
+  color: var(--inert);
+}

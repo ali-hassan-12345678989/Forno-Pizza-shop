@@ -7,6 +7,14 @@ export const ROUTES = {
   orders: '/orders',
   track: '/track',
   trackOrder: '/track/:token',
+
+  // Staff. Deliberately unlinked from anywhere in the customer UI - staff type
+  // the address. Hiding them is not the protection; the database is. See
+  // StaffGate, and the RLS on every table these pages read.
+  staffLogin: '/staff',
+  manager: '/manager',
+  admin: '/admin',
+
   notFound: '*',
 }
 
