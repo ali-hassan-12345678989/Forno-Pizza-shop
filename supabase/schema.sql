@@ -49,6 +49,18 @@ create table if not exists public.recipes (
 
 create sequence if not exists public.order_number_seq start 1000;
 
+-- Pads an order number up to 4 characters but never truncates one that is
+-- already longer. lpad() alone would truncate: lpad('10160', 4, '0') -> '1016',
+-- which re-issues a number handed out earlier and breaks the unique index.
+create or replace function public.next_order_number()
+returns text
+language sql
+volatile
+as $$
+  select case when n < 10000 then lpad(n::text, 4, '0') else n::text end
+  from (select nextval('public.order_number_seq') as n) s;
+$$;
+
 -- Orders are created only through public.place_order() (supabase/place_order.sql),
 -- which prices them from the database. Clients have no INSERT privilege here.
 -- Guests have no SELECT policy either — place_order() hands back the access
@@ -57,7 +69,7 @@ create table if not exists public.orders (
   id               uuid primary key default gen_random_uuid(),
   -- Short, human-readable reference shown to the customer. Guessable by design,
   -- so it is never the thing that authorises access.
-  order_number     text        not null unique default lpad(nextval('public.order_number_seq')::text, 4, '0'),
+  order_number     text        not null unique default public.next_order_number(),
   -- The actual secret, and the only credential a guest needs to read their order.
   access_token     uuid        not null unique default gen_random_uuid(),
   user_id          uuid        references auth.users(id) on delete set null,
@@ -308,6 +320,8 @@ grant select on public.menu_item_sizes to anon, authenticated;
 revoke insert  on public.orders      from anon, authenticated;
 revoke insert  on public.order_items from anon, authenticated;
 revoke usage   on sequence public.order_number_seq from anon, authenticated;
+revoke execute on function public.next_order_number() from public;
+revoke execute on function public.next_order_number() from anon, authenticated;
 
 grant  select  on public.orders      to authenticated;
 grant  select  on public.order_items to authenticated;
