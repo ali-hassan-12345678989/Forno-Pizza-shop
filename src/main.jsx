@@ -5,6 +5,7 @@ import { SettingsProvider } from './context/SettingsContext'
 import { OrderProvider } from './context/OrderContext'
 import { CartProvider } from './context/CartContext'
 import { AuthProvider } from './context/AuthContext'
+import { StaffProvider } from './context/StaffContext'
 import SettingsGate from './components/SettingsGate'
 import './index.css'
 import App from './App.jsx'
@@ -15,11 +16,13 @@ createRoot(document.getElementById('root')).render(
       <SettingsProvider>
         <SettingsGate>
           <AuthProvider>
-            <OrderProvider>
-              <CartProvider>
-                <App />
-              </CartProvider>
-            </OrderProvider>
+            <StaffProvider>
+              <OrderProvider>
+                <CartProvider>
+                  <App />
+                </CartProvider>
+              </OrderProvider>
+            </StaffProvider>
           </AuthProvider>
         </SettingsGate>
       </SettingsProvider>

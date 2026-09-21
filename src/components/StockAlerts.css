@@ -1,0 +1,104 @@
+/* Low-stock alerts. Sits at the top of the Manager panel — it is the thing
+   most likely to need acting on today. */
+
+.alerts {
+  margin-bottom: 1.75rem;
+}
+
+.alerts h2 {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 1.15rem;
+  color: var(--ink);
+}
+
+.alerts-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.alerts-count {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--red-deep);
+}
+
+.alerts-clear {
+  padding: 0.9rem 1rem;
+  background: var(--green-tint);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+}
+
+.alerts-clear p {
+  margin: 0.25rem 0 0;
+  color: var(--ink-2);
+  font-size: 0.9rem;
+}
+
+.alerts-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.alert {
+  padding: 0.8rem 0.9rem;
+  background: var(--gold-tint);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--gold-deep);
+  border-radius: var(--r);
+}
+
+.alert.out {
+  background: var(--red-tint);
+  border-left-color: var(--red);
+}
+
+.alert-main {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.alert-name {
+  color: var(--ink);
+  font-size: 0.95rem;
+}
+
+.alert-badge {
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: var(--red);
+  color: var(--on-ink);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.alert-levels,
+.alert-when,
+.alert-stale {
+  margin: 0.3rem 0 0;
+  font-size: 0.82rem;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.alert-when {
+  color: var(--ink-3);
+}
+
+.alert-stale {
+  color: var(--red-deep);
+  font-weight: 600;
+}

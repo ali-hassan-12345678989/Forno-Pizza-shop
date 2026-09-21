@@ -529,4 +529,276 @@ export const COPY = {
     notFoundTitle: 'Page not found',
     notFoundBody: 'That page does not exist.',
   },
+
+  /** Manager and Admin. Never linked from the customer UI. */
+  staff: {
+    loginTitle: 'Staff sign in',
+    loginSub: 'Manager and Admin accounts only. Customer accounts cannot sign in here.',
+    documentTitle: 'Staff sign in',
+
+    email: 'Work email',
+    emailPlaceholder: 'you@forno.pk',
+    password: 'Password',
+    passwordPlaceholder: '••••••••',
+    submit: 'Sign in',
+    busy: 'Checking…',
+    signOut: 'Sign out',
+    signedInAs: 'Signed in as',
+
+    checking: 'Checking your access…',
+
+    /** Shown to a visitor with no session at all. */
+    needsSignIn: 'Sign in to continue.',
+
+    /**
+     * Shown to someone signed in who is not staff, and to staff who opened the
+     * other panel. Deliberately the same wording for both: telling a customer
+     * that a Manager panel exists at this address, and that they merely have
+     * the wrong role, is more than they need to know.
+     */
+    notAuthorisedTitle: 'Not available on this account',
+    notAuthorisedBody: 'This account does not have access here.',
+    backToShop: 'Back to the shop',
+
+    managerTitle: 'Manager',
+    managerSub: 'Stock, low-stock alerts and sales.',
+    managerDocumentTitle: 'Manager · Forno',
+
+    adminTitle: 'Admin',
+    adminSub: 'Menu, orders and sales reports.',
+    adminDocumentTitle: 'Admin · Forno',
+
+    errors: {
+      emailRequired: 'Enter your email',
+      emailInvalid: 'That email does not look right',
+      passwordRequired: 'Enter your password',
+      signInFailed: 'That email and password did not match.',
+    },
+
+    /** FR-6.3 / FR-7.5 — current stock levels. */
+    stock: {
+      title: 'Stock levels',
+      subtitle: 'Every ingredient, most urgent first.',
+
+      colIngredient: 'Ingredient',
+      colStock: 'In stock',
+      colThreshold: 'Low at',
+      colStatus: 'Status',
+
+      statusOut: 'Out of stock',
+      statusLow: 'Running low',
+      statusOk: 'In stock',
+
+      summary: (total, low, out) =>
+        `${total} ingredient${total === 1 ? '' : 's'} · ${low} running low · ${out} out of stock`,
+      allHealthy: 'Everything is above its low-stock threshold.',
+
+      loading: 'Loading stock levels…',
+      empty: 'No ingredients yet.',
+      retry: 'Try again',
+
+      errors: {
+        not_staff: 'This account cannot view stock levels.',
+        unknown: 'Could not load stock levels. Check your connection and try again.',
+      },
+    },
+
+    /** FR-6.2 — booking in a delivery. Manager only. */
+    receive: {
+      title: 'Book in a delivery',
+      subtitle: 'Adds to what is already in stock — it does not replace it.',
+
+      ingredient: 'Ingredient',
+      ingredientPlaceholder: 'Choose an ingredient',
+      quantity: 'Quantity received',
+      quantityHint: (unit) => `In ${unit}`,
+      quantityHintNone: 'Choose an ingredient first',
+
+      submit: 'Add to stock',
+      busy: 'Adding…',
+
+      success: (quantity, name, total) => `Added ${quantity} to ${name}. Now ${total}.`,
+
+      errors: {
+        ingredientRequired: 'Choose an ingredient',
+        quantityRequired: 'Enter how much arrived',
+        invalid_quantity: 'Enter a quantity greater than zero',
+        quantity_too_large: 'That is larger than a single delivery can be',
+        ingredient_not_found: 'That ingredient no longer exists',
+        not_manager: 'Only the Manager can add stock.',
+        not_staff: 'Only the Manager can add stock.',
+        unknown: 'Could not add the stock. Check your connection and try again.',
+      },
+    },
+
+    /** FR-5.4 — low-stock alerts, where they finally get seen. */
+    alerts: {
+      title: 'Low stock',
+      none: 'Nothing is below its threshold right now.',
+      count: (n) => `${n} ingredient${n === 1 ? '' : 's'} need${n === 1 ? 's' : ''} reordering`,
+
+      triggered: (when) => `Flagged ${when}`,
+      nowAt: (current, threshold) => `Now ${current} · flags at ${threshold}`,
+      outNow: 'Out of stock',
+
+      /** Shown only if an open alert somehow sits on a healthy ingredient. */
+      staleWarning: 'This ingredient is back above its threshold — refresh the page.',
+
+      loading: 'Loading alerts…',
+
+      errors: {
+        not_staff: 'This account cannot view stock alerts.',
+        unknown: 'Could not load alerts. Check your connection and try again.',
+      },
+    },
+
+    /** FR-6.4 / FR-7.4 — sales reports. */
+    sales: {
+      title: 'Sales',
+      periodLabel: 'Group by',
+      periods: {
+        day: 'Daily',
+        month: 'Monthly',
+        year: 'Yearly',
+      },
+
+      window: {
+        day: 'Last 30 days with orders',
+        month: 'Last 12 months with orders',
+        year: 'Last 5 years with orders',
+      },
+
+      colPeriod: 'Period',
+      colOrders: 'Orders',
+      colRevenue: 'Revenue',
+      colGoods: 'Goods',
+      colCancelled: 'Cancelled',
+
+      totalOrders: 'Orders',
+      totalRevenue: 'Revenue',
+      totalGoods: 'Goods revenue',
+      totalCancelled: 'Cancelled',
+
+      goodsNote:
+        'Goods revenue excludes delivery fees — it is the figure that matches ingredients used.',
+      timeZoneNote: (zone) => `Days start and end in ${zone.replace('_', ' ')}.`,
+
+      empty: 'No orders yet.',
+      loading: 'Loading sales…',
+      retry: 'Try again',
+
+      errors: {
+        not_staff: 'This account cannot view sales reports.',
+        invalid_period: 'That grouping is not available.',
+        invalid_limit: 'That is too much history to ask for at once.',
+        unknown: 'Could not load sales. Check your connection and try again.',
+      },
+    },
+
+    /** FR-7.2 — the Admin manages the menu. */
+    menu: {
+      title: 'Menu',
+      countLabel: (total, hidden) =>
+        `${total} item${total === 1 ? '' : 's'}${hidden > 0 ? ` · ${hidden} hidden from customers` : ''}`,
+
+      addItem: 'Add an item',
+      newItem: 'New item',
+      edit: 'Edit',
+      done: 'Done',
+      save: 'Save',
+      saving: 'Saving…',
+      cancel: 'Cancel',
+      remove: 'Remove',
+      removing: 'Removing…',
+
+      fieldName: 'Name',
+      fieldDescription: 'Description',
+      fieldImage: 'Image URL',
+      fieldCategory: 'Category',
+      fieldBadge: 'Badge',
+      fieldSortOrder: 'Sort order',
+      fieldActive: 'Show on the customer menu',
+      fieldSoldOut: 'Mark sold out by hand',
+
+      /** The engine's flag, shown but never editable here. */
+      autoSoldOut: 'Sold out automatically — an ingredient it needs is at zero',
+      autoSoldOutNote:
+        'This is set by the inventory engine, not here. Book in the missing ingredient to clear it.',
+
+      statusHidden: 'Hidden',
+      statusSoldOut: 'Sold out',
+      statusOutOfStock: 'No ingredients',
+      statusLive: 'Live',
+
+      sizes: 'Sizes and prices',
+      addSize: 'Add a size',
+      fieldSize: 'Size',
+      fieldPrice: 'Price',
+      fieldServes: 'Serves',
+      noSizes: 'No sizes yet — a customer cannot order this until it has one.',
+      newItemHidden:
+        'New items start hidden. Add the sizes, then tick "Show on the customer menu".',
+
+      orderedTimes: (n) => `Ordered ${n} time${n === 1 ? '' : 's'}`,
+      cannotDelete: 'Ordered before, so it can only be hidden — order history depends on it.',
+      confirmRemove: (name) => `Remove ${name}? This cannot be undone.`,
+
+      loading: 'Loading the menu…',
+      empty: 'No menu items yet.',
+      retry: 'Try again',
+
+      errors: {
+        not_admin: 'Only the Admin can edit the menu.',
+        name_required: 'Give the item a name',
+        name_too_long: 'That name is too long',
+        description_too_long: 'That description is too long',
+        category_too_long: 'That category is too long',
+        badge_too_long: 'That badge is too long',
+        item_not_found: 'That item no longer exists',
+        item_has_orders: 'This item has been ordered, so it cannot be deleted. Hide it instead.',
+        item_required: 'Choose an item first',
+        size_required: 'Give the size a name',
+        size_too_long: 'That size name is too long',
+        size_not_found: 'That size no longer exists',
+        size_has_orders: 'This size has been ordered, so it cannot be deleted.',
+        size_already_exists: 'That size already exists on this item',
+        invalid_price: 'Enter a price of zero or more',
+        price_too_large: 'That price is too large',
+        unknown: 'Something went wrong. Check your connection and try again.',
+      },
+    },
+
+    /** FR-7.3 — how busy the shop is right now. */
+    active: {
+      title: 'Open orders',
+      none: 'Nothing in progress right now.',
+      total: (n) => `${n} order${n === 1 ? '' : 's'} in progress`,
+
+      colStatus: 'Stage',
+      colType: 'Type',
+
+      /* The staff panel's own words. Deliberately not reused from the home
+         page hero - editing marketing copy should not relabel an ops table. */
+      types: {
+        delivery: 'Delivery',
+        pickup: 'Pickup',
+      },
+
+      colCount: 'Orders',
+      colOldest: 'Waiting since',
+
+      loading: 'Loading open orders…',
+      retry: 'Try again',
+
+      errors: {
+        not_staff: 'This account cannot view open orders.',
+        unknown: 'Could not load open orders. Check your connection and try again.',
+      },
+    },
+
+    /** FR-7.5 — the Admin sees inventory but cannot touch it. */
+    inventory: {
+      readOnlyNote: 'Read-only. Stock is added by the Manager.',
+    },
+  },
 }

@@ -28,3 +28,41 @@ export function formatDateTime(value) {
   const day = date.toLocaleDateString('en-PK', { day: 'numeric', month: 'short' })
   return `${day}, ${formatTime(value)}`
 }
+
+/**
+ * A stock reading with its unit, e.g. "40,000 g" or "12.5 kg".
+ *
+ * Quantities are numeric(12,3) in Postgres, so whole numbers arrive as "40000"
+ * and fractions matter. Trailing zeros are dropped because "1.500 kg" reads
+ * like a precision the shop does not actually measure to.
+ */
+export function formatQuantity(amount, unit) {
+  const n = Number(amount)
+  if (!Number.isFinite(n)) return '—'
+  const rounded = Math.round(n * 1000) / 1000
+  return `${rounded.toLocaleString('en-PK')} ${unit}`
+}
+
+/**
+ * A report bucket's label: "21 Sep 2026", "September 2026" or "2026".
+ *
+ * sales_report() hands back a plain calendar date already cut in the shop's
+ * time zone. It is split by hand rather than passed to new Date(), because
+ * new Date('2026-09-21') is parsed as UTC midnight and would render as the
+ * 20th for any reader west of Greenwich - relabelling a day the database was
+ * perfectly clear about.
+ */
+export function formatPeriod(isoDate, period) {
+  if (!isoDate) return '—'
+  const [y, m, d] = String(isoDate).split('-').map(Number)
+  if (!y) return String(isoDate)
+
+  if (period === 'year') return String(y)
+
+  const month = new Date(Date.UTC(y, (m || 1) - 1, 1)).toLocaleDateString('en-GB', {
+    month: period === 'month' ? 'long' : 'short',
+    timeZone: 'UTC',
+  })
+
+  return period === 'month' ? `${month} ${y}` : `${d} ${month} ${y}`
+}

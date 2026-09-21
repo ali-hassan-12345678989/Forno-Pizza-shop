@@ -34,7 +34,14 @@ export async function signedInClient(email) {
   if (error) {
     const created = await client.auth.signUp({ email, password })
     if (created.error) {
-      throw new Error(`Could not sign in or create ${email}: ${created.error.message}`)
+      // "User already registered" here means sign-in failed for some reason
+      // OTHER than the account not existing - almost always Supabase's auth
+      // rate limit. Reporting only the signUp error sends you hunting for a
+      // missing account that is right there, so carry both.
+      throw new Error(
+        `Could not sign in as ${email}. Sign-in said: ${error.message}. ` +
+          `Sign-up then said: ${created.error.message}.`,
+      )
     }
     if (!created.data.session) {
       throw new Error(
@@ -46,6 +53,58 @@ export async function signedInClient(email) {
   }
 
   return { client, userId: data.user.id }
+}
+
+/**
+ * The two staff accounts. Their addresses live in .env; their ROLES are
+ * granted by supabase/seed_staff.sql, which has to name the same addresses.
+ * Nothing in the test suite can grant a role itself - that is the point of
+ * the staff table being unreachable from any client.
+ */
+/**
+ * Read lazily, NOT captured at import time. tests/setup.js imports this module
+ * before it calls dotenv.config(), and ES imports are hoisted above statements,
+ * so anything read at the top level here sees an empty process.env. (The VITE_*
+ * pair above survive only because Vite loads those itself.)
+ */
+export const STAFF = {
+  get managerEmail() {
+    return process.env.TEST_MANAGER_EMAIL
+  },
+  get adminEmail() {
+    return process.env.TEST_ADMIN_EMAIL
+  },
+}
+
+/** False when .env has no staff addresses yet, so those tests can say why they skipped. */
+export function staffConfigured() {
+  return Boolean(STAFF.managerEmail && STAFF.adminEmail)
+}
+
+/**
+ * One session per staff account, reused.
+ *
+ * Supabase rate-limits authentication, and signing in once per `it()` was
+ * enough to trip it: sign-in then fails, signedInClient falls back to signUp,
+ * and the suite reports "User already registered" for accounts that exist. The
+ * accounts are fixed and read-only here, so a shared session is both correct
+ * and a great deal kinder to the auth endpoint.
+ */
+const staffSessions = new Map()
+
+function cachedStaffClient(email) {
+  if (!email)
+    throw new Error('No staff email configured - see TEST_MANAGER_EMAIL / TEST_ADMIN_EMAIL')
+  if (!staffSessions.has(email)) staffSessions.set(email, signedInClient(email))
+  return staffSessions.get(email)
+}
+
+export function managerClient() {
+  return cachedStaffClient(STAFF.managerEmail)
+}
+
+export function adminClient() {
+  return cachedStaffClient(STAFF.adminEmail)
 }
 
 /**
