@@ -1,28 +1,29 @@
-/* Admin menu editor. Dense on purpose: this is a tool, not a shopfront. */
+/* The Admin's menu: an index to scan, and one item to edit.
+   Every colour is a token from index.css — a literal here would drift from the
+   rest of the site the first time the palette moves. */
 
-.amenu {
-  margin-top: 2rem;
-}
+/* ===========================================================================
+   The index
+   =========================================================================== */
 
-.amenu-head {
+.amenu-controls {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem 1rem;
   align-items: center;
-  justify-content: space-between;
+  gap: 0.6rem 0.75rem;
   margin-bottom: 0.9rem;
 }
 
-.amenu-head h2 {
-  margin: 0;
-  font-family: var(--serif);
-  font-size: 1.15rem;
-  color: var(--ink);
+.amenu-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  flex: none;
 }
 
-.amenu-count,
-.amenu-empty {
-  margin: 0.15rem 0 0;
+.amenu-empty,
+.amenu-showing {
+  margin: 0.6rem 0 0;
   font-size: 0.85rem;
   color: var(--ink-3);
 }
@@ -37,32 +38,53 @@
   background: var(--card);
 }
 
-.amenu-item + .amenu-item {
+.amenu-list li + li {
   border-top: 1px solid var(--line-2);
 }
 
-.amenu-item.hidden-item .amenu-id strong {
-  color: var(--ink-3);
+/* The whole row is the link: a row is an easier target than a word, and the
+   accessible name is set on the link so it reads as "Edit Chicken Tikka". */
+.amenu-row {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) auto auto auto;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.6rem 0.8rem;
+  text-decoration: none;
+  color: var(--ink);
 }
 
-.amenu-row {
+.amenu-row:hover {
+  background: var(--wash-1);
+}
+
+.amenu-thumb {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem 0.9rem;
   align-items: center;
-  padding: 0.7rem 0.9rem;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  flex: none;
+  overflow: hidden;
+  border-radius: var(--r);
+  background: linear-gradient(135deg, var(--sand-1), var(--sand-3));
+}
+
+.amenu-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .amenu-id {
-  flex: 1 1 12rem;
-  min-width: 0;
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .amenu-id strong {
-  color: var(--ink);
   font-size: 0.95rem;
+  color: var(--ink);
 }
 
 .amenu-meta {
@@ -70,12 +92,18 @@
   color: var(--ink-3);
 }
 
-.amenu-flags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
+.amenu-price {
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
+.amenu-chev {
+  color: var(--ink-3);
+}
+
+/* Status. One pill, not four: an item is in exactly one of these states. */
 .amenu-pill {
   padding: 0.12rem 0.5rem;
   border-radius: 999px;
@@ -83,6 +111,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 
 .amenu-pill.live {
@@ -95,116 +124,459 @@
   background: var(--sand-2);
 }
 
-.amenu-pill.sold {
+.amenu-pill.soldOut {
   color: var(--gold-deep);
   background: var(--gold-tint);
 }
 
-.amenu-pill.auto {
+.amenu-pill.outOfStock {
   color: var(--red-deep);
   background: var(--red-tint);
 }
 
-.amenu-edit {
-  padding: 0.25rem 0.9rem 1rem;
-  border-top: 1px dashed var(--line-2);
-  background: var(--sand-1);
+/* Four columns do not fit a phone. The pill drops to a second row and the
+   chevron goes — the whole row is the target anyway. */
+@media (max-width: 34rem) {
+  .amenu-row {
+    grid-template-columns: 40px minmax(0, 1fr) auto;
+    gap: 0.3rem 0.7rem;
+  }
+
+  .amenu-thumb {
+    width: 40px;
+    height: 40px;
+    grid-row: span 2;
+  }
+
+  .amenu-price {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .amenu-pill {
+    grid-column: 2 / -1;
+    grid-row: 2;
+    justify-self: start;
+  }
+
+  .amenu-chev {
+    display: none;
+  }
 }
 
-.amenu-edit .field {
-  margin-top: 0.7rem;
-}
+/* ===========================================================================
+   The editor
+   =========================================================================== */
 
-.amenu-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
-  gap: 0 0.75rem;
-}
-
-.amenu-check {
+.medit-top {
   display: flex;
-  gap: 0.5rem;
+  flex-wrap: wrap;
   align-items: center;
-  margin-top: 0.7rem;
+  gap: 0.5rem 0.9rem;
+  margin-bottom: 0.4rem;
+}
+
+.medit-top h1 {
+  flex: 1 1 auto;
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 1.5rem;
+  color: var(--ink);
+}
+
+.medit-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.4rem 0.5rem 0.4rem 0;
+  border: 0;
+  background: none;
+  font: inherit;
   font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.medit-back:hover {
+  color: var(--red-dark);
+}
+
+.medit-note,
+.medit-sub {
+  margin: 0 0 0.9rem;
+  font-size: 0.85rem;
   color: var(--ink-2);
 }
 
-.amenu-auto {
-  margin: 0.7rem 0 0;
-  padding: 0.6rem 0.8rem;
-  font-size: 0.82rem;
+.medit-missing {
+  padding: 2rem 0;
   color: var(--ink-2);
+}
+
+.medit-missing p {
+  margin: 0 0 0.9rem;
+}
+
+.medit-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 21rem);
+  gap: 1.1rem;
+  align-items: start;
+  margin-top: 1rem;
+}
+
+.medit-stack {
+  display: grid;
+  gap: 1.1rem;
+  min-width: 0;
+}
+
+.medit-card {
+  padding: 1.1rem;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+}
+
+.medit-card h2 {
+  margin: 0 0 0.9rem;
+  font-family: var(--serif);
+  font-size: 1.05rem;
+  color: var(--ink);
+}
+
+.medit-card h2 + .medit-sub {
+  margin-top: -0.6rem;
+}
+
+.medit-card .field:last-child {
+  margin-bottom: 0;
+}
+
+/* The description gets the same width as everything else. It was a third of it,
+   which is what made the old form look broken. */
+.medit-area {
+  display: block;
+  width: 100%;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  background: var(--card);
+  font: inherit;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--ink);
+  resize: vertical;
+}
+
+.medit-area:focus-visible {
+  outline: none;
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px rgba(var(--ink-rgb), 0.07);
+}
+
+.medit-select {
+  flex: 1;
+  min-width: 0;
+  height: 48px;
+  padding: 0 0.85rem;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 1rem;
+  color: var(--ink);
+}
+
+.medit-select:focus-visible {
+  outline: none;
+}
+
+/* A label for a group of controls rather than one input, so it is not a
+   <label> and does not get .field label's flex row. */
+.medit-label {
+  display: block;
+  margin-bottom: 0.45rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+/* ---- preview -------------------------------------------------------------- */
+
+.medit-preview {
+  margin-bottom: 0.5rem;
+}
+
+/* The real MenuCard, at sidebar width. Its hover states say "open me", which
+   inert has already ruled out. */
+.medit-preview .pcard:hover {
+  box-shadow: none;
+}
+
+.medit-preview .pcard:hover .pcard-pic img {
+  transform: none;
+}
+
+/* ---- availability --------------------------------------------------------- */
+
+.medit-choices {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.medit-choice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  background: var(--card);
+  cursor: pointer;
+}
+
+.medit-choice:hover {
+  background: var(--wash-1);
+}
+
+.medit-choice.on {
+  border-color: var(--red);
   background: var(--red-tint);
+}
+
+.medit-choice input {
+  margin: 0.2rem 0 0;
+  flex: none;
+  accent-color: var(--red);
+}
+
+.medit-choice b {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.medit-choice small {
+  display: block;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--ink-2);
+}
+
+.medit-auto {
+  margin: 0.8rem 0 0;
+  padding: 0.65rem 0.8rem;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--gold-deep);
+  background: var(--gold-tint);
   border-radius: var(--r);
 }
 
-.amenu-sizes {
-  margin-top: 1.1rem;
+.medit-auto b {
+  display: block;
+  margin-bottom: 0.1rem;
 }
 
-.amenu-sizes h4 {
-  margin: 0 0 0.4rem;
+/* ---- position ------------------------------------------------------------- */
+
+.medit-move {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.medit-arrow {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  background: var(--card);
+  font: inherit;
+  font-size: 0.95rem;
+  line-height: 1;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.medit-arrow:hover:not(:disabled) {
+  background: var(--wash-3);
+  color: var(--ink);
+}
+
+.medit-arrow:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.medit-place {
+  margin-left: 0.2rem;
   font-size: 0.8rem;
   color: var(--ink-2);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
+  font-variant-numeric: tabular-nums;
 }
 
-.amenu-nosizes {
-  margin: 0 0 0.5rem;
-  font-size: 0.82rem;
+/* ---- sizes ---------------------------------------------------------------- */
+
+.medit-nosizes {
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
   color: var(--red-deep);
 }
 
-.amenu-sizes ul {
-  margin: 0;
-  padding: 0;
-  list-style: none;
+.msize-scroll {
+  overflow-x: auto;
 }
 
-.amenu-size {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  align-items: center;
-  padding: 0.35rem 0;
+.msize {
+  width: 100%;
+  min-width: 26rem;
+  border-collapse: collapse;
 }
 
-.amenu-size input {
-  flex: 1 1 6rem;
+.msize th {
+  padding: 0 0.5rem 0.4rem 0;
+  text-align: left;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.msize td {
+  padding: 0.2rem 0.5rem 0.2rem 0;
+  vertical-align: middle;
+}
+
+.msize th:last-child,
+.msize td:last-child {
+  padding-right: 0;
+  text-align: right;
+  width: 1%;
+}
+
+.msize-in,
+.msize-money input {
+  width: 100%;
   min-width: 0;
-  padding: 0.35rem 0.5rem;
-  font: inherit;
-  font-size: 0.85rem;
-  color: var(--ink);
+  height: 38px;
+  padding: 0 0.6rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
   background: var(--card);
+  font: inherit;
+  font-size: 0.875rem;
+  color: var(--ink);
+}
+
+.msize-in:focus-visible,
+.msize-money input:focus-visible {
+  outline: none;
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px rgba(var(--ink-rgb), 0.07);
+}
+
+/* The currency lives inside the control, so a price reads as a price. */
+.msize-money {
+  display: flex;
+  align-items: stretch;
+}
+
+.msize-pre {
+  display: flex;
+  align-items: center;
+  padding: 0 0.5rem;
+  border: 1px solid var(--line-2);
+  border-right: 0;
+  border-radius: var(--r) 0 0 var(--r);
+  background: var(--wash-3);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.msize-money input {
+  border-radius: 0 var(--r) var(--r) 0;
+  font-variant-numeric: tabular-nums;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.msize-money input::-webkit-outer-spin-button,
+.msize-money input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.msize-act {
+  white-space: nowrap;
+}
+
+.msize-locked {
+  font-size: 0.72rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.msize-drop {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  background: var(--card);
+  color: var(--ink-3);
+  cursor: pointer;
+}
+
+.msize-drop:hover {
+  color: var(--red-dark);
+  background: var(--red-tint);
+  border-color: var(--red-line);
+}
+
+.medit-addsize {
+  margin-top: 0.8rem;
+}
+
+/* ---- removing ------------------------------------------------------------- */
+
+.medit-card.danger {
+  border-color: var(--red-line);
+  background: var(--red-tint);
+}
+
+.medit-card.danger h2 {
+  color: var(--red-deep);
+}
+
+.medit-remove {
+  color: var(--red-deep);
+}
+
+.medit-remove:disabled {
+  color: var(--ink-3);
+}
+
+.medit-saved {
+  margin: 0.9rem 0 0;
+  padding: 0.6rem 0.8rem;
+  font-size: 0.875rem;
+  color: var(--green);
+  background: var(--green-tint);
   border: 1px solid var(--line);
   border-radius: var(--r);
 }
 
-.amenu-size-note {
-  font-size: 0.75rem;
-  color: var(--ink-3);
-}
-
-.amenu-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  align-items: center;
-  margin-top: 1rem;
-}
-
-.amenu-note {
-  font-size: 0.75rem;
-  color: var(--ink-3);
-}
-
-.btn-ghost.danger {
-  color: var(--red-deep);
-}
-
-.btn-ghost.danger:disabled {
-  color: var(--inert);
+@media (max-width: 64rem) {
+  .medit-cols {
+    grid-template-columns: 1fr;
+  }
 }

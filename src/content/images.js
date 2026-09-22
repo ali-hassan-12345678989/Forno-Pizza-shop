@@ -26,4 +26,6 @@ export const IMAGES = {
 
 export const IMAGE_SIZES = {
   menuCard: { width: 600, quality: 72 },
+  // The Admin's menu index shows the same photos at thumbnail size.
+  adminThumb: { width: 120, quality: 60 },
 }

@@ -1,0 +1,27 @@
+.spark {
+  display: block;
+  width: 100%;
+  height: 3.5rem;
+  overflow: visible;
+}
+
+.spark-area {
+  fill: var(--red-tint);
+  stroke: none;
+}
+
+.spark-line {
+  fill: none;
+  stroke: var(--red);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  /* preserveAspectRatio="none" stretches the box, so the stroke is scaled
+     with it. Fixing the vector effect keeps the line the same weight at
+     every panel width. */
+  vector-effect: non-scaling-stroke;
+}
+
+.spark-end {
+  fill: var(--red);
+}

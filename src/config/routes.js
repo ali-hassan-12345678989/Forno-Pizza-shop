@@ -14,6 +14,9 @@ export const ROUTES = {
   staffLogin: '/staff',
   manager: '/manager',
   admin: '/admin',
+  // Each panel's sections are child routes of the two above. The section's own
+  // path fragment lives in config/staffNav.js next to its label and icon, so a
+  // section is described in exactly one place; sectionPath() below joins them.
 
   notFound: '*',
 }
@@ -33,4 +36,16 @@ export function tokenFromInput(value) {
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(last)
 
   return isUuid ? last.toLowerCase() : null
+}
+
+/**
+ * Absolute path of one panel section.
+ *
+ * The panel root is a ROUTES entry and the fragment comes from the nav config,
+ * so neither half is ever written as a literal at a call site. The dashboard
+ * is the index route and carries an empty fragment, which resolves to the
+ * panel root itself.
+ */
+export function sectionPath(panelRoot, fragment) {
+  return fragment ? `${panelRoot}/${fragment}` : panelRoot
 }

@@ -64,6 +64,34 @@ export async function fetchAdminMenu() {
   }
 }
 
+/**
+ * A brand-new item, before it has ever been saved.
+ *
+ * Hidden by default. An item is created with no sizes, and an active item with
+ * no sizes is a card on the customer menu that cannot be ordered — so the Admin
+ * adds the sizes first, then sets it live. Saving cannot publish something
+ * broken by accident.
+ *
+ * A function rather than a constant: the editor holds this in state and would
+ * otherwise share one object with every other new item the session opens.
+ */
+export function blankMenuItem() {
+  return {
+    id: null,
+    name: '',
+    description: '',
+    imageUrl: '',
+    category: '',
+    badge: '',
+    sortOrder: 0,
+    isActive: false,
+    isSoldOut: false,
+    outOfStock: false,
+    orderCount: 0,
+    sizes: [],
+  }
+}
+
 export async function saveMenuItem(item) {
   const { data, error } = await supabase.rpc('admin_save_menu_item', {
     p_id: item.id ?? null,

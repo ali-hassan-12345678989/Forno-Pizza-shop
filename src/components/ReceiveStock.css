@@ -1,63 +1,323 @@
-/* Book-in form. Sits above the stock table on the Manager panel. */
+/* The delivery sheet, and the type-to-find control under it.
+   Every colour is a token from index.css — a literal here would drift from the
+   rest of the site the first time the palette moves. */
 
-.receive {
-  margin-bottom: 1.75rem;
+.sheet {
+  /* Tall enough to matter on a wide screen: the Manager works down the paper
+     note in one hand while this stays beside the table they picked from. */
+  position: sticky;
+  top: 1rem;
 }
 
-.receive h2 {
-  margin: 0 0 0.15rem;
-  font-family: var(--serif);
-  font-size: 1.15rem;
+.sheet-head {
+  margin-bottom: 0.9rem;
+}
+
+.sheet-head h2 {
+  margin: 0;
+}
+
+/* ---- nothing on it yet ---------------------------------------------------- */
+
+.sheet-empty {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 1.6rem 1rem;
+  text-align: center;
+  border: 1px dashed var(--line-2);
+  border-radius: var(--r);
+  background: var(--wash-1);
+  font-size: 0.875rem;
+  color: var(--ink-2);
+}
+
+.sheet-empty b {
+  color: var(--ink);
+  font-size: 0.95rem;
+}
+
+/* ---- one line of the delivery note ---------------------------------------- */
+
+.sheet-lines {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sheet-line {
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.sheet-line:first-child {
+  padding-top: 0;
+}
+
+.sheet-line-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-bottom: 0.5rem;
+}
+
+.sheet-line-name {
+  font-weight: 600;
+  font-size: 0.925rem;
   color: var(--ink);
 }
 
-.receive form {
-  display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-  gap: 0.75rem 1rem;
-  align-items: start;
-  margin-top: 1rem;
-}
-
-.receive .field {
-  margin: 0;
-  min-width: 0;
-}
-
-.receive select,
-.receive input {
-  width: 100%;
-}
-
-.receive-unit {
-  padding-right: 0.75rem;
-  font-size: 0.8rem;
+.sheet-drop {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  /* 24px is the WCAG 2.5.8 floor for a pointer target. */
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r);
+  background: none;
   color: var(--ink-3);
-  white-space: nowrap;
+  cursor: pointer;
 }
 
-.receive .btn-solid {
-  grid-column: 1 / -1;
-  justify-self: start;
+.sheet-drop:hover:not(:disabled) {
+  color: var(--red-dark);
+  background: var(--red-tint);
 }
 
-.receive .form-alert,
-.receive-ok {
-  grid-column: 1 / -1;
+.sheet-drop:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ---- how much arrived, with its unit inside the control ------------------- */
+
+.qty {
+  display: flex;
+  align-items: stretch;
+  max-width: 12rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  background: var(--card);
+  overflow: hidden;
+}
+
+.qty:focus-within {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px rgba(var(--ink-rgb), 0.07);
+}
+
+.qty input {
+  flex: 1;
+  min-width: 0;
+  height: 42px;
+  padding: 0 0.35rem 0 0.75rem;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--ink);
+  /* The spinners are useless for a delivery of 12,000 g and steal width. */
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.qty input::-webkit-outer-spin-button,
+.qty input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
   margin: 0;
 }
 
-.receive-ok {
-  padding: 0.6rem 0.8rem;
-  font-size: 0.875rem;
+.qty input:disabled {
+  color: var(--ink-3);
+}
+
+.qty-unit {
+  display: flex;
+  align-items: center;
+  padding: 0 0.75rem 0 0.4rem;
+  border-left: 1px solid var(--line);
+  background: var(--wash-3);
+  font-size: 0.85rem;
+  font-weight: 600;
   color: var(--ink-2);
+}
+
+/* ---- what the line will leave behind -------------------------------------- */
+
+.sheet-maths {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0.5rem 0 0;
+  min-height: 1.4rem;
+  font-size: 0.8rem;
+}
+
+.sheet-from {
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- the one save --------------------------------------------------------- */
+
+.sheet-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+}
+
+.sheet-count {
+  font-size: 0.85rem;
+  color: var(--ink-2);
+}
+
+.sheet-ok {
+  margin: 0.9rem 0 0;
+  padding: 0.65rem 0.8rem;
+  font-size: 0.875rem;
+  color: var(--green);
   background: var(--green-tint);
   border: 1px solid var(--line);
   border-radius: var(--r);
 }
 
-@media (max-width: 34rem) {
-  .receive form {
-    grid-template-columns: 1fr;
+.sheet-failed {
+  margin: 0.4rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.85rem;
+}
+
+.sheet-failed li + li {
+  margin-top: 0.2rem;
+}
+
+/* ---- type-to-find ---------------------------------------------------------- */
+
+.picker {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px dashed var(--line-2);
+}
+
+.picker-label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.picker-box {
+  position: relative;
+}
+
+.picker-input {
+  width: 100%;
+  height: 44px;
+  padding: 0 0.85rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  background: var(--card);
+  font: inherit;
+  font-size: 0.95rem;
+  color: var(--ink);
+}
+
+.picker-input::placeholder {
+  color: var(--ink-3);
+}
+
+.picker-input:focus-visible {
+  outline: none;
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px rgba(var(--ink-rgb), 0.07);
+}
+
+.picker-input:disabled {
+  background: var(--wash-1);
+  color: var(--ink-3);
+}
+
+.picker-list {
+  position: absolute;
+  z-index: 20;
+  left: 0;
+  right: 0;
+  top: calc(100% + 0.25rem);
+  margin: 0;
+  padding: 0.25rem;
+  list-style: none;
+  max-height: 13rem;
+  overflow-y: auto;
+  background: var(--card);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  box-shadow: var(--shadow-lift);
+}
+
+.picker-opt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  border: 0;
+  border-radius: calc(var(--r) - 3px);
+  background: none;
+  font: inherit;
+  font-size: 0.875rem;
+  text-align: left;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.picker-opt.on {
+  background: var(--wash-3);
+}
+
+.picker-opt-name {
+  font-weight: 500;
+}
+
+.picker-opt-stock {
+  flex: none;
+  font-size: 0.8rem;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.picker-none {
+  padding: 0.6rem;
+  font-size: 0.85rem;
+  color: var(--ink-3);
+}
+
+.picker-hint {
+  margin: 0.4rem 0 0;
+  font-size: 0.8rem;
+  color: var(--ink-3);
+}
+
+/* On a narrow screen the sheet sits under the table, so pinning it would pin
+   it to the bottom of a very long page. */
+@media (max-width: 64rem) {
+  .sheet {
+    position: static;
   }
 }

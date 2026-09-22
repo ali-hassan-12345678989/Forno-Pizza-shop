@@ -1,0 +1,64 @@
+/* Headline figures. Tokens only — see the Part 3 audit on raw colour literals. */
+
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.4rem;
+}
+
+.kpi {
+  padding: 0.85rem 0.95rem;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow);
+}
+
+.kpi-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.kpi-value {
+  margin-top: 0.3rem;
+  font-family: var(--serif);
+  font-size: 1.7rem;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.kpi-meta {
+  margin-top: 0.2rem;
+  font-size: 0.78rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* A number somebody has to act on. Never used for emphasis alone. */
+.kpi-attention {
+  border-color: var(--gold);
+  background: var(--gold-tint);
+}
+
+.kpi-attention .kpi-value {
+  color: var(--gold-deep);
+}
+
+.kpi-critical {
+  border-color: var(--red-line);
+  background: var(--red-tint);
+}
+
+.kpi-critical .kpi-value {
+  color: var(--red-deep);
+}
+
+.kpi-good .kpi-value {
+  color: var(--green);
+}

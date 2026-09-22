@@ -66,3 +66,19 @@ export function formatPeriod(isoDate, period) {
 
   return period === 'month' ? `${month} ${y}` : `${d} ${month} ${y}`
 }
+
+/**
+ * Today, written the way the shop would say it: "Tuesday 22 September".
+ *
+ * Formatted in the shop's own time zone rather than the reader's, so a staff
+ * member checking the panel from anywhere sees the shop's day, which is also
+ * the day the sales report buckets by.
+ */
+export function formatShopDate(date, timeZone) {
+  return new Intl.DateTimeFormat('en-GB', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    timeZone,
+  }).format(date)
+}

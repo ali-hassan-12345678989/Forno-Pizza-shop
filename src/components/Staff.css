@@ -1,6 +1,15 @@
-/* Manager and Admin chrome. Deliberately plainer than the customer site: these
-   are tools used daily by two people, not a shopfront. Every colour is a token
-   from index.css so the panels follow the same palette in one place. */
+/* Manager and Admin chrome.
+ *
+ * Deliberately plainer than the customer site: these are tools two people use
+ * daily, not a shopfront. Every colour is a token from index.css — the dark
+ * rail reuses --ink with --on-ink / --on-ink-muted, which already exist for
+ * the near-black bar on the customer header, rather than introducing a second
+ * dark palette that would drift from it. */
+
+/* ---------------------------------------------------------------------------
+   The gate: sign-in, the refusal screen, and the moment before the role
+   arrives. These render instead of the panel, so they own the whole page.
+   --------------------------------------------------------------------------- */
 
 .staff-gate {
   display: grid;
@@ -69,73 +78,332 @@
   margin-top: 0.5rem;
 }
 
+/* ---------------------------------------------------------------------------
+   The panel: a fixed rail and the section beside it.
+   --------------------------------------------------------------------------- */
+
 .staff {
-  max-width: 68rem;
-  margin: 0 auto;
-  padding: 1.5rem 1rem 3rem;
+  display: grid;
+  grid-template-columns: 13.5rem minmax(0, 1fr);
+  min-height: 100vh;
+  background: var(--paper);
 }
 
-.staff-head {
+.staff-main {
+  min-width: 0;
+  padding: 1.4rem 1.25rem 3rem;
+}
+
+/* ---- rail ---- */
+
+.staff-rail {
   display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  align-items: flex-start;
-  justify-content: space-between;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--line);
+  flex-direction: column;
+  gap: 1.4rem;
+  padding: 1.1rem 0.75rem 1.5rem;
+  background: var(--ink);
+  color: var(--on-ink);
 }
 
-.staff-head h1 {
-  margin: 0;
+.staff-rail-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding-inline: 0.6rem;
+}
+
+.staff-rail-brand b {
   font-family: var(--serif);
-  font-size: 1.6rem;
-  color: var(--ink);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
 }
 
-.staff-sub {
-  margin: 0.15rem 0 0;
-  color: var(--ink-3);
-  font-size: 0.9rem;
+.staff-rail-brand span {
+  font-size: 0.68rem;
+  color: var(--on-ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
 }
 
-.staff-who {
+.staff-rail-nav {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
+  flex-direction: column;
+  gap: 0.12rem;
+}
+
+.staff-rail-nav a {
+  display: flex;
+  gap: 0.6rem;
   align-items: center;
+  padding: 0.55rem 0.6rem;
+  border-radius: var(--r);
+  color: var(--on-ink-muted);
+  font-size: 0.86rem;
+  font-weight: 500;
+  text-decoration: none;
 }
 
-.staff-email {
-  color: var(--ink-3);
-  font-size: 0.85rem;
+.staff-rail-nav a:hover {
+  background: var(--ink-hover);
+  color: var(--on-ink);
 }
 
-.staff-email strong {
-  color: var(--ink-2);
+.staff-rail-nav a.on {
+  background: var(--ink-hover);
+  color: var(--on-ink);
   font-weight: 600;
 }
 
-.staff-body {
-  padding-top: 1.5rem;
+.staff-rail-nav a.on .staff-rail-ico {
+  color: var(--gold);
 }
 
-@media (max-width: 34rem) {
-  .staff-head {
-    flex-direction: column;
+.staff-rail-nav a:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: -2px;
+}
+
+.staff-rail-ico {
+  display: flex;
+  flex: none;
+  color: var(--on-ink-muted);
+}
+
+.staff-rail-ico svg {
+  display: block;
+  width: 1rem;
+  height: 1rem;
+}
+
+.staff-rail-label {
+  min-width: 0;
+}
+
+.staff-rail-badge {
+  margin-left: auto;
+  min-width: 1.25rem;
+  padding: 0.05rem 0.35rem;
+  border-radius: 999px;
+  background: var(--red);
+  color: var(--on-dark);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.staff-rail-foot {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  margin-top: auto;
+  padding-inline: 0.6rem;
+  font-size: 0.72rem;
+  color: var(--on-ink-muted);
+}
+
+.staff-rail-foot b {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--on-ink);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.staff-rail-foot button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--on-ink-muted);
+  font: inherit;
+  font-size: 0.72rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.staff-rail-foot button:hover {
+  color: var(--on-ink);
+}
+
+.staff-rail-foot button:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* ---- section heading ---- */
+
+.staff-page-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 1.2rem;
+}
+
+.staff-page-head h1 {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 1.45rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.staff-page-head p {
+  margin: 0.1rem 0 0;
+  font-size: 0.82rem;
+  color: var(--ink-3);
+}
+
+.staff-page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* ---- shared section blocks ---- */
+
+.staff-section + .staff-section {
+  margin-top: 1.5rem;
+}
+
+.staff-note {
+  margin: 0.6rem 0 0;
+  font-size: 0.78rem;
+  color: var(--ink-3);
+}
+
+.staff-readonly {
+  margin: 0 0 0.7rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8rem;
+  color: var(--ink-2);
+  background: var(--wash-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+}
+
+/* ---------------------------------------------------------------------------
+   Phone: the rail becomes a scrolling row above the content. A drawer would
+   hide the sections behind a tap, and there are only three to five of them.
+   --------------------------------------------------------------------------- */
+
+@media (max-width: 47rem) {
+  .staff {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .staff-rail {
+    flex-direction: row;
+    gap: 0.6rem;
+    align-items: center;
+    padding: 0.55rem 0.75rem;
+    overflow-x: auto;
+  }
+
+  .staff-rail-brand {
+    display: none;
+  }
+
+  /* The foot stays: hiding it here would take away the only way to sign out
+     on a phone. The address goes, the control does not. */
+  .staff-rail-foot {
+    flex-direction: row;
+    align-items: center;
+    margin-top: 0;
+    margin-left: auto;
+    padding-inline: 0.25rem;
+  }
+
+  .staff-rail-foot b {
+    display: none;
+  }
+
+  .staff-rail-nav {
+    flex-direction: row;
+    gap: 0.25rem;
+  }
+
+  .staff-rail-nav a {
+    white-space: nowrap;
+  }
+
+  .staff-main {
+    padding: 1.1rem 1rem 2.5rem;
   }
 }
 
-/* Admin's read-only inventory section. */
-.admin-inventory {
-  margin-top: 2rem;
+/* A plain titled block, used where a section needs a heading but not the
+   full panel chrome — the dashboard's trend line, for instance. */
+.staff-panel-title {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--ink);
 }
 
-.admin-readonly {
-  margin: 0 0 0.6rem;
-  padding: 0.5rem 0.75rem;
-  font-size: 0.82rem;
-  color: var(--ink-2);
-  background: var(--sand-1);
+.staff-section.panel {
+  padding: 0.9rem 1rem 1rem;
+  background: var(--card);
   border: 1px solid var(--line);
-  border-radius: var(--r);
+  border-radius: var(--r-lg);
+}
+
+/* ---------------------------------------------------------------------------
+   Two panels side by side: a list you pick from, and the work you are doing
+   with it. Used by the Manager's stock screen; the narrow breakpoint is wider
+   than the rail's because two panels need more room than one.
+   --------------------------------------------------------------------------- */
+
+.staff-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+@media (max-width: 64rem) {
+  .staff-split {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* A filter toggle. Pressed state carries the meaning, so it is a real
+   aria-pressed button rather than a styled div. */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.8rem;
+  border: 1px solid var(--line-2);
+  border-radius: 999px;
+  background: var(--card);
+  font: inherit;
+  font-size: 0.825rem;
+  font-weight: 600;
+  color: var(--ink-2);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.chip:hover {
+  background: var(--wash-3);
+}
+
+.chip[aria-pressed='true'] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--on-ink);
+}
+
+.chip-count {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.75rem;
+  opacity: 0.75;
 }

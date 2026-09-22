@@ -3,43 +3,90 @@
    palette moves. */
 
 .stock-head {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem 1rem;
-  align-items: baseline;
-  justify-content: space-between;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.9rem;
 }
 
 .stock-head h2 {
   margin: 0;
-  font-family: var(--serif);
-  font-size: 1.15rem;
-  color: var(--ink);
 }
 
 .stock-summary {
-  margin: 0;
+  margin: 0.15rem 0 0;
   font-size: 0.85rem;
   color: var(--ink-3);
 }
 
-.stock-healthy {
-  margin: 0 0 0.75rem;
-  padding: 0.6rem 0.8rem;
+.stock-empty,
+.stock-none {
+  margin: 0;
+  padding: 1.25rem 0.25rem;
   font-size: 0.875rem;
-  color: var(--ink-2);
-  background: var(--green-tint);
-  border: 1px solid var(--line);
-  border-radius: var(--r);
-}
-
-.stock-empty {
   color: var(--ink-3);
 }
 
-/* The table is wider than a phone. Scrolling it beats stacking 32 rows into
-   cards nobody can scan. */
+.stock-showing {
+  margin: 0.6rem 0 0;
+  font-size: 0.8rem;
+  color: var(--ink-3);
+}
+
+/* ---- search and filter ---------------------------------------------------- */
+
+.stock-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 0.75rem;
+  margin-bottom: 0.9rem;
+}
+
+.stock-search {
+  position: relative;
+  flex: 1 1 12rem;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.stock-search svg {
+  position: absolute;
+  left: 0.7rem;
+  color: var(--ink-3);
+  pointer-events: none;
+}
+
+.stock-search input {
+  width: 100%;
+  height: 40px;
+  padding: 0 0.75rem 0 2.1rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  background: var(--card);
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--ink);
+}
+
+.stock-search input::placeholder {
+  color: var(--ink-3);
+}
+
+.stock-search input:focus-visible {
+  outline: none;
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px rgba(var(--ink-rgb), 0.07);
+}
+
+.stock-filters {
+  display: flex;
+  gap: 0.35rem;
+  flex: none;
+}
+
+/* ---- the table ------------------------------------------------------------ */
+
+/* Wider than a phone. Scrolling it beats stacking 32 rows into cards nobody
+   can scan. */
 .stock-scroll {
   overflow-x: auto;
   border: 1px solid var(--line);
@@ -99,6 +146,11 @@
   background: var(--red-tint);
 }
 
+/* Already on the delivery sheet: the row stops asking to be dealt with. */
+.stock-table tr.is-queued {
+  background: var(--green-tint);
+}
+
 .stock-pill {
   display: inline-block;
   padding: 0.15rem 0.55rem;
@@ -121,4 +173,39 @@
 .stock-pill.out {
   color: var(--red-deep);
   background: var(--red-tint);
+}
+
+/* ---- booking in from the row ---------------------------------------------- */
+
+.stock-act {
+  width: 1%;
+  text-align: right;
+  padding-left: 0.4rem;
+}
+
+.stock-add {
+  padding: 0.35rem 0.75rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  background: var(--card);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.stock-add:hover:not(:disabled) {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--on-ink);
+}
+
+.stock-add.on,
+.stock-add:disabled {
+  background: transparent;
+  border-color: transparent;
+  color: var(--green);
+  cursor: default;
 }

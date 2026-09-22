@@ -591,7 +591,15 @@ export const COPY = {
 
       summary: (total, low, out) =>
         `${total} ingredient${total === 1 ? '' : 's'} · ${low} running low · ${out} out of stock`,
-      allHealthy: 'Everything is above its low-stock threshold.',
+
+      searchLabel: 'Search ingredients',
+      filterLabel: 'Show',
+      filterNeeds: 'Needs ordering',
+      filterAll: 'All',
+      showing: (shown, total) => `Showing ${shown} of ${total}`,
+      noMatch: (query) => `Nothing matches “${query}”.`,
+      nothingLow: 'Nothing needs ordering right now.',
+      colBookIn: 'Add stock',
 
       loading: 'Loading stock levels…',
       empty: 'No ingredients yet.',
@@ -603,24 +611,65 @@ export const COPY = {
       },
     },
 
-    /** FR-6.2 — booking in a delivery. Manager only. */
+    /**
+     * FR-6.2 — booking in a delivery. Manager only.
+     *
+     * A delivery note arrives with several lines on it, so the sheet takes
+     * several lines. Each one is still its own receive_stock() call: the
+     * database knows about stock arriving, not about deliveries.
+     */
     receive: {
-      title: 'Book in a delivery',
-      subtitle: 'Adds to what is already in stock — it does not replace it.',
+      title: 'This delivery',
+      subtitle: 'Adds to stock. It never replaces it.',
 
-      ingredient: 'Ingredient',
-      ingredientPlaceholder: 'Choose an ingredient',
-      quantity: 'Quantity received',
-      quantityHint: (unit) => `In ${unit}`,
-      quantityHintNone: 'Choose an ingredient first',
+      empty: 'Nothing on the sheet yet',
+      /* Two hints, because the dashboard has no stock table beside the sheet
+         and pointing at one that is not there is worse than saying less. */
+      emptyHintTable: 'Press “Add stock” beside an ingredient, or search for one below.',
+      emptyHintAlone: 'Search for an ingredient below to start one.',
+
+      add: 'Add stock',
+      added: 'On the sheet',
+      addAria: (name) => `Add stock of ${name} to this delivery`,
+      addedAria: (name) => `${name} is already on this delivery`,
+      removeAria: (name) => `Take ${name} off this delivery`,
+
+      quantityAria: (name, unit) => `Quantity of ${name} received, in ${unit}`,
+      nowAt: (stock) => `Now ${stock}`,
+
+      /* A preview of a change that has not happened yet, so it is the one place
+         the browser works out a stock level for itself. The moment the delivery
+         is saved the figure on screen comes from receive_stock()'s own row
+         again - see api/inventory.js. */
+      afterwards: (before, after) => `${before} → ${after}`,
+      /* Two ways to end up fine, and they are not the same sentence: an
+         ingredient that was never short did not come "back" from anywhere. */
+      stillFine: 'In stock',
+      backAbove: 'Back above the threshold',
+      willBeLow: 'Still below the threshold',
+      willBeOut: 'Still at zero',
+
+      pickerLabel: 'Add something else',
+      pickerPlaceholder: 'Start typing a name',
+      pickerHint: (total) => `${total} ingredients — typing beats scrolling.`,
+      pickerNone: (query) => `Nothing matches “${query}”.`,
+      pickerDone: 'Everything is already on this delivery.',
+      pickerCount: (n) => `${n} match${n === 1 ? '' : 'es'}`,
+
+      ready: (n) => `${n} line${n === 1 ? '' : 's'} ready`,
+      partial: (ready, total) => `${ready} of ${total} filled in`,
 
       submit: 'Add to stock',
-      busy: 'Adding…',
+      busy: (done, total) => `Adding ${done} of ${total}…`,
 
-      success: (quantity, name, total) => `Added ${quantity} to ${name}. Now ${total}.`,
+      success: (n) => `Booked in ${n} line${n === 1 ? '' : 's'}. Stock is up to date.`,
+      /* Lines go in one at a time, so a failure halfway leaves the earlier ones
+         committed. Saying which is the only honest thing to do. */
+      someWentIn: (n) => `${n} line${n === 1 ? '' : 's'} went in. These did not:`,
+      noneWentIn: 'Nothing was added:',
+      failedLine: (name, reason) => `${name} — ${reason}`,
 
       errors: {
-        ingredientRequired: 'Choose an ingredient',
         quantityRequired: 'Enter how much arrived',
         invalid_quantity: 'Enter a quantity greater than zero',
         quantity_too_large: 'That is larger than a single delivery can be',
@@ -695,53 +744,134 @@ export const COPY = {
       },
     },
 
-    /** FR-7.2 — the Admin manages the menu. */
+    /**
+     * FR-7.2 — the Admin manages the menu.
+     *
+     * Two screens: an index you scan, and one item you edit on its own URL.
+     * The wording avoids the column names - a Manager reads "Position on the
+     * menu", not "sort order".
+     */
     menu: {
       title: 'Menu',
       countLabel: (total, hidden) =>
         `${total} item${total === 1 ? '' : 's'}${hidden > 0 ? ` · ${hidden} hidden from customers` : ''}`,
 
+      /* ---- the index ---- */
+      searchLabel: 'Search the menu',
+      filterLabel: 'Show',
+      filters: {
+        all: 'All',
+        live: 'Live',
+        hidden: 'Hidden',
+        soldOut: 'Sold out',
+      },
+      showing: (shown, total) => `Showing ${shown} of ${total}`,
+      noMatch: 'Nothing matches that.',
+      openItem: (name) => `Edit ${name}`,
+      sizeCount: (n) => `${n} size${n === 1 ? '' : 's'}`,
+      noSizesYet: 'No sizes yet',
+      priceRange: (low, high) => (low === high ? low : `${low} – ${high}`),
+      noPrice: 'No price yet',
+      neverOrdered: 'Never ordered',
+      orderedTimes: (n) => `Ordered ${n} time${n === 1 ? '' : 's'}`,
+
       addItem: 'Add an item',
       newItem: 'New item',
-      edit: 'Edit',
-      done: 'Done',
-      save: 'Save',
-      saving: 'Saving…',
-      cancel: 'Cancel',
-      remove: 'Remove',
-      removing: 'Removing…',
+      newItemSub: 'Add the sizes first — an item cannot go live without one.',
+      back: 'Menu',
+
+      /* ---- the editor ---- */
+      cardCustomer: 'What the customer sees',
+      cardSizes: 'Sizes and prices',
+      cardPreview: 'Preview',
+      previewNote: 'This is the card on the customer menu, live as you type.',
+      cardAvailability: 'Availability',
+      cardPlacement: 'Where it sits',
+      cardDanger: 'Remove this item',
 
       fieldName: 'Name',
       fieldDescription: 'Description',
-      fieldImage: 'Image URL',
-      fieldCategory: 'Category',
-      fieldBadge: 'Badge',
-      fieldSortOrder: 'Sort order',
-      fieldActive: 'Show on the customer menu',
-      fieldSoldOut: 'Mark sold out by hand',
+      fieldImage: 'Photo',
+      imageHint: 'Paste a link. The card above updates, so you can see it landed.',
+      fieldCategory: 'Section of the menu',
+      categoryHint: 'Pick one that already exists, or type a new one.',
+      fieldBadge: 'Label on the card',
+      badgeNone: 'No label',
+      badgeHint: 'Only these labels appear on the customer menu.',
 
-      /** The engine's flag, shown but never editable here. */
-      autoSoldOut: 'Sold out automatically — an ingredient it needs is at zero',
+      fieldPosition: 'Position on the menu',
+      positionAt: (place, total) => `${place} of ${total}`,
+      positionOrdinal: (n) => {
+        const teen = n % 100 >= 11 && n % 100 <= 13
+        const suffix = teen ? 'th' : { 1: 'st', 2: 'nd', 3: 'rd' }[n % 10] || 'th'
+        return `${n}${suffix}`
+      },
+      moveUp: 'Move up',
+      moveDown: 'Move down',
+      positionHint: 'The whole menu, not just this section. Saved with the rest.',
+      positionNew: 'Set once the item is saved.',
+
+      availability: {
+        live: 'Live',
+        liveNote: 'On the menu and orderable.',
+        soldOut: 'Sold out today',
+        soldOutNote: 'Stays on the menu, greyed out. Put it back tomorrow.',
+        hidden: 'Hidden',
+        hiddenNote: 'Off the menu entirely. Nothing is deleted.',
+      },
+
+      /* The engine's flag, shown but never editable here. The choice above
+         stays live: the Admin can still hide an item the engine has sold out. */
+      autoSoldOut: 'Sold out automatically',
       autoSoldOutNote:
-        'This is set by the inventory engine, not here. Book in the missing ingredient to clear it.',
+        'An ingredient it needs is at zero, so customers cannot order it whatever is set above. Book in the missing ingredient and it comes back on its own.',
 
-      statusHidden: 'Hidden',
-      statusSoldOut: 'Sold out',
-      statusOutOfStock: 'No ingredients',
-      statusLive: 'Live',
+      /* Keyed by the values in lib/menuAvailability.js, so a status indexes
+         straight into its own label and a new one cannot go unlabelled. */
+      statuses: {
+        live: 'Live',
+        soldOut: 'Sold out',
+        hidden: 'Hidden',
+        outOfStock: 'No ingredients',
+      },
 
-      sizes: 'Sizes and prices',
+      colSize: 'Size',
+      colPrice: 'Price',
+      colServes: 'Serves',
+      pricePrefix: 'Rs.',
       addSize: 'Add a size',
-      fieldSize: 'Size',
-      fieldPrice: 'Price',
-      fieldServes: 'Serves',
+      removeSizeAria: (name) => `Remove the ${name || 'new'} size`,
+      sizeLocked: (n) => `ordered ${n}×`,
+      sizeLockedWhy: 'Kept because past receipts point at it.',
       noSizes: 'No sizes yet — a customer cannot order this until it has one.',
-      newItemHidden:
-        'New items start hidden. Add the sizes, then tick "Show on the customer menu".',
+      sizesNote:
+        'What the customer picks between. At least one is needed before the item can go live.',
 
-      orderedTimes: (n) => `Ordered ${n} time${n === 1 ? '' : 's'}`,
-      cannotDelete: 'Ordered before, so it can only be hidden — order history depends on it.',
-      confirmRemove: (name) => `Remove ${name}? This cannot be undone.`,
+      /* ---- the one save ---- */
+      unsaved: 'Unsaved changes',
+      save: 'Save',
+      saving: 'Saving…',
+      saved: 'Saved',
+      discard: 'Discard',
+
+      remove: 'Remove from the menu',
+      removing: 'Removing…',
+      cannotDelete: (name, n) =>
+        `${name} has been ordered ${n} time${n === 1 ? '' : 's'}. Old receipts point at it, so it cannot be deleted — hide it instead and it leaves the menu today.`,
+      canDelete: (name) => `${name} has never been ordered, so removing it takes it away for good.`,
+      deleteNotSaved: 'Nothing to remove yet — this item has not been saved.',
+
+      confirmRemoveTitle: 'Remove this item?',
+      confirmRemoveBody: (name) =>
+        `${name} will be taken off the menu and deleted. This cannot be undone.`,
+      confirmRemoveYes: 'Remove it',
+      confirmLeaveTitle: 'Leave without saving?',
+      confirmLeaveBody: 'The changes you made to this item will be lost.',
+      confirmLeaveYes: 'Leave',
+      cancel: 'Cancel',
+
+      notFound: 'That item is not on the menu.',
+      backToMenu: 'Back to the menu',
 
       loading: 'Loading the menu…',
       empty: 'No menu items yet.',
@@ -799,6 +929,84 @@ export const COPY = {
     /** FR-7.5 — the Admin sees inventory but cannot touch it. */
     inventory: {
       readOnlyNote: 'Read-only. Stock is added by the Manager.',
+    },
+
+    /**
+     * Sidebar labels. Plain nouns, not instructions: a person recognises
+     * "Stock" faster than "Manage inventory", and the verb adds nothing
+     * once you are already looking at the section.
+     */
+    nav: {
+      dashboard: 'Dashboard',
+      stock: 'Stock',
+      sales: 'Sales',
+      orders: 'Orders',
+      menu: 'Menu',
+      inventory: 'Inventory',
+      reports: 'Reports',
+      sectionsLabel: 'Sections',
+      badgeLabel: (n, what) => `${n} ${what} need attention`,
+    },
+
+    /** The first screen of each panel: is anything wrong, and how is today going. */
+    dashboard: {
+      managerTitle: 'Today at Forno',
+      adminTitle: 'Today at Forno',
+      subtitle: (dateText) => `${dateText} · what needs you now`,
+
+      needsReordering: 'Needs reordering',
+      needsReorderingNone: 'Everything is stocked',
+      needsReorderingSome: (name) => `${name} is lowest`,
+      needsReorderingOut: (name) => `${name} is out`,
+
+      ordersToday: 'Orders today',
+      revenueToday: 'Revenue today',
+      goodsOf: (amount) => `${amount} goods`,
+      noOrdersYet: 'No orders yet today',
+
+      openNow: 'Open right now',
+      openNoneNow: 'Nothing in progress',
+      oldestWaiting: (timeText) => `Oldest since ${timeText}`,
+
+      liveOnMenu: 'Live on the menu',
+      menuBreakdown: (hidden, unavailable) =>
+        [
+          hidden > 0 ? `${hidden} hidden` : null,
+          unavailable > 0 ? `${unavailable} unavailable` : null,
+        ]
+          .filter(Boolean)
+          .join(', ') || 'All items available',
+
+      stockProblems: 'Stock problems',
+      stockProblemsNone: 'Nothing below threshold',
+
+      weekTitle: 'Last seven days',
+      weekSub: 'Orders per day',
+      weekEmpty: 'No orders in the last seven days.',
+      weekAria: (min, max) => `Orders per day over the last seven days, between ${min} and ${max}`,
+
+      quickBookIn: 'Book in a delivery',
+      seeAllStock: 'See all stock',
+      seeAllOrders: 'See all orders',
+
+      loading: 'Loading…',
+      retry: 'Try again',
+      error: 'Could not load this. Check your connection and try again.',
+    },
+
+    /** Page headings for each section. */
+    pages: {
+      stockTitle: 'Stock',
+      stockSub: (total) => `All ${total} ingredients · most urgent first`,
+      salesTitle: 'Sales',
+      salesSub: 'Orders and revenue, to check against the stock they used',
+      ordersTitle: 'Orders',
+      ordersSub: 'In progress now. Finished orders are under Reports.',
+      menuTitle: 'Menu',
+      inventoryTitle: 'Inventory',
+      inventorySub: 'What the kitchen has right now',
+      reportsTitle: 'Reports',
+      reportsSub: 'How the shop is doing over time',
     },
   },
 }

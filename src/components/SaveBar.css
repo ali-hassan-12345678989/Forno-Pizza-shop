@@ -1,0 +1,51 @@
+/* The contextual save bar. Dark, because it is the only thing on the screen
+   that writes — it should not look like another card. */
+
+.savebar {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+  padding: 0.8rem 1rem;
+  background: var(--ink);
+  color: var(--on-ink);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lift);
+}
+
+.savebar-msg {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.savebar-acts {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* On the dark bar the ghost button needs its own border and the solid one
+   inverts — the page's own button colours would disappear into it. */
+.savebar .btn-ghost {
+  background: transparent;
+  border-color: var(--ink-2);
+  color: var(--on-ink);
+}
+
+.savebar .btn-ghost:hover:not(:disabled) {
+  background: var(--ink-hover);
+}
+
+.savebar .btn-solid {
+  background: var(--card);
+  color: var(--ink);
+}
+
+.savebar .btn-solid:hover:not(:disabled) {
+  background: var(--on-ink);
+}
