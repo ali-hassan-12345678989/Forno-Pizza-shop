@@ -57,6 +57,7 @@
   --red-deep: #7d1f18; /* the far end of the menu banner gradient */
   --red-line: #f3d5d1; /* border of an error notice */
   --gold-deep: #8a6416; /* gold dark enough to read on --gold-tint */
+  --green-deep: #2a7049; /* green dark enough to read on --green-tint */
   --inert: #f1eee9; /* a cancelled or inactive badge */
 
   /* Channel triplets, so a translucent variant never restates the colour.

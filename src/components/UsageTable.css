@@ -1,0 +1,146 @@
+/* What the kitchen has got through.
+   Every colour is a token from index.css — a literal here would drift from the
+   rest of the site the first time the palette moves. */
+
+.usage-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.6rem 0.9rem;
+}
+
+.usage-head h2 {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 1.05rem;
+  color: var(--ink);
+}
+
+.usage-summary {
+  margin: 0.15rem 0 0;
+  font-size: 0.85rem;
+  color: var(--ink-2);
+}
+
+.usage-periods,
+.usage-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  flex: none;
+}
+
+.usage-note {
+  margin: 0.7rem 0 0;
+  font-size: 0.78rem;
+  color: var(--ink-3);
+}
+
+.usage-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 0.75rem;
+  margin: 0.9rem 0;
+}
+
+.usage-empty,
+.usage-showing {
+  margin: 0.6rem 0 0;
+  font-size: 0.85rem;
+  color: var(--ink-3);
+}
+
+.usage-scroll {
+  overflow-x: auto;
+}
+
+.usage-table {
+  width: 100%;
+  min-width: 24rem;
+  border-collapse: collapse;
+}
+
+.usage-table th {
+  padding: 0 0.5rem 0.4rem 0;
+  text-align: left;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.usage-table tbody th {
+  padding: 0.5rem 0.5rem 0.5rem 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink);
+}
+
+.usage-table td {
+  padding: 0.5rem 0.5rem 0.5rem 0;
+  font-size: 0.875rem;
+  color: var(--ink);
+}
+
+.usage-table tbody tr + tr th,
+.usage-table tbody tr + tr td {
+  border-top: 1px solid var(--line-2);
+}
+
+.usage-table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.usage-table th:last-child,
+.usage-table td:last-child {
+  padding-right: 0;
+}
+
+.usage-figure {
+  display: block;
+}
+
+/* Ranks within its own column only. Deliberately thin and quiet: the figure
+   above it is the answer, this is only the shape of the column. */
+.usage-bar {
+  display: block;
+  width: min(9rem, 100%);
+  height: 3px;
+  margin: 0.25rem 0 0 auto;
+  border-radius: 999px;
+  background: var(--wash-4);
+  overflow: hidden;
+}
+
+/* gold-deep, not gold: plain --gold on this track is 1.92:1, which is barely
+   visible on a screen in a bright kitchen. The bar is decorative — it is
+   aria-hidden and the exact figure sits beside it — so WCAG's 3:1 for
+   meaningful graphics does not strictly apply, but a bar nobody can see is
+   just a bar nobody can see. gold-deep reads at 4.52:1 and is the same token
+   the low-stock figure below already uses. */
+.usage-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--gold-deep);
+}
+
+.usage-none {
+  color: var(--ink-3);
+}
+
+.usage-low {
+  color: var(--gold-deep);
+  font-weight: 600;
+}
+
+.usage-out {
+  color: var(--red-deep);
+  font-weight: 600;
+}

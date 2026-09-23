@@ -1,0 +1,161 @@
+/* The kitchen screen. Read from two feet away by someone with flour on their
+   hands, so everything is a size up from the rest of the panel and the button
+   is the biggest thing on the card.
+   Every colour is a token from index.css. */
+
+.chef-none {
+  margin: 2rem 0;
+  font-size: 1rem;
+  color: var(--ink-2);
+}
+
+.chef-live {
+  margin: 1rem 0 0;
+  font-size: 0.8rem;
+  color: var(--ink-2);
+}
+
+.chef-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr));
+  gap: 0.9rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chef-card {
+  display: flex;
+  flex-direction: column;
+  padding: 0.9rem 1rem 1rem;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+}
+
+.chef-card.is-busy {
+  opacity: 0.6;
+}
+
+.chef-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.6rem;
+}
+
+.chef-num {
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.chef-stage {
+  padding: 0.12rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--ink-2);
+  background: var(--wash-3);
+}
+
+/* A new order is the one nobody has touched yet, so it is the one that stands
+   out. Once it is in the oven it stops shouting. */
+.chef-stage.placed {
+  color: var(--gold-deep);
+  background: var(--gold-tint);
+}
+
+.chef-type {
+  font-size: 0.78rem;
+  color: var(--ink-2);
+}
+
+/* Pushed to the end of the row: how long an order has waited is the thing a
+   kitchen scans down the column for. */
+.chef-wait {
+  margin-left: auto;
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+
+.chef-who {
+  margin: 0.35rem 0 0.6rem;
+  font-size: 0.85rem;
+  color: var(--ink-2);
+}
+
+.chef-items {
+  flex: 1;
+  margin: 0 0 0.9rem;
+  padding: 0.7rem 0 0;
+  border-top: 1px solid var(--line-2);
+  list-style: none;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.chef-items li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.15rem 0.45rem;
+  font-size: 1rem;
+  color: var(--ink);
+}
+
+.chef-qty {
+  min-width: 1.6rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.chef-extras {
+  flex-basis: 100%;
+  padding-left: 2.05rem;
+  font-size: 0.82rem;
+  color: var(--ink-2);
+}
+
+.chef-fail {
+  margin: 0 0 0.6rem;
+  padding: 0.5rem 0.65rem;
+  font-size: 0.82rem;
+  color: var(--red-deep);
+  background: var(--red-tint);
+  border-radius: var(--r);
+}
+
+/* The only control on the card, and deliberately the largest target on it. */
+.chef-go {
+  width: 100%;
+  min-height: 48px;
+  padding: 0.7rem 1rem;
+  border: 0;
+  border-radius: var(--r);
+  background: var(--ink);
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--on-ink);
+  cursor: pointer;
+}
+
+.chef-go:hover:not(:disabled) {
+  background: var(--ink-hover);
+}
+
+.chef-go:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.chef-go:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

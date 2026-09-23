@@ -1,5 +1,5 @@
 /**
- * The two staff roles.
+ * The three staff roles.
  *
  * These strings are the contract with the database: they must match the check
  * constraint on public.staff.role and what staff_role() returns. A browser
@@ -11,6 +11,7 @@
 export const STAFF_ROLES = {
   manager: 'manager',
   admin: 'admin',
+  chef: 'chef',
 }
 
 /** Every valid role, for exhaustive checks. */

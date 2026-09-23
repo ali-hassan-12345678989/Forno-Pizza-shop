@@ -13,6 +13,7 @@ import './Staff.css'
 const PANEL_TITLE = {
   [STAFF_ROLES.manager]: 'managerTitle',
   [STAFF_ROLES.admin]: 'adminTitle',
+  [STAFF_ROLES.chef]: 'chefTitle',
 }
 
 /**

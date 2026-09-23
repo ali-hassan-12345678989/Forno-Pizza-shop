@@ -13,7 +13,9 @@ import { fetchStockAlerts, fetchStockLevels } from '../api/inventory'
 import { fetchActiveOrders } from '../api/activeOrders'
 import { fetchSalesReport } from '../api/reports'
 import { formatPrice, formatShopDate, formatTime } from '../lib/format'
+import { STAFF_POLL_MS } from '../config/staffPoll'
 import { useAsyncData } from '../lib/useAsyncData'
+import { useAutoRefresh } from '../lib/useAutoRefresh'
 import { useDeliverySheet } from '../lib/useDeliverySheet'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 
@@ -41,6 +43,12 @@ export default function ManagerDashboard() {
     const { rows, errorCode } = await fetchStockLevels()
     return { data: rows, errorCode }
   })
+
+  /* Stock moves with every order a customer places, so this is the one figure
+     on the Manager's dashboard that can go stale while they are looking at it.
+     Alerts follow stock and are re-read with it by reloadAll(); sales do not
+     move fast enough to be worth a ten-second clock. */
+  useAutoRefresh(stock.reload, STAFF_POLL_MS)
 
   const alerts = useAsyncData(async () => {
     const { alerts: data, errorCode } = await fetchStockAlerts()

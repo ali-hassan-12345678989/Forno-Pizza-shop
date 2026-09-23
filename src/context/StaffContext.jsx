@@ -51,6 +51,7 @@ export function StaffProvider({ children }) {
       ready: authReady && ready,
       isManager: role === STAFF_ROLES.manager,
       isAdmin: role === STAFF_ROLES.admin,
+      isChef: role === STAFF_ROLES.chef,
       isStaff: role !== null,
       reload,
     }),

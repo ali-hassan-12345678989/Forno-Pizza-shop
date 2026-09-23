@@ -17,10 +17,13 @@ import ManagerStock from './pages/ManagerStock'
 import ManagerSales from './pages/ManagerSales'
 import AdminDashboard from './pages/AdminDashboard'
 import AdminOrders from './pages/AdminOrders'
+import AdminOrderPage from './pages/AdminOrderPage'
 import AdminMenuSection from './pages/AdminMenuSection'
 import AdminMenuItemPage from './pages/AdminMenuItemPage'
 import AdminInventory from './pages/AdminInventory'
 import AdminReports from './pages/AdminReports'
+import StaffUsage from './pages/StaffUsage'
+import ChefKitchen from './pages/ChefKitchen'
 import { COPY } from './content/copy'
 import { ROUTES } from './config/routes'
 import { STAFF_ROLES } from './config/staff'
@@ -38,16 +41,21 @@ import { SECTION_IDS, navFor } from './config/staffNav'
  * same nav entry as the section's, so no path is spelled in here either.
  */
 const PANEL_SECTIONS = {
+  [STAFF_ROLES.chef]: {
+    [SECTION_IDS.kitchen]: ChefKitchen,
+  },
   [STAFF_ROLES.manager]: {
     [SECTION_IDS.dashboard]: ManagerDashboard,
     [SECTION_IDS.stock]: ManagerStock,
+    [SECTION_IDS.usage]: StaffUsage,
     [SECTION_IDS.sales]: ManagerSales,
   },
   [STAFF_ROLES.admin]: {
     [SECTION_IDS.dashboard]: AdminDashboard,
-    [SECTION_IDS.orders]: AdminOrders,
+    [SECTION_IDS.orders]: { list: AdminOrders, detail: AdminOrderPage },
     [SECTION_IDS.menu]: { list: AdminMenuSection, detail: AdminMenuItemPage },
     [SECTION_IDS.inventory]: AdminInventory,
+    [SECTION_IDS.usage]: StaffUsage,
     [SECTION_IDS.reports]: AdminReports,
   },
 }
@@ -105,6 +113,17 @@ export default function App() {
             }
           >
             {sectionRoutes(STAFF_ROLES.manager)}
+          </Route>
+
+          <Route
+            path={ROUTES.chef}
+            element={
+              <StaffGate requires={STAFF_ROLES.chef}>
+                <StaffShell role={STAFF_ROLES.chef} />
+              </StaffGate>
+            }
+          >
+            {sectionRoutes(STAFF_ROLES.chef)}
           </Route>
 
           <Route

@@ -14,6 +14,7 @@ import '../components/Staff.css'
 const HOME_FOR_ROLE = {
   [STAFF_ROLES.manager]: ROUTES.manager,
   [STAFF_ROLES.admin]: ROUTES.admin,
+  [STAFF_ROLES.chef]: ROUTES.chef,
 }
 
 /**

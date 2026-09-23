@@ -565,6 +565,7 @@ export const COPY = {
     managerDocumentTitle: 'Manager · Forno',
 
     adminTitle: 'Admin',
+    chefTitle: 'Chef',
     adminSub: 'Menu, orders and sales reports.',
     adminDocumentTitle: 'Admin · Forno',
 
@@ -926,6 +927,206 @@ export const COPY = {
       },
     },
 
+    /* FR-7.3 extended: the Admin looking at real orders rather than a count.
+       Separate from `active` above, which still describes the dashboard's
+       how-busy-are-we table. Two screens, two jobs, two vocabularies. */
+    orders: {
+      searchLabel: 'Search by order number or name',
+      filterLabel: 'Show',
+
+      filters: {
+        all: 'All',
+        active: 'In progress',
+        completed: 'Completed',
+        cancelled: 'Cancelled',
+      },
+
+      /* Appended to the chip so the Admin can see where the orders are before
+         clicking a filter that turns out to be empty. */
+      filterCount: (label, n) => `${label} (${n})`,
+
+      empty: 'No orders yet.',
+      noMatch: 'No orders match that.',
+      showing: (shown, total) => `Showing ${shown} of ${total}`,
+      /* Said only when the list is full, so nobody reads a capped list as the
+         shop's whole history. The cap applies to finished orders only — an
+         order still in progress is always listed, however old it is. */
+      capped: (n) =>
+        `Latest ${n} orders, plus everything still in progress. Older ones are in Reports.`,
+
+      itemCount: (n) => `${n} item${n === 1 ? '' : 's'}`,
+      countLabel: (n) => `${n} order${n === 1 ? '' : 's'}`,
+      openOrder: (number) => `Open order #${number}`,
+      guest: 'Guest',
+      hasAccount: 'Account',
+
+      loading: 'Loading orders…',
+
+      errors: {
+        not_admin: 'This account cannot view orders.',
+        invalid_limit: 'Could not load that many orders.',
+        unknown: 'Could not load orders. Check your connection and try again.',
+      },
+
+      /* One order, open. */
+      detail: {
+        back: 'All orders',
+        notFoundTitle: 'No such order',
+        notFoundBody: 'It may have been deleted. Go back to the list and try again.',
+
+        placedAt: 'Placed',
+        stage: 'Stage',
+        type: 'Type',
+
+        itemsTitle: 'What was ordered',
+        colItem: 'Item',
+        colQty: 'Qty',
+        colEach: 'Each',
+        colLine: 'Total',
+        extras: (names) => `+ ${names}`,
+
+        subtotal: 'Subtotal',
+        deliveryFee: 'Delivery',
+        total: 'Total',
+
+        customerTitle: 'Customer',
+        name: 'Name',
+        phone: 'Phone',
+        address: 'Address',
+        notes: 'Notes',
+        /* Every order has a name and a phone — checkout requires them of guests
+           too. What is optional is the account, so that is what this line is
+           about, and it never implies the contact details are missing. */
+        email: 'Account',
+        orderCount: (n) => `${n} order${n === 1 ? '' : 's'} with us`,
+        guestNote: 'Ordered as a guest — no account linked.',
+
+        trailTitle: 'Progress',
+
+        errors: {
+          not_admin: 'This account cannot view orders.',
+          order_not_found: 'We could not find that order.',
+          unknown: 'Could not load that order. Check your connection and try again.',
+        },
+      },
+    },
+
+    /* What the kitchen has actually got through. Read by both the Manager
+       (against deliveries) and the Admin (against the sales report), which is
+       why the wording names neither of them. */
+    usage: {
+      /* The panel's own heading, distinct from the section name in the
+         sidebar — the same split the stock screen uses ("Stock" / "Stock
+         levels"). Repeating one word twice down the page reads as a bug. */
+      title: 'Ingredients used',
+
+      searchLabel: 'Search ingredients',
+      periodLabel: 'Period',
+
+      periods: {
+        today: 'Today',
+        total: 'All time',
+      },
+
+      /* Said under the heading so nobody has to guess whose midnight it is.
+         The same zone the sales report buckets by, which is what makes the two
+         screens comparable at all. */
+      dayNote: (day) => `Today is ${day} in the shop's own time zone`,
+
+      summary: (moved, total) =>
+        moved === 0
+          ? `Nothing used yet out of ${total} ingredients`
+          : `${moved} of ${total} ingredients used`,
+
+      onlyUsed: 'Only what moved',
+      showAll: 'Every ingredient',
+
+      colIngredient: 'Ingredient',
+      colUsed: 'Used',
+      colStock: 'Left in stock',
+
+      /* An ingredient nothing has touched. A dash rather than "0 g", because
+         zero of something is a measurement and this is the absence of one. */
+      none: '—',
+
+      empty: 'No ingredients yet.',
+      noMatch: 'No ingredients match that.',
+
+      /* A genuinely quiet day, which is NOT the same as a search that found
+         nothing. Saying "no ingredients match that" when nobody typed anything
+         blames the reader for a search they never made. */
+      noneUsed: {
+        today: 'Nothing has been used today yet.',
+        total: 'Nothing has been used yet.',
+      },
+      showing: (shown, total) => `Showing ${shown} of ${total}`,
+
+      /* The ledger starts when it is switched on, and says so rather than
+         letting an empty first day read as a broken screen. */
+      ledgerNote: 'Counts what has moved since stock tracking was switched on.',
+
+      loading: 'Loading usage…',
+
+      errors: {
+        not_staff: 'This account cannot view ingredient usage.',
+        unknown: 'Could not load usage. Check your connection and try again.',
+      },
+    },
+
+    /* The kitchen screen. Written for someone with flour on their hands
+       looking at a counter from two feet away, so the words are short and the
+       button says what happens rather than what it is. */
+    chef: {
+      title: 'Kitchen',
+      panelTitle: 'Chef',
+      sub: 'Oldest first. Tap an order when it moves on.',
+
+      none: 'Nothing waiting. The kitchen is clear.',
+      loading: 'Loading orders…',
+
+      /* What pressing the button does, phrased as the action rather than the
+         stage it lands on. "Mark delivered" is a thing you do; "delivered" is
+         a thing an order is. The stage names themselves stay in COPY.track so
+         the kitchen and the customer never describe the ladder differently. */
+      actions: {
+        preparing: 'Start cooking',
+        out_for_delivery: 'Out for delivery',
+        ready_for_pickup: 'Ready for pickup',
+        delivered: 'Mark delivered',
+        picked_up: 'Mark picked up',
+      },
+
+      waiting: (mins) => (mins < 1 ? 'just now' : `${mins} min`),
+      itemCount: (n) => `${n} item${n === 1 ? '' : 's'}`,
+      extras: (names) => `+ ${names}`,
+
+      /* Announced to a screen reader after the status actually changed, not
+         when the button was pressed — the database has the final say and can
+         still refuse. */
+      moved: (number, stage) => `Order ${number} is now ${stage}`,
+
+      /* An order someone else moved while this screen was showing the old
+         stage. Not an error the chef caused, so it reads as news rather than
+         a failure. */
+      errors: {
+        not_kitchen: 'This account cannot update orders.',
+        order_not_found: 'That order is no longer there.',
+        order_cancelled: 'That order was cancelled.',
+        status_not_forward: 'Someone else already moved that one on.',
+        invalid_status: 'That stage does not apply to this order.',
+        already_final: 'That order is already finished.',
+        unknown: 'Could not update that order. Check your connection.',
+      },
+
+      loadErrors: {
+        not_kitchen: 'This account cannot see the kitchen.',
+        unknown: 'Could not load orders. Check your connection and try again.',
+      },
+
+      /* Said once under the list rather than beside every order. */
+      liveNote: 'This screen keeps itself up to date.',
+    },
+
     /** FR-7.5 — the Admin sees inventory but cannot touch it. */
     inventory: {
       readOnlyNote: 'Read-only. Stock is added by the Manager.',
@@ -943,6 +1144,8 @@ export const COPY = {
       orders: 'Orders',
       menu: 'Menu',
       inventory: 'Inventory',
+      usage: 'Usage',
+      kitchen: 'Kitchen',
       reports: 'Reports',
       sectionsLabel: 'Sections',
       badgeLabel: (n, what) => `${n} ${what} need attention`,
@@ -1001,10 +1204,12 @@ export const COPY = {
       salesTitle: 'Sales',
       salesSub: 'Orders and revenue, to check against the stock they used',
       ordersTitle: 'Orders',
-      ordersSub: 'In progress now. Finished orders are under Reports.',
+      ordersSub: 'Recent orders, newest first',
       menuTitle: 'Menu',
       inventoryTitle: 'Inventory',
       inventorySub: 'What the kitchen has right now',
+      usageTitle: 'Usage',
+      usageSub: 'What the kitchen has got through',
       reportsTitle: 'Reports',
       reportsSub: 'How the shop is doing over time',
     },

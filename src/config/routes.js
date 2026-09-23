@@ -1,3 +1,5 @@
+import { isUuid } from '../lib/uuid'
+
 // Every URL in the app. Nothing should ever write a path as a string literal.
 export const ROUTES = {
   home: '/',
@@ -14,6 +16,7 @@ export const ROUTES = {
   staffLogin: '/staff',
   manager: '/manager',
   admin: '/admin',
+  chef: '/chef',
   // Each panel's sections are child routes of the two above. The section's own
   // path fragment lives in config/staffNav.js next to its label and icon, so a
   // section is described in exactly one place; sectionPath() below joins them.
@@ -33,9 +36,8 @@ export function tokenFromInput(value) {
   if (!trimmed) return null
 
   const last = trimmed.split(/[/?#]/).filter(Boolean).pop() ?? ''
-  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(last)
 
-  return isUuid ? last.toLowerCase() : null
+  return isUuid(last) ? last.toLowerCase() : null
 }
 
 /**

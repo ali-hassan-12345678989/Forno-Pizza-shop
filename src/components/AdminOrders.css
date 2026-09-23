@@ -1,0 +1,355 @@
+/* The Admin's orders: an index to scan, and one order in full.
+   Every colour is a token from index.css — a literal here would drift from the
+   rest of the site the first time the palette moves. */
+
+/* ===========================================================================
+   The index
+   =========================================================================== */
+
+.aord-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 0.75rem;
+  margin-bottom: 0.9rem;
+}
+
+.aord-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  flex: none;
+}
+
+.aord-empty,
+.aord-showing {
+  margin: 0.6rem 0 0;
+  font-size: 0.85rem;
+  color: var(--ink-3);
+}
+
+.aord-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  background: var(--card);
+}
+
+.aord-list li + li {
+  border-top: 1px solid var(--line-2);
+}
+
+/* The whole row is the link: a row is an easier target than a word, and the
+   accessible name is set on the link so it reads as "Open order #1007". */
+.aord-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto auto;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.6rem 0.8rem;
+  text-decoration: none;
+  color: var(--ink);
+}
+
+.aord-row:hover {
+  background: var(--wash-1);
+}
+
+/* The order number is what someone reads off a ticket or hears on the phone,
+   so it leads the row and lines up down the column. */
+.aord-num {
+  font-size: 0.9rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.aord-id {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.aord-id strong {
+  overflow: hidden;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink);
+}
+
+.aord-meta {
+  font-size: 0.78rem;
+  color: var(--ink-3);
+}
+
+.aord-total {
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.aord-chev {
+  color: var(--ink-3);
+}
+
+/* Stage. One pill, not three: an order is in exactly one of these buckets. */
+.aord-pill {
+  padding: 0.12rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+/* In progress is the one that wants attention, so it gets the warm tone the
+   rest of the panel already uses for "look at this". */
+.aord-pill.active {
+  color: var(--gold-deep);
+  background: var(--gold-tint);
+}
+
+/* green-deep, not green: --green on --green-tint is 4.47:1, which misses the
+   4.5:1 bar for small text by a hair. The palette already carries --gold-deep
+   for exactly this job; green simply had no equivalent until now. */
+.aord-pill.completed {
+  color: var(--green-deep);
+  background: var(--green-tint);
+}
+
+/* Muted, not red. A cancelled order is a non-event, not a failure, and
+   colouring it like an error makes a quiet list look alarming.
+
+   ink-2 rather than ink-3: the pill is 0.7rem bold, which WCAG counts as small
+   text, and ink-3 on sand-2 is 2.48:1 — well under the 4.5:1 bar. ink-2 on the
+   same ground is 4.78:1 and still reads as muted next to the other two. */
+.aord-pill.cancelled {
+  color: var(--ink-2);
+  background: var(--sand-2);
+}
+
+.aord-pill.type {
+  color: var(--ink-2);
+  background: var(--wash-3);
+}
+
+/* Five columns do not fit a narrow panel. The pill drops to a second row and
+   the chevron goes — the whole row is the target anyway. */
+@media (max-width: 40rem) {
+  .aord-row {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 0.3rem 0.7rem;
+  }
+
+  .aord-num {
+    grid-row: span 2;
+  }
+
+  .aord-total {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .aord-pill {
+    grid-column: 2 / -1;
+    grid-row: 2;
+    justify-self: start;
+  }
+
+  .aord-chev {
+    display: none;
+  }
+}
+
+/* ===========================================================================
+   One order
+   =========================================================================== */
+
+.aord-detail {
+  display: grid;
+  gap: 1.1rem;
+  margin-top: 1rem;
+}
+
+.aord-dhead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 0.9rem;
+}
+
+.aord-dnum {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 1.5rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.aord-dwhen {
+  margin: 0.1rem 0 0;
+  font-size: 0.85rem;
+  color: var(--ink-2);
+}
+
+.aord-dtags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.aord-lines h2,
+.aord-customer h2 {
+  margin: 0 0 0.9rem;
+  font-family: var(--serif);
+  font-size: 1.05rem;
+  color: var(--ink);
+}
+
+.aord-scroll {
+  overflow-x: auto;
+}
+
+.aord-table {
+  width: 100%;
+  min-width: 24rem;
+  border-collapse: collapse;
+}
+
+.aord-table th {
+  padding: 0 0.5rem 0.4rem 0;
+  text-align: left;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.aord-table tbody th {
+  padding: 0.45rem 0.5rem 0.45rem 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink);
+}
+
+.aord-table td {
+  padding: 0.45rem 0.5rem 0.45rem 0;
+  font-size: 0.875rem;
+  color: var(--ink);
+}
+
+.aord-table tbody tr + tr th,
+.aord-table tbody tr + tr td {
+  border-top: 1px solid var(--line-2);
+}
+
+.aord-table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.aord-table th:last-child,
+.aord-table td:last-child {
+  padding-right: 0;
+}
+
+.aord-line-name {
+  display: block;
+}
+
+.aord-line-extras {
+  display: block;
+  margin-top: 0.1rem;
+  font-size: 0.78rem;
+  color: var(--ink-3);
+}
+
+.aord-totals {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0.9rem 0 0;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--line-2);
+}
+
+.aord-totals div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.aord-totals dt {
+  font-size: 0.875rem;
+  color: var(--ink-2);
+}
+
+.aord-totals dd {
+  margin: 0;
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.aord-grand dt,
+.aord-grand dd {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.aord-facts {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0;
+}
+
+.aord-facts div {
+  display: grid;
+  grid-template-columns: 6rem minmax(0, 1fr);
+  gap: 0.2rem 0.9rem;
+  align-items: baseline;
+}
+
+.aord-facts dt {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.aord-facts dd {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.aord-facts a {
+  color: var(--ink);
+}
+
+.aord-guest {
+  margin: 0.9rem 0 0;
+  font-size: 0.82rem;
+  color: var(--ink-3);
+}
+
+@media (max-width: 34rem) {
+  .aord-facts div {
+    grid-template-columns: 1fr;
+  }
+}

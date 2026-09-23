@@ -12,6 +12,8 @@ export const SECTION_IDS = {
   orders: 'orders',
   menu: 'menu',
   inventory: 'inventory',
+  usage: 'usage',
+  kitchen: 'kitchen',
   reports: 'reports',
 }
 
@@ -43,15 +45,31 @@ export const STAFF_NAV = {
     // The badge is the count of ingredients needing attention — the one thing
     // a Manager wants to know without opening anything.
     { id: SECTION_IDS.stock, path: 'stock', icon: 'stock', badge: 'lowStock' },
+    // Both panels carry it: the Manager reads it against deliveries, the
+    // Admin against the sales report. One screen, one function, two doors.
+    { id: SECTION_IDS.usage, path: 'usage', icon: 'stock' },
     { id: SECTION_IDS.sales, path: 'sales', icon: 'sales' },
   ],
+  /* One section, which is the panel. A kitchen does one thing, and a sidebar
+     offering a single door is still worth having: it names where you are and
+     carries the sign-out. */
+  [STAFF_ROLES.chef]: [{ id: SECTION_IDS.kitchen, path: '', icon: 'orders' }],
   [STAFF_ROLES.admin]: [
     { id: SECTION_IDS.dashboard, path: '', icon: 'dashboard' },
-    { id: SECTION_IDS.orders, path: 'orders', icon: 'orders', badge: 'openOrders' },
+    // Opens one order on its own URL, so a support call can be answered
+    // from a link rather than by describing which row to scroll to.
+    {
+      id: SECTION_IDS.orders,
+      path: 'orders',
+      icon: 'orders',
+      badge: 'openOrders',
+      detail: `:${DETAIL_PARAM}`,
+    },
     // One item opens on its own URL, so the back button, a refresh and a
     // bookmark all land on the item the Admin was editing.
     { id: SECTION_IDS.menu, path: 'menu', icon: 'menu', detail: `:${DETAIL_PARAM}` },
     { id: SECTION_IDS.inventory, path: 'inventory', icon: 'stock' },
+    { id: SECTION_IDS.usage, path: 'usage', icon: 'stock' },
     { id: SECTION_IDS.reports, path: 'reports', icon: 'sales' },
   ],
 }
@@ -60,6 +78,7 @@ export const STAFF_NAV = {
 export const PANEL_ROOT = {
   [STAFF_ROLES.manager]: ROUTES.manager,
   [STAFF_ROLES.admin]: ROUTES.admin,
+  [STAFF_ROLES.chef]: ROUTES.chef,
 }
 
 /** The badge sources a nav entry may ask for, so a typo is an import error. */

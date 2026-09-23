@@ -74,11 +74,25 @@ export const STAFF = {
   get adminEmail() {
     return process.env.TEST_ADMIN_EMAIL
   },
+  get chefEmail() {
+    return process.env.TEST_CHEF_EMAIL
+  },
 }
 
 /** False when .env has no staff addresses yet, so those tests can say why they skipped. */
 export function staffConfigured() {
   return Boolean(STAFF.managerEmail && STAFF.adminEmail)
+}
+
+/**
+ * The kitchen account, checked separately from the other two.
+ *
+ * Folding it into staffConfigured() would make every Manager and Admin test in
+ * the suite skip on a database where the chef has not been seeded yet, which
+ * would hide far more than it explains.
+ */
+export function chefConfigured() {
+  return Boolean(STAFF.chefEmail)
 }
 
 /**
@@ -105,6 +119,10 @@ export function managerClient() {
 
 export function adminClient() {
   return cachedStaffClient(STAFF.adminEmail)
+}
+
+export function chefClient() {
+  return cachedStaffClient(STAFF.chefEmail)
 }
 
 /**

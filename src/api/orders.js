@@ -174,8 +174,14 @@ function normaliseHistoryRow(row) {
   }
 }
 
-/** One shape for all three calls, so every order view shares it. */
-function normaliseOrder(payload) {
+/**
+ * One shape for every order view, so no two of them can disagree.
+ *
+ * Exported because the Admin's reader (api/adminOrders.js) returns the same
+ * order/items/status_history payload as get_order_by_token() and has no business
+ * inventing a second mapping of the same columns.
+ */
+export function normaliseOrder(payload) {
   const order = payload.order ?? {}
 
   return {

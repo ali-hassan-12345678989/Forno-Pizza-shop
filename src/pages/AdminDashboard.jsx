@@ -13,7 +13,9 @@ import { fetchAdminMenu } from '../api/adminMenu'
 import { fetchStockLevels } from '../api/inventory'
 import { fetchSalesReport } from '../api/reports'
 import { formatPrice, formatShopDate, formatTime } from '../lib/format'
+import { STAFF_POLL_MS } from '../config/staffPoll'
 import { useAsyncData } from '../lib/useAsyncData'
+import { useAutoRefresh } from '../lib/useAutoRefresh'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 
 /** How many days the dashboard's trend line covers. */
@@ -40,6 +42,11 @@ export default function AdminDashboard() {
     const { rows, errorCode } = await fetchSalesReport(REPORT_PERIODS.day, TREND_DAYS)
     return { data: rows, errorCode }
   })
+
+  /* Only the open-order count. Sales and the menu move on a scale of days, and
+     re-fetching them every ten seconds would be three times the requests to
+     watch two numbers that cannot have changed. */
+  useAutoRefresh(open.reload, STAFF_POLL_MS)
 
   const menu = useAsyncData(async () => {
     const { items, errorCode } = await fetchAdminMenu()

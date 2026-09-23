@@ -7,6 +7,8 @@ import {
   anonClient,
   managerClient,
   signedInClient,
+  chefClient,
+  chefConfigured,
   staffConfigured,
 } from './helpers/supabase.js'
 
@@ -181,13 +183,30 @@ describe.skipIf(!staffConfigured())('the UI role constants match the database', 
     expect(isStaffRole(data)).toBe(true)
   })
 
-  it('every role the UI knows about is a role the database actually issues', async () => {
-    const issued = new Set()
-    for (const { client } of [await managerClient(), await adminClient()]) {
-      issued.add((await client.rpc('staff_role')).data)
-    }
-    expect([...issued].sort()).toEqual([...ALL_STAFF_ROLES].sort())
-  })
+  it.skipIf(!chefConfigured())(
+    'the seeded chef comes back as exactly STAFF_ROLES.chef',
+    async () => {
+      const { client } = await chefClient()
+      const { data } = await client.rpc('staff_role')
+      expect(data).toBe(STAFF_ROLES.chef)
+      expect(isStaffRole(data)).toBe(true)
+    },
+  )
+
+  it.skipIf(!chefConfigured())(
+    'every role the UI knows about is a role the database actually issues',
+    async () => {
+      // One seeded account per role in STAFF_ROLES. Adding a role to the UI
+      // constant without seeding an account for it fails here — which is
+      // exactly what happened when the chef role was added, and is the reason
+      // this test is worth having.
+      const issued = new Set()
+      for (const { client } of [await managerClient(), await adminClient(), await chefClient()]) {
+        issued.add((await client.rpc('staff_role')).data)
+      }
+      expect([...issued].sort()).toEqual([...ALL_STAFF_ROLES].sort())
+    },
+  )
 
   it('a customer is not mistaken for a staff role', async () => {
     const { client } = await signedInClient(customerEmail)
