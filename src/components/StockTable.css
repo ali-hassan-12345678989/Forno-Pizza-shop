@@ -161,7 +161,7 @@
 }
 
 .stock-pill.ok {
-  color: var(--green);
+  color: var(--green-deep);
   background: var(--green-tint);
 }
 

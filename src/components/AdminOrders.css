@@ -130,7 +130,7 @@
 
    ink-2 rather than ink-3: the pill is 0.7rem bold, which WCAG counts as small
    text, and ink-3 on sand-2 is 2.48:1 — well under the 4.5:1 bar. ink-2 on the
-   same ground is 4.78:1 and still reads as muted next to the other two. */
+   same ground is 6.33:1 and still reads as muted next to the other two. */
 .aord-pill.cancelled {
   color: var(--ink-2);
   background: var(--sand-2);

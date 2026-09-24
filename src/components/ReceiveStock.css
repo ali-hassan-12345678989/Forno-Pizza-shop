@@ -190,7 +190,7 @@
   margin: 0.9rem 0 0;
   padding: 0.65rem 0.8rem;
   font-size: 0.875rem;
-  color: var(--green);
+  color: var(--green-deep);
   background: var(--green-tint);
   border: 1px solid var(--line);
   border-radius: var(--r);

@@ -1,9 +1,8 @@
+import { lazy, Suspense } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import CustomerLayout from './components/CustomerLayout'
-import StaffLayout from './components/StaffLayout'
-import StaffGate from './components/StaffGate'
-import StaffShell from './components/StaffShell'
 import ScrollToTop from './components/ScrollToTop'
+import RouteFallback from './components/RouteFallback'
 import Home from './pages/Home'
 import Menu from './pages/Menu'
 import Cart from './pages/Cart'
@@ -11,23 +10,45 @@ import Checkout from './pages/Checkout'
 import Track from './pages/Track'
 import Orders from './pages/Orders'
 import Placeholder from './pages/Placeholder'
-import StaffLogin from './pages/StaffLogin'
-import ManagerDashboard from './pages/ManagerDashboard'
-import ManagerStock from './pages/ManagerStock'
-import ManagerSales from './pages/ManagerSales'
-import AdminDashboard from './pages/AdminDashboard'
-import AdminOrders from './pages/AdminOrders'
-import AdminOrderPage from './pages/AdminOrderPage'
-import AdminMenuSection from './pages/AdminMenuSection'
-import AdminMenuItemPage from './pages/AdminMenuItemPage'
-import AdminInventory from './pages/AdminInventory'
-import AdminReports from './pages/AdminReports'
-import StaffUsage from './pages/StaffUsage'
-import ChefKitchen from './pages/ChefKitchen'
 import { COPY } from './content/copy'
 import { ROUTES } from './config/routes'
 import { STAFF_ROLES } from './config/staff'
 import { SECTION_IDS, navFor } from './config/staffNav'
+
+/**
+ * Every staff screen is loaded on demand, and the customer pages above are not.
+ *
+ * A customer opening the menu was downloading the Manager, Admin and Chef
+ * panels as well — inventory tables, the sales report, the menu editor, the
+ * kitchen queue — none of which they can even sign in to. That is most of a
+ * single 639 kB bundle spent on code the overwhelming majority of visitors will
+ * never run, over mobile data, before the first pizza appears.
+ *
+ * The shell components go with them. StaffLayout, StaffGate and StaffShell are
+ * only ever rendered underneath one of these routes, so leaving them eager
+ * would have kept the sidebar, the rail and the role gate in the customer
+ * bundle to no purpose.
+ *
+ * Nothing else may import these modules statically. A single static import
+ * anywhere pulls the module back into the main chunk and silently undoes the
+ * split for that file — the build does not fail, it just gets big again.
+ */
+const StaffLayout = lazy(() => import('./components/StaffLayout'))
+const StaffGate = lazy(() => import('./components/StaffGate'))
+const StaffShell = lazy(() => import('./components/StaffShell'))
+const StaffLogin = lazy(() => import('./pages/StaffLogin'))
+const ManagerDashboard = lazy(() => import('./pages/ManagerDashboard'))
+const ManagerStock = lazy(() => import('./pages/ManagerStock'))
+const ManagerSales = lazy(() => import('./pages/ManagerSales'))
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'))
+const AdminOrders = lazy(() => import('./pages/AdminOrders'))
+const AdminOrderPage = lazy(() => import('./pages/AdminOrderPage'))
+const AdminMenuSection = lazy(() => import('./pages/AdminMenuSection'))
+const AdminMenuItemPage = lazy(() => import('./pages/AdminMenuItemPage'))
+const AdminInventory = lazy(() => import('./pages/AdminInventory'))
+const AdminReports = lazy(() => import('./pages/AdminReports'))
+const StaffUsage = lazy(() => import('./pages/StaffUsage'))
+const ChefKitchen = lazy(() => import('./pages/ChefKitchen'))
 
 /**
  * Which component renders each section.
@@ -101,7 +122,13 @@ export default function App() {
 
         {/* Staff. The gate asks the database for the caller's role on every
             page view; it is not what secures the data — RLS is. See StaffGate. */}
-        <Route element={<StaffLayout />}>
+        <Route
+          element={
+            <Suspense fallback={<RouteFallback />}>
+              <StaffLayout />
+            </Suspense>
+          }
+        >
           <Route path={ROUTES.staffLogin} element={<StaffLogin />} />
 
           <Route

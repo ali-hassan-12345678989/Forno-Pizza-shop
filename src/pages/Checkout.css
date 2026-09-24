@@ -62,7 +62,7 @@
   padding: 10px 12px;
   border-radius: var(--r);
   background: var(--green-tint);
-  color: var(--green);
+  color: var(--green-deep);
   font-size: 13.5px;
 }
 .prefill-note button {

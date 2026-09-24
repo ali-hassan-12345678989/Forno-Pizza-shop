@@ -114,13 +114,18 @@
   white-space: nowrap;
 }
 
+/* Both of these pills are small text on a tinted ground, which is the case
+   WCAG AA is strictest about. --green on --green-tint reads 4.47:1 and
+   --ink-3 on --sand-2 reads 4.38:1 — near misses, but misses. The two deeper
+   tokens exist for exactly this pairing and cost the pills nothing: they still
+   read as quiet next to a live item's name. */
 .amenu-pill.live {
-  color: var(--green);
+  color: var(--green-deep);
   background: var(--green-tint);
 }
 
 .amenu-pill.hidden {
-  color: var(--ink-3);
+  color: var(--ink-2);
   background: var(--sand-2);
 }
 
@@ -569,7 +574,7 @@
   margin: 0.9rem 0 0;
   padding: 0.6rem 0.8rem;
   font-size: 0.875rem;
-  color: var(--green);
+  color: var(--green-deep);
   background: var(--green-tint);
   border: 1px solid var(--line);
   border-radius: var(--r);

@@ -110,7 +110,7 @@
 .orders-status.is-delivered,
 .orders-status.is-picked_up {
   background: var(--green-tint);
-  color: var(--green);
+  color: var(--green-deep);
 }
 .orders-status.is-cancelled {
   background: var(--inert);

@@ -1,0 +1,38 @@
+# ---------------------------------------------------------------------------
+# How this site deploys.
+#
+# Until now this lived only in the Cloudflare dashboard, which meant the repo
+# could not answer "how does this ship?" — and if that dashboard setting were
+# ever lost or changed by someone else, nothing here would have contradicted
+# them. This file is the answer, in the repo, next to the code it deploys.
+#
+# THE LIVE PATH: Cloudflare Workers Builds watches the `main` branch of the
+# GitHub repo. A push runs `npm run build` and publishes `dist/`. Nobody runs a
+# deploy command by hand; merging to main IS the deploy. Cloudflare reads this
+# file during that build, so the settings below are the ones actually in force.
+#
+# BY HAND, if the git connection is ever unavailable:
+#   npx wrangler login        (opens a browser; one-time)
+#   npm run build
+#   npx wrangler deploy
+#
+# There is no Worker script — no `main` key below — because there is no server.
+# The React app is static files and Supabase is the backend, which is the whole
+# reason this hosting was chosen: static assets have no cold start.
+# ---------------------------------------------------------------------------
+
+name = "forno-pizza-shop"
+compatibility_date = "2026-09-24"
+
+[assets]
+# Vite's build output. Changing `npm run build` without changing this, or the
+# reverse, deploys an empty site.
+directory = "./dist"
+
+# The app is a single-page app: React Router owns /menu, /track/<token>,
+# /admin/orders and the rest, and none of them exist as files on disk. Without
+# this line Cloudflare looks for /admin/orders/index.html, does not find it, and
+# returns 404 — so every deep link, refresh and shared tracking link breaks
+# while the home page carries on working perfectly. It is the single most
+# important line in this file.
+not_found_handling = "single-page-application"

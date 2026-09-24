@@ -5,9 +5,17 @@
 :root {
   --paper: #fdfbf7;
   --card: #fff;
+  /* The one place these deviate from design-reference/Forno_Website.html, and
+     deliberately. The reference's --ink-3 (#9a9089) reads at 2.61:1 on the
+     deepest surface it sits on, well under the 4.5:1 WCAG AA needs for small
+     text, and it carries 98 pieces of text across both the customer site and
+     the staff panels. Darkening it alone would have parked it within 1.08:1 of
+     --ink-2 and flattened three levels of emphasis into two, so --ink-2 moves
+     down with it to keep the step visible. Worst-case ratios, measured against
+     --wash-5: 15.00 / 6.66 / 4.61. */
   --ink: #1a1614;
-  --ink-2: #6b615a;
-  --ink-3: #9a9089;
+  --ink-2: #584f4a;
+  --ink-3: #706762;
 
   --line: #e8e1d7;
   --line-2: #d6ccbf;
