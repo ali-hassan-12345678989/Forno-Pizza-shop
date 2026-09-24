@@ -36,3 +36,12 @@ directory = "./dist"
 # while the home page carries on working perfectly. It is the single most
 # important line in this file.
 not_found_handling = "single-page-application"
+
+# Response headers come from public/_headers, which Vite copies into dist/ and
+# Cloudflare reads from the root of the assets directory. The audit found this
+# site sending no security headers at all; the one that mattered was frame
+# protection, without which a signed-in Admin can be clickjacked through an
+# invisible iframe of /admin. That file explains each header it sets.
+#
+# It has no effect under `vite preview` — only Cloudflare applies it — so the
+# headers can only be confirmed against the deployed URL.

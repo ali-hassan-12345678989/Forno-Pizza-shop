@@ -263,14 +263,29 @@ exception
     raise exception 'size_already_exists';
 end $$;
 
-create or replace function public.admin_delete_menu_size(p_id uuid)
+-- Adding a parameter creates a SECOND function rather than replacing the first:
+-- (uuid) and (uuid, boolean) are different signatures to Postgres. Without this
+-- drop, the original ungated version would still be sitting there, still
+-- granted to authenticated, and still deleting recipes without asking — a fix
+-- that leaves the hole open next to it.
+drop function if exists public.admin_delete_menu_size(uuid);
+
+create or replace function public.admin_delete_menu_size(
+  p_id            uuid,
+  -- Deleting a size takes its recipe with it, and there is no screen anywhere
+  -- that can put a recipe back. So the caller has to say, in as many words,
+  -- that it knows. A client that simply forgets gets 'size_has_recipe' rather
+  -- than a silent hole in the inventory engine.
+  p_confirm_recipe_loss boolean default false
+)
 returns void
 language plpgsql
 security definer
 set search_path = public
 as $$
 declare
-  v_orders bigint;
+  v_orders  bigint;
+  v_recipes bigint;
 begin
   if not public.is_admin() then
     raise exception 'not_admin';
@@ -280,6 +295,17 @@ begin
 
   if v_orders > 0 then
     raise exception 'size_has_orders';
+  end if;
+
+  -- recipes.menu_item_size_id is ON DELETE CASCADE, so the rows behind this
+  -- size go the moment it does — quietly, and with no way back short of
+  -- hand-written SQL. This audit removed one by accident inside a minute of
+  -- probing and it cost a repair script to undo, which is why the check is
+  -- here and not in a comment asking people to be careful.
+  select count(*) into v_recipes from public.recipes where menu_item_size_id = p_id;
+
+  if v_recipes > 0 and not coalesce(p_confirm_recipe_loss, false) then
+    raise exception 'size_has_recipe';
   end if;
 
   delete from public.menu_item_sizes where id = p_id;
@@ -297,10 +323,10 @@ revoke execute on function public.admin_menu_items()                            
 revoke execute on function public.admin_save_menu_item(uuid, text, text, text, text, text, int, boolean, boolean) from public;
 revoke execute on function public.admin_delete_menu_item(uuid)                    from public;
 revoke execute on function public.admin_save_menu_size(uuid, uuid, text, numeric, text, int) from public;
-revoke execute on function public.admin_delete_menu_size(uuid)                    from public;
+revoke execute on function public.admin_delete_menu_size(uuid, boolean)           from public;
 
 grant execute on function public.admin_menu_items()                               to authenticated;
 grant execute on function public.admin_save_menu_item(uuid, text, text, text, text, text, int, boolean, boolean) to authenticated;
 grant execute on function public.admin_delete_menu_item(uuid)                     to authenticated;
 grant execute on function public.admin_save_menu_size(uuid, uuid, text, numeric, text, int) to authenticated;
-grant execute on function public.admin_delete_menu_size(uuid)                     to authenticated;
+grant execute on function public.admin_delete_menu_size(uuid, boolean)                     to authenticated;

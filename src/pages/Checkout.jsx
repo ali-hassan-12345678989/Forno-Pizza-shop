@@ -11,6 +11,7 @@ import { COPY } from '../content/copy'
 import { ROUTES, trackPath } from '../config/routes'
 import { STORAGE_KEYS, writeStored } from '../config/storage'
 import { placeOrder, OrderError, fetchSavedDetails } from '../api/orders'
+import { logDev } from '../lib/logDev'
 import { useShop } from '../context/SettingsContext'
 import { formatPrice } from '../lib/format'
 import { calculateTotals } from '../lib/totals'
@@ -159,7 +160,7 @@ export default function Checkout() {
       if (error instanceof OrderError) {
         setSubmitError(t.orderErrors[error.code] ?? t.orderErrors.unknown)
       } else {
-        console.error('Unexpected failure placing order:', error)
+        logDev('Unexpected failure placing order:', error)
         setSubmitError(t.orderErrors.unknown)
       }
       setSubmitting(false)

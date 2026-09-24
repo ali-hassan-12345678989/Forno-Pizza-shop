@@ -217,10 +217,12 @@ export const COPY = {
     errors: {
       nameRequired: 'Enter your name',
       nameTooShort: 'That name looks too short',
+      nameTooLong: 'That name is too long — 80 characters at most',
       phoneRequired: 'Enter a phone number',
       phoneInvalid: 'Enter a Pakistani mobile number, e.g. 0300 1234567',
       addressRequired: 'Enter a delivery address',
       addressTooShort: 'Add a bit more detail so we can find you',
+      addressTooLong: 'That address is too long — 300 characters at most',
       notesTooLong: 'Notes are too long',
       formInvalid: 'Please fix the highlighted fields',
     },
@@ -265,6 +267,8 @@ export const COPY = {
     orderErrors: {
       invalid_fulfillment_type: 'Choose delivery or pickup and try again.',
       invalid_name: 'Enter your name',
+      name_too_long: 'That name is too long — 80 characters at most',
+      address_too_long: 'That address is too long — 300 characters at most',
       invalid_phone: 'Enter a Pakistani mobile number, e.g. 0300 1234567',
       invalid_address: 'Add a bit more detail so we can find you',
       invalid_notes: 'Notes are too long',
@@ -842,6 +846,10 @@ export const COPY = {
       pricePrefix: 'Rs.',
       addSize: 'Add a size',
       removeSizeAria: (name) => `Remove the ${name || 'new'} size`,
+      confirmDropSizeTitle: 'Delete this size and its recipe?',
+      confirmDropSizeBody: (names) =>
+        `Saving will delete ${names}. The recipe behind it goes too — which ingredients that size uses, and how much of each — and nothing in this panel can put it back. Past orders are unaffected.`,
+      confirmDropSizeYes: 'Delete it',
       sizeLocked: (n) => `ordered ${n}×`,
       sizeLockedWhy: 'Kept because past receipts point at it.',
       noSizes: 'No sizes yet — a customer cannot order this until it has one.',
@@ -892,6 +900,8 @@ export const COPY = {
         size_too_long: 'That size name is too long',
         size_not_found: 'That size no longer exists',
         size_has_orders: 'This size has been ordered, so it cannot be deleted.',
+        size_has_recipe:
+          'That size still has a recipe. Removing it deletes the recipe too, and it cannot be put back from here.',
         size_already_exists: 'That size already exists on this item',
         invalid_price: 'Enter a price of zero or more',
         price_too_large: 'That price is too large',

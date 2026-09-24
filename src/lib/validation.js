@@ -18,6 +18,17 @@ export const MIN_ADDRESS_LENGTH = 8
 export const MAX_NOTES_LENGTH = 200
 
 /**
+ * The upper bounds place_order() enforces. They were always there, but as
+ * left(v_name, 80) and left(v_address, 300) — the order went through and the
+ * kitchen was handed a quietly different name and address from the ones the
+ * customer typed. The database now refuses instead, and these two constants
+ * are what stop the customer meeting that refusal: the field tells them while
+ * they are still looking at it.
+ */
+export const MAX_NAME_LENGTH = 80
+export const MAX_ADDRESS_LENGTH = 300
+
+/**
  * Pakistani mobile numbers are 10 digits starting with 3, written locally with
  * a leading 0 (0300 1234567) and internationally as +92 300 1234567. Accept
  * either and normalise, the way Domino's PK and Pizza Hut PK both do.
@@ -46,6 +57,7 @@ export function validateName(value) {
   const trimmed = String(value ?? '').trim()
   if (!trimmed) return 'nameRequired'
   if (trimmed.length < MIN_NAME_LENGTH) return 'nameTooShort'
+  if (trimmed.length > MAX_NAME_LENGTH) return 'nameTooLong'
   return null
 }
 
@@ -60,6 +72,7 @@ export function validateAddress(value, { required }) {
   const trimmed = String(value ?? '').trim()
   if (!trimmed) return 'addressRequired'
   if (trimmed.length < MIN_ADDRESS_LENGTH) return 'addressTooShort'
+  if (trimmed.length > MAX_ADDRESS_LENGTH) return 'addressTooLong'
   return null
 }
 

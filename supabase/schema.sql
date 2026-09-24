@@ -206,6 +206,15 @@ $$;
 
 -- The only way a guest reads their own order back: the unguessable token the
 -- client generated at creation. No SELECT policy on orders is opened for anon.
+--
+-- CAREFUL: this is the BOOTSTRAP copy. supabase/place_order.sql defines the
+-- same function again, and its version is the one that ships — it also returns
+-- each line's toppings, which it can only do once toppings.sql has created
+-- order_item_toppings_json(), which does not exist yet at this point in the
+-- run order. The consequence is that re-running THIS file on an established
+-- database silently downgrades the tracker: every customer's extras disappear
+-- from their order view and nothing errors. If you re-run schema.sql, re-run
+-- place_order.sql straight after it.
 create or replace function public.get_order_by_token(p_access_token uuid)
 returns jsonb language sql security definer set search_path = public stable as $$
   select jsonb_build_object(
@@ -220,7 +229,17 @@ returns jsonb language sql security definer set search_path = public stable as $
     ), '[]'::jsonb)
   )
   from public.orders o
-  where o.access_token = p_access_token;
+  where o.access_token = p_access_token
+    -- A tracking link is a bearer credential: whoever holds it reads the
+    -- customer's name, phone number and home address. Without this line it
+    -- does that for ever, so a link forwarded into a family group chat in
+    -- January is still an open window onto that address in December.
+    --
+    -- Thirty days is well past the life of a pizza order and past any
+    -- realistic "where was that place again?" — cancelling closes in minutes
+    -- and tracking is over in an hour. A signed-in customer is unaffected:
+    -- /orders reads through RLS on user_id, not through this token.
+    and o.created_at > now() - interval '30 days';
 $$;
 
 grant execute on function public.get_order_by_token(uuid)       to anon, authenticated;

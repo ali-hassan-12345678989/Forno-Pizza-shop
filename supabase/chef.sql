@@ -298,9 +298,15 @@ grant execute on function public.advance_order_status(text)   to authenticated;
 
 do $$
 declare
-  -- The kitchen account. Already created in Supabase Auth, so this just finds
-  -- it. Swap it for the shop's real kitchen address before going live.
-  v_chef_email constant text := 'forno.chef.test@gmail.com';
+  -- >>> PUT THE KITCHEN ADDRESS HERE BEFORE RUNNING <<<
+  --
+  -- It must match TEST_CHEF_EMAIL in .env, because the kitchen tests sign in
+  -- as it. A placeholder on purpose, for the same reason as seed_staff.sql:
+  -- this repository is public, and publishing the address the kitchen logs in
+  -- with hands an attacker half a credential for nothing in return. This file
+  -- previously carried the real address so it could be pasted and run without
+  -- editing; the convenience was not worth the disclosure.
+  v_chef_email constant text := 'REPLACE_WITH_CHEF_EMAIL';
   v_chef_id    uuid;
 begin
   select id into v_chef_id from auth.users where lower(email) = lower(v_chef_email);

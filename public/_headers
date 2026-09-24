@@ -1,0 +1,45 @@
+# Response headers for every path Cloudflare serves.
+#
+# Cloudflare Workers static assets reads this file from the root of the built
+# output. Vite copies everything in public/ into dist/ unchanged, so this file
+# lives here and arrives there.
+#
+# WHY THIS EXISTS: the audit found the live site sending no security headers at
+# all — only Cloudflare's own. The one that mattered was the missing frame
+# protection: with none, any page anywhere can put /admin or /manager in an
+# invisible iframe, overlay bait, and have a signed-in Admin click a real
+# control in the panel without knowing it. The role checks do not help there,
+# because the victim genuinely is the Admin and the browser sends their real
+# session.
+#
+# Deliberately NOT here: a full Content-Security-Policy covering script-src,
+# connect-src and friends. That was not an audit finding, it cannot be tested
+# before it is live — this file has no effect under `vite preview` — and a
+# wrong directive takes the whole site down rather than degrading. It is worth
+# doing as a separate, deliberate piece of work with a deploy to test against.
+
+/*
+  # No framing, stated twice on purpose. frame-ancestors is the modern rule and
+  # supersedes X-Frame-Options, which is kept for older browsers that only
+  # understand that one.
+  X-Frame-Options: DENY
+  Content-Security-Policy: frame-ancestors 'none'
+
+  # Stops a browser second-guessing Content-Type. Without it, a file served as
+  # text/plain that happens to contain markup can be treated as HTML.
+  X-Content-Type-Options: nosniff
+
+  # An order tracking link carries its access token in the path, and that token
+  # is the whole credential for reading the customer's name, phone number and
+  # address. Modern browsers already default to exactly this policy, so nothing
+  # was leaking — this states the requirement rather than inheriting it.
+  Referrer-Policy: strict-origin-when-cross-origin
+
+  # A year of HTTPS-only, so a customer on shop wifi cannot be stripped back to
+  # http on a later visit. Cloudflare already redirects; this removes the first
+  # unprotected request that the redirect itself depends on.
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+
+  # The site asks for none of these. Saying so means an injected script cannot
+  # ask on its behalf either.
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()

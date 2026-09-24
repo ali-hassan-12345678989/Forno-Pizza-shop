@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { logDev } from '../lib/logDev'
 import { fetchMenu, categoriesOf } from '../api/menu'
 import { fetchReviewSummary } from '../api/reviews'
 import MenuCard from '../components/MenuCard'
@@ -32,12 +33,13 @@ export default function Menu() {
 
     fetchMenu()
       .then((data) => !cancelled && setItems(data))
-      // The reason is for the console, not the customer: a raw PostgREST
-      // message ("permission denied for table menu_items") tells them nothing
-      // they can act on and leaks the schema.
+      // The reason reaches a developer's console and nowhere else: a raw
+      // PostgREST message ("permission denied for table menu_items") tells the
+      // customer nothing they can act on and leaks the schema. logDev is
+      // compiled out of the production bundle, so it does not reach theirs.
       .catch((err) => {
         if (cancelled) return
-        console.error('Menu failed to load:', err)
+        logDev('Menu failed to load:', err)
         setFailed(true)
       })
 

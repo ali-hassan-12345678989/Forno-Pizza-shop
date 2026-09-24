@@ -29,7 +29,7 @@ import { tidyItem, tidySize } from '../lib/menuDraft'
 import './AdminMenu.css'
 
 /** Which confirmation is open, if any. */
-const ASKING = { remove: 'remove', leave: 'leave' }
+const ASKING = { remove: 'remove', leave: 'leave', dropSize: 'dropSize' }
 
 /**
  * Everything that has changed since the item was loaded, as one string.
@@ -131,7 +131,7 @@ export default function MenuItemEditor({ item, items, onSaved }) {
    * neighbours a move displaced. Stops at the first refusal and says which,
    * rather than carrying on and leaving a half-applied item behind.
    */
-  async function persist(fields, rows) {
+  async function persist(fields, rows, confirmRecipeLoss) {
     const mine = orderChanges.find((change) => change.id === item.id)
     // A new item goes to the end. sort_order defaults to 0, which would put a
     // brand-new item first on the customer menu — never what was meant.
@@ -144,7 +144,7 @@ export default function MenuItemEditor({ item, items, onSaved }) {
 
     const kept = new Set(rows.map((size) => size.id).filter(Boolean))
     for (const gone of item.sizes.filter((size) => !kept.has(size.id))) {
-      const result = await deleteMenuSize(gone.id)
+      const result = await deleteMenuSize(gone.id, { confirmRecipeLoss })
       if (result.errorCode) return result
     }
 
@@ -183,8 +183,30 @@ export default function MenuItemEditor({ item, items, onSaved }) {
     return { id, errorCode: null }
   }
 
-  async function save() {
+  /**
+   * Sizes the Admin has taken out of the editor that really exist in the
+   * database. A row added and removed in the same sitting has no id and has
+   * nothing behind it to lose.
+   */
+  function sizesBeingDropped() {
+    const kept = new Set(sizes.map((size) => size.id).filter(Boolean))
+    return item.sizes.filter((size) => size.id && !kept.has(size.id))
+  }
+
+  async function save({ confirmRecipeLoss = false } = {}) {
     if (busy) return
+
+    // Asked before anything is written, not after the database has refused.
+    // The save is a batch — item, then deletions, then the remaining sizes —
+    // so a refusal partway through would already have renamed the item, and
+    // the Admin would be answering a question about a half-applied save.
+    const dropping = sizesBeingDropped()
+    if (dropping.length > 0 && !confirmRecipeLoss) {
+      setAsking(ASKING.dropSize)
+      return
+    }
+
+    setAsking(null)
     setBusy(true)
     setError(null)
 
@@ -196,7 +218,7 @@ export default function MenuItemEditor({ item, items, onSaved }) {
     setDraft(fields)
     setSizes(rows)
 
-    const result = await persist(fields, rows)
+    const result = await persist(fields, rows, confirmRecipeLoss)
 
     if (result.errorCode) {
       // The draft is kept exactly as it was so the Admin can fix and retry.
@@ -543,7 +565,7 @@ export default function MenuItemEditor({ item, items, onSaved }) {
         saveLabel={busy ? t.saving : t.save}
         discardLabel={t.discard}
         busy={busy}
-        onSave={save}
+        onSave={() => save()}
         onDiscard={discard}
       />
 
@@ -556,6 +578,22 @@ export default function MenuItemEditor({ item, items, onSaved }) {
         destructive
         busy={busy}
         onConfirm={remove}
+        onCancel={() => setAsking(null)}
+      />
+
+      <ConfirmDialog
+        open={asking === ASKING.dropSize}
+        title={t.confirmDropSizeTitle}
+        body={t.confirmDropSizeBody(
+          sizesBeingDropped()
+            .map((size) => `"${size.size}"`)
+            .join(' and '),
+        )}
+        confirmLabel={t.confirmDropSizeYes}
+        cancelLabel={t.cancel}
+        destructive
+        busy={busy}
+        onConfirm={() => save({ confirmRecipeLoss: true })}
         onCancel={() => setAsking(null)}
       />
 

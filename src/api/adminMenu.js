@@ -129,7 +129,19 @@ export async function saveMenuSize(size) {
   return { id: data, errorCode: null }
 }
 
-export async function deleteMenuSize(id) {
-  const { error } = await supabase.rpc('admin_delete_menu_size', { p_id: id })
+/**
+ * Deleting a size takes its recipe with it — which ingredients it uses and how
+ * much of each — and no screen in the panel can put that back.
+ *
+ * So the database refuses unless it is told, explicitly, that the caller knows.
+ * `confirmRecipeLoss` is that word, and it is only ever true because the Admin
+ * answered the dialog in MenuItemEditor. Passing it by default here would turn
+ * the guard back into the cascade it replaced.
+ */
+export async function deleteMenuSize(id, { confirmRecipeLoss = false } = {}) {
+  const { error } = await supabase.rpc('admin_delete_menu_size', {
+    p_id: id,
+    p_confirm_recipe_loss: confirmRecipeLoss,
+  })
   return { errorCode: error ? errorCodeFrom(error) : null }
 }

@@ -2,8 +2,12 @@ import { describe, it, expect } from 'vitest'
 import {
   normalisePhone,
   MIN_NAME_LENGTH,
+  MAX_NAME_LENGTH,
   MIN_ADDRESS_LENGTH,
+  MAX_ADDRESS_LENGTH,
   MAX_NOTES_LENGTH,
+  validateName,
+  validateAddress,
 } from '../src/lib/validation.js'
 import { MAX_QUANTITY } from '../src/context/CartContext.jsx'
 import { anonClient, placeOrder, FIXTURES } from './helpers/supabase.js'
@@ -32,6 +36,36 @@ describe('the name limit matches on both sides', () => {
 
     expect(error?.message).toBe('invalid_name')
   })
+
+  it(`accepts a name of exactly ${MAX_NAME_LENGTH}`, async () => {
+    const { error } = await placeOrder(anon, { ...pickup, name: 'A'.repeat(MAX_NAME_LENGTH) })
+
+    expect(error).toBeNull()
+  })
+
+  // Before the audit this passed silently and stored 80 characters, so the
+  // kitchen got a different name from the one the customer typed. The database
+  // refuses now, and the form refuses first.
+  it(`rejects a name of ${MAX_NAME_LENGTH + 1} rather than trimming it`, async () => {
+    const { error } = await placeOrder(anon, { ...pickup, name: 'A'.repeat(MAX_NAME_LENGTH + 1) })
+
+    expect(error?.message).toBe('name_too_long')
+  })
+
+  it('the form catches an over-long name before the database has to', () => {
+    expect(validateName('A'.repeat(MAX_NAME_LENGTH))).toBeNull()
+    expect(validateName('A'.repeat(MAX_NAME_LENGTH + 1))).toBe('nameTooLong')
+  })
+
+  // A stored name is only proof of no truncation if it is read back.
+  it('stores the name whole, not shortened to the limit', async () => {
+    const name = 'Muhammad '.repeat(8).trim().slice(0, MAX_NAME_LENGTH)
+    const { data, error } = await placeOrder(anon, { ...pickup, name })
+
+    expect(error).toBeNull()
+    expect(data.order.customer_name).toBe(name)
+    expect(data.order.customer_name).toHaveLength(name.length)
+  })
 })
 
 describe('the address limit matches on both sides', () => {
@@ -51,6 +85,30 @@ describe('the address limit matches on both sides', () => {
     })
 
     expect(error?.message).toBe('invalid_address')
+  })
+
+  it(`accepts an address of exactly ${MAX_ADDRESS_LENGTH}`, async () => {
+    const { error } = await placeOrder(anon, {
+      fulfillmentType: 'delivery',
+      address: 'x'.repeat(MAX_ADDRESS_LENGTH),
+    })
+
+    expect(error).toBeNull()
+  })
+
+  it(`rejects an address of ${MAX_ADDRESS_LENGTH + 1} rather than trimming it`, async () => {
+    const { error } = await placeOrder(anon, {
+      fulfillmentType: 'delivery',
+      address: 'x'.repeat(MAX_ADDRESS_LENGTH + 1),
+    })
+
+    expect(error?.message).toBe('address_too_long')
+  })
+
+  it('the form catches an over-long address before the database has to', () => {
+    const required = { required: true }
+    expect(validateAddress('x'.repeat(MAX_ADDRESS_LENGTH), required)).toBeNull()
+    expect(validateAddress('x'.repeat(MAX_ADDRESS_LENGTH + 1), required)).toBe('addressTooLong')
   })
 })
 
