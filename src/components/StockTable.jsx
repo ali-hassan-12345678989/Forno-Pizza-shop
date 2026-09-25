@@ -2,6 +2,7 @@ import { useId, useMemo, useState } from 'react'
 import { COPY } from '../content/copy'
 import { formatQuantity } from '../lib/format'
 import './StockTable.css'
+import SearchField from './SearchField'
 
 /** The two ways to look at the list. Named so no call site spells one. */
 const VIEWS = { needs: 'needs', all: 'all' }
@@ -59,28 +60,7 @@ export default function StockTable({ rows, onBookIn, queuedIds }) {
       </div>
 
       <div className="stock-controls">
-        <div className="stock-search">
-          <label className="sr-only" htmlFor={searchId}>
-            {t.searchLabel}
-          </label>
-          <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true">
-            <circle cx="7" cy="7" r="4.5" fill="none" stroke="currentColor" strokeWidth="1.8" />
-            <path
-              d="M10.5 10.5 14 14"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-            />
-          </svg>
-          <input
-            id={searchId}
-            type="search"
-            value={query}
-            placeholder={t.searchLabel}
-            onChange={(event) => setQuery(event.target.value)}
-          />
-        </div>
+        <SearchField id={searchId} label={t.searchLabel} value={query} onChange={setQuery} />
 
         <div className="stock-filters" role="group" aria-label={t.filterLabel}>
           <button

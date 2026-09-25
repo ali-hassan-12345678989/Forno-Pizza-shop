@@ -64,6 +64,13 @@ as $$
     and c.contype = 'c';
 $$;
 
+-- Postgres grants EXECUTE on a new function to PUBLIC by default, so these
+-- grants were decorating a door that was already open. Revoking first makes the
+-- audience explicit: anon and authenticated, and nobody else. Nothing changes
+-- for a real caller today — what changes is that a role added later inherits
+-- nothing by accident.
+revoke execute on function public.order_status_values() from public;
+
 grant execute on function public.order_status_values() to anon, authenticated;
 
 
@@ -249,6 +256,7 @@ revoke execute on function public.order_status_flow(text)          from public;
 
 -- The exception: cancelling is the customer's to do, within the window the
 -- function itself enforces.
+revoke execute on function public.cancel_order(uuid) from public;
 grant execute on function public.cancel_order(uuid) to anon, authenticated;
 
 -- Customers must not be able to write a status by hand either. There is no

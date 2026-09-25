@@ -242,6 +242,14 @@ returns jsonb language sql security definer set search_path = public stable as $
     and o.created_at > now() - interval '30 days';
 $$;
 
+-- Postgres grants EXECUTE on a new function to PUBLIC by default, so these
+-- grants were decorating a door that was already open. Revoking first makes the
+-- audience explicit: anon and authenticated, and nobody else. Nothing changes
+-- for a real caller today — what changes is that a role added later inherits
+-- nothing by accident.
+revoke execute on function public.get_order_by_token(uuid)       from public;
+revoke execute on function public.can_write_order(uuid)         from public;
+
 grant execute on function public.get_order_by_token(uuid)       to anon, authenticated;
 grant execute on function public.can_write_order(uuid)          to anon, authenticated;
 

@@ -193,6 +193,17 @@ drop policy if exists reviews_public_read on public.reviews;
 
 revoke insert, select on public.reviews from anon, authenticated;
 
+-- Postgres grants EXECUTE on a new function to PUBLIC by default, so these
+-- grants were decorating a door that was already open. Revoking first makes the
+-- audience explicit: anon and authenticated, and nobody else. Nothing changes
+-- for a real caller today — what changes is that a role added later inherits
+-- nothing by accident.
+revoke execute on function public.submit_review(uuid, uuid, int, text) from public;
+revoke execute on function public.order_reviews(uuid)                  from public;
+revoke execute on function public.item_reviews(uuid, int)              from public;
+revoke execute on function public.menu_review_summary()                from public;
+revoke execute on function public.experience_summary()                 from public;
+
 grant execute on function public.submit_review(uuid, uuid, int, text) to anon, authenticated;
 grant execute on function public.order_reviews(uuid)                  to anon, authenticated;
 grant execute on function public.item_reviews(uuid, int)              to anon, authenticated;
