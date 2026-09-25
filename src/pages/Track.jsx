@@ -13,6 +13,7 @@ import { useShop } from '../context/SettingsContext'
 import { useAuth } from '../context/AuthContext'
 import { fetchOrderByToken } from '../api/orders'
 import { formatPrice, formatTime } from '../lib/format'
+import { useAutoRefresh } from '../lib/useAutoRefresh'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 import './Track.css'
 
@@ -73,31 +74,19 @@ function TrackedOrder({ token }) {
   /**
    * Keeping a live order current.
    *
-   * Two triggers, because they answer different moments. The interval covers
-   * the customer who leaves the page open on the counter; the visibility
-   * listener covers the one who switched to WhatsApp and came back, which is
-   * exactly when they want to know and exactly when an interval is least
-   * likely to have just fired.
+   * The same hook the four staff screens use. This page previously carried its
+   * own copy of the interval-plus-visibility pair, which meant two
+   * implementations of one idea and a fix to either one missing the other.
    *
-   * Depends on the status rather than the order object: a poll that returns the
-   * same stage should not restart the clock it was scheduled by.
+   * Passing 0 once the order is settled is how the hook is told to stop — it
+   * already treats 0 as "do not poll", so nothing had to be added to it for
+   * this page's needs. Depends on the status rather than the order object: a
+   * poll that returns the same stage should not restart the clock it was
+   * scheduled by.
    */
   const settled = !order || isFinal(order.status)
 
-  useEffect(() => {
-    if (settled) return
-
-    const timer = setInterval(refresh, STATUS_POLL_MS)
-    const onVisible = () => {
-      if (document.visibilityState === 'visible') refresh()
-    }
-    document.addEventListener('visibilitychange', onVisible)
-
-    return () => {
-      clearInterval(timer)
-      document.removeEventListener('visibilitychange', onVisible)
-    }
-  }, [settled, refresh])
+  useAutoRefresh(refresh, settled ? 0 : STATUS_POLL_MS)
 
   if (state === 'loading') {
     return (

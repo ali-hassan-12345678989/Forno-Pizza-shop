@@ -4,6 +4,7 @@ import { ALL_USAGE_PERIODS, DEFAULT_USAGE_PERIOD, SHOP_TIME_ZONE } from '../conf
 import { movedCount, shareOfBusiest, usedIn, visibleRows } from '../lib/usageRows'
 import { formatQuantity, formatShopDate } from '../lib/format'
 import './UsageTable.css'
+import SearchField from './SearchField'
 
 /**
  * How much of each ingredient the kitchen has got through.
@@ -68,28 +69,7 @@ export default function UsageTable({ rows }) {
       <p className="usage-note">{t.dayNote(today)}</p>
 
       <div className="usage-controls">
-        <div className="stock-search">
-          <label className="sr-only" htmlFor={searchId}>
-            {t.searchLabel}
-          </label>
-          <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true">
-            <circle cx="7" cy="7" r="4.5" fill="none" stroke="currentColor" strokeWidth="1.8" />
-            <path
-              d="M10.5 10.5 14 14"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-            />
-          </svg>
-          <input
-            id={searchId}
-            type="search"
-            value={query}
-            placeholder={t.searchLabel}
-            onChange={(event) => setQuery(event.target.value)}
-          />
-        </div>
+        <SearchField id={searchId} label={t.searchLabel} value={query} onChange={setQuery} />
 
         <div className="usage-filters" role="group" aria-label={t.periodLabel}>
           <button

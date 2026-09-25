@@ -1,0 +1,53 @@
+/* The search box's own styles, which used to live in StockTable.css.
+
+   That was a real defect, not untidiness: three of the four screens with a
+   search box — the Admin menu, Admin orders and the usage table — never
+   imported StockTable.css, so the rules only reached them if StockTable
+   happened to be in the same bundle. After the staff panels were split into
+   separate chunks it was not, and those three shipped an unstyled input with
+   the magnifying glass sitting beside it instead of inside it.
+
+   Living next to the component that uses it, imported by that component, the
+   styling arrives wherever the component does. */
+
+.stock-search {
+  position: relative;
+  flex: 1 1 12rem;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.stock-search svg {
+  /* The shared <Icon> ships no width or height attributes — every icon is sized
+     by the component that places it. The old inline markup here carried
+     width="15" height="15" instead. */
+  width: 15px;
+  height: 15px;
+  position: absolute;
+  left: 0.7rem;
+  color: var(--ink-3);
+  pointer-events: none;
+}
+
+.stock-search input {
+  width: 100%;
+  height: 40px;
+  padding: 0 0.75rem 0 2.1rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  background: var(--card);
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--ink);
+}
+
+.stock-search input::placeholder {
+  color: var(--ink-3);
+}
+
+.stock-search input:focus-visible {
+  outline: none;
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px rgba(var(--ink-rgb), 0.07);
+}

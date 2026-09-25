@@ -30,12 +30,25 @@ export const trackPath = (token) => `${ROUTES.track}/${token}`
 /**
  * Pulls a token out of whatever the customer pasted — the whole tracking URL,
  * or just the token on its own. Returns null when it is neither.
+ *
+ * The query and fragment come off FIRST, and only then is the path split. The
+ * earlier version split on `/`, `?` and `#` together and took the last piece,
+ * which made `from=sms` the candidate for `/track/<token>?from=sms` and threw
+ * the link away.
+ *
+ * That was written off as a robustness edge on the grounds that this app only
+ * ever emits `/track/<token>`. It is not an edge: the app does not have to
+ * append anything, because WhatsApp, SMS gateways and email clients add their
+ * own tags to a link AFTER the customer receives it. A guest's tracking link is
+ * their only way back to the order, so a rejected paste is a total failure for
+ * that person.
  */
 export function tokenFromInput(value) {
   const trimmed = String(value ?? '').trim()
   if (!trimmed) return null
 
-  const last = trimmed.split(/[/?#]/).filter(Boolean).pop() ?? ''
+  const path = trimmed.split(/[?#]/)[0]
+  const last = path.split('/').filter(Boolean).pop() ?? ''
 
   return isUuid(last) ? last.toLowerCase() : null
 }

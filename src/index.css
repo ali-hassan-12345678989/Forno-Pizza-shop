@@ -1,4 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap');
+/* The Google Fonts @import that used to sit here has moved to index.html as a
+   preconnect plus a stylesheet link. It cannot come back: an @import is not
+   discovered until this file has been fetched and parsed, which put the font
+   request at the end of a serial chain that first paint was waiting on. */
 
 /* Palette, type and radii come from design-reference/Forno_Website.html —
    that file is the approved visual spec, so these are copied, not reinvented. */

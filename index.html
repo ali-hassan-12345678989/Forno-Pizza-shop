@@ -3,6 +3,23 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- Fonts are requested from here rather than with @import inside
+         index.css. An @import is only discovered once the stylesheet has
+         been downloaded AND parsed, so the chain ran HTML -> index.css ->
+         css2 -> the woff2 files, strictly one after another, and first
+         paint waited on the end of it: measured at 1020ms on the live
+         site, with the font stylesheet alone accounting for 728ms.
+
+         crossorigin on the gstatic hint is load-bearing, not decoration.
+         Font files are fetched in CORS mode, and a preconnect opened
+         without it warms a connection the browser then cannot use. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap"
+    />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <!-- Shown only until React mounts and lib/useDocumentTitle.js takes over.
          Deliberately static: there is no database to read at this point. -->

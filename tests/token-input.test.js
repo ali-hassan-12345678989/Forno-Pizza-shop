@@ -59,15 +59,29 @@ describe('pulling a token out of what the customer pasted', () => {
     expect(tokenFromInput(trackPath(TOKEN))).toBe(TOKEN)
   })
 
-  it('refuses a link with anything appended after the token', () => {
-    /* Documenting what it does, not what it might ideally do. The split is on
-       [/?#] and the LAST segment is what gets tested, so `?from=sms` becomes
-       the candidate and is rightly rejected. The app never generates such a
-       link — trackPath() emits /track/<token> and nothing else — so this is a
-       robustness edge, not a live failure. Worth knowing before anyone starts
-       adding campaign parameters to tracking links. */
-    expect(tokenFromInput(`/track/${TOKEN}?from=sms`)).toBeNull()
-    expect(tokenFromInput(`/track/${TOKEN}#top`)).toBeNull()
+  /* These eight are the ways a real paste arrives, and three of them used to
+     fail. The old test asserted that failure as correct, reasoning that the app
+     only ever emits /track/<token>. That reasoning does not hold: the app is
+     not what appends ?utm_source=whatsapp — the messenger the link travelled
+     through is, after it left us. */
+  it.each([
+    ['the token on its own', TOKEN],
+    ['a whole tracking URL', `https://forno.example/track/${TOKEN}`],
+    ['a link carrying a query', `https://forno.example/track/${TOKEN}?from=sms`],
+    ['a link carrying a campaign tag', `https://forno.example/track/${TOKEN}?utm_source=whatsapp`],
+    ['a link carrying a fragment', `https://forno.example/track/${TOKEN}#top`],
+    ['a link with a trailing slash', `https://forno.example/track/${TOKEN}/`],
+    ['a link with both a slash and a query', `https://forno.example/track/${TOKEN}/?from=sms`],
+    ['a paste that shouted', TOKEN.toUpperCase()],
+  ])('reads the token out of %s', (_label, pasted) => {
+    expect(tokenFromInput(pasted)).toBe(TOKEN)
+  })
+
+  it('still refuses a query string that has no token in front of it', () => {
+    // The fix must not turn "anything with a ?" into a pass.
+    expect(tokenFromInput('https://forno.example/track/?from=sms')).toBeNull()
+    expect(tokenFromInput('?from=sms')).toBeNull()
+    expect(tokenFromInput(`https://forno.example/track?token=${TOKEN}`)).toBeNull()
   })
 
   it('trims whitespace, because a paste usually carries some', () => {

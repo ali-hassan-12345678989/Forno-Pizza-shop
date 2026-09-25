@@ -17,6 +17,15 @@ function Icon({ children, className }) {
   )
 }
 
+export function SearchIcon(props) {
+  return (
+    <Icon {...props}>
+      <circle cx="11" cy="11" r="7" />
+      <path d="M20 20l-4.35-4.35" />
+    </Icon>
+  )
+}
+
 export function PhoneIcon(props) {
   return (
     <Icon {...props}>
