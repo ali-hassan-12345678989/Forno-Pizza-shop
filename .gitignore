@@ -20,3 +20,12 @@ npm-debug.log*
 .env.backup-*
 .env.bak
 .env.*.local
+
+# Kept locally, never committed — decided deliberately, and re-decided after a
+# `git add -A` swept them in. The audit reports are point-in-time documents
+# that go stale, and AUDIT_REPORT.md quotes a real staff email address, which
+# is the exact finding (L-4) that was cleaned out of this public repo once
+# already. go_live_reset.sql deletes every order and belongs nowhere near a
+# checkout someone might run without reading.
+AUDIT_REPORT*.md
+supabase/go_live_reset.sql
