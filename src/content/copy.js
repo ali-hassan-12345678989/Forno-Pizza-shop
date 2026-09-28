@@ -486,6 +486,17 @@ export const COPY = {
 
     emptyTitle: 'No orders yet',
     emptyBody: 'Once you order with this account, everything you have had will be listed here.',
+    /* "Order again" rather than "Reorder": it is what a customer would say,
+       and it is a promise the button keeps — the same food, not a form. */
+    reorder: 'Order again',
+    reorderGoToCart: 'Go to cart',
+    reorderNothing: 'Nothing from this order is on the menu right now.',
+    /* Names what is missing rather than saying "some items are unavailable".
+       A customer who knows the olives were dropped can decide; one who is told
+       "some items" has to compare two lists themselves. */
+    reorderPartial: (added, missing) =>
+      `Added ${added} item${added === 1 ? '' : 's'} to your cart. ` +
+      `${missing.join(', ')} ${missing.length === 1 ? 'is' : 'are'} no longer available.`,
     browseMenu: 'Browse the menu',
 
     countHeading: (n) => `${n} order${n === 1 ? '' : 's'}`,

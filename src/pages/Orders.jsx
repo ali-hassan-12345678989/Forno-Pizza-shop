@@ -7,6 +7,8 @@ import { COPY } from '../content/copy'
 import { ROUTES, trackPath } from '../config/routes'
 import { useAuth } from '../context/AuthContext'
 import { fetchMyOrders } from '../api/orders'
+import { consumeMenu } from '../lib/primeMenu'
+import ReorderButton from '../components/ReorderButton'
 import { formatPrice, formatDateTime } from '../lib/format'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 import './Orders.css'
@@ -75,6 +77,14 @@ function OrderHistory() {
   const t = COPY.orders
   const [orders, setOrders] = useState(null)
   const [state, setState] = useState('loading')
+  /* Today's menu, so "order again" can look each line up rather than copy a
+     price forward. Fetched once here and passed down: seventeen rows asking
+     the same question seventeen times would be seventeen round trips.
+
+     main.jsx primed this before React mounted, so on a fresh load it is
+     usually already in flight. It is allowed to fail on its own — a history
+     without reorder buttons is still a history. */
+  const [menu, setMenu] = useState(null)
 
   const load = useCallback(async () => {
     setState('loading')
@@ -83,6 +93,16 @@ function OrderHistory() {
       setState('ready')
     } catch {
       setState('error')
+    }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    consumeMenu()
+      .menu.then((items) => !cancelled && setMenu(items))
+      .catch(() => {})
+    return () => {
+      cancelled = true
     }
   }, [])
 
@@ -120,14 +140,14 @@ function OrderHistory() {
       <p className="orders-count">{t.countHeading(orders.length)}</p>
       <ul className="orders-list">
         {orders.map((order) => (
-          <OrderRow key={order.id} order={order} />
+          <OrderRow key={order.id} order={order} menu={menu} />
         ))}
       </ul>
     </>
   )
 }
 
-function OrderRow({ order }) {
+function OrderRow({ order, menu }) {
   const t = COPY.orders
 
   return (
@@ -155,6 +175,8 @@ function OrderRow({ order }) {
           <span className="orders-total">{formatPrice(order.total)}</span>
         </span>
       </Link>
+
+      <ReorderButton order={order} menu={menu} />
     </li>
   )
 }

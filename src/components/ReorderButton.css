@@ -1,0 +1,27 @@
+/* Sits under the order card, not inside it — the card itself is a link to the
+   tracker, and a button nested in an anchor is neither valid nor reliably
+   operable from a keyboard. */
+.reorder-btn {
+  align-self: flex-start;
+  margin: 0 14px 14px;
+  font-size: 13.5px;
+  padding: 7px 14px;
+}
+
+.reorder-note {
+  margin: 0 14px 14px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+.reorder-note a {
+  color: var(--red);
+  font-weight: 600;
+}
+
+/* Nothing on this order is still sold. Quieter than the working state — it is
+   information, not an offer. */
+.reorder-note.is-none {
+  color: var(--ink-3);
+}
