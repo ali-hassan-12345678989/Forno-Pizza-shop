@@ -16,10 +16,10 @@ import App from './App.jsx'
 /**
  * The menu request leaves before React does.
  *
- * SettingsGate holds the whole app back until shop_settings returns, so the
- * Menu page could not fetch until that round trip had finished — measured at
- * 24ms after, strictly one then the other. Starting here puts both calls in
- * flight at the same moment, which is the earliest either can go.
+ * SettingsGate holds the app back only until the shop details are KNOWN, which
+ * for a returning customer is immediate. The Menu page still could not fetch
+ * until that gate opened, so priming here puts both calls in flight at the
+ * same moment — the earliest either can go.
  *
  * Staff routes are skipped: a Manager checking stock has no use for the
  * customer menu, and two requests nobody reads still cost the shop's quota.

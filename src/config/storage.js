@@ -6,6 +6,10 @@ export const STORAGE_KEYS = {
   address: `${NS}.address`,
   cart: `${NS}.cart`,
   lastOrderToken: `${NS}.lastOrderToken`,
+  /* The shop's own details from the last visit. Versioned in the key rather
+     than validated on read: if the shape ever changes, a new key means the old
+     value is ignored instead of half-understood. */
+  shopSettings: `${NS}.shopSettings.v1`,
 }
 
 /** localStorage throws in private mode and when site data is blocked. */
