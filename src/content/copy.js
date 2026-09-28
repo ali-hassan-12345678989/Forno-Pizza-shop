@@ -20,6 +20,12 @@ export const COPY = {
     currencyNote: 'Prices include tax',
     settingsErrorTitle: 'We could not reach the kitchen',
     settingsErrorBody: 'Something went wrong loading the shop details. Please try again.',
+    /* Deliberately not "an error occurred". The customer's real question after
+       a failed checkout is whether the shop has their order, and the phone
+       number is in the header either way. */
+    renderErrorTitle: 'Something went wrong on this page',
+    renderErrorBody:
+      'Your order has not been placed. Try again, or call us and we will take it over the phone.',
   },
 
   header: {
@@ -277,6 +283,14 @@ export const COPY = {
       item_unavailable: 'Something in your cart just sold out. Check your cart and try again.',
       rate_limited: 'That is a lot of orders at once. Give it a minute and try again.',
       settings_missing: 'We could not reach the kitchen. Please try again.',
+      /* Both of these are about the extras on one line, and both used to fall
+         through to `unknown` — "we could not place your order, please try
+         again" — which is the worst possible answer, because trying again
+         produces exactly the same result forever and never says which choice
+         is the problem. They name the step so there is something to change. */
+      too_many_toppings: 'That is too many extras on one item. Remove a few and try again.',
+      topping_unavailable:
+        'One of the extras you picked is no longer available. Open that item and choose again.',
       /* Raised when the kitchen has run out of something the order needs. It
          deliberately does not say which ingredient — that is the shop's recipe,
          and it is not something a customer could act on anyway. Pointing them

@@ -16,7 +16,7 @@ import { ORDER_TYPES } from '../config/fulfillment'
  */
 
 /** Errors place_order() raises. Anything else is unexpected and reported as such. */
-const ORDER_ERRORS = {
+export const ORDER_ERRORS = {
   invalid_fulfillment_type: 'invalid_fulfillment_type',
   invalid_name: 'invalid_name',
   invalid_phone: 'invalid_phone',
@@ -27,6 +27,18 @@ const ORDER_ERRORS = {
   item_unavailable: 'item_unavailable',
   rate_limited: 'rate_limited',
   settings_missing: 'settings_missing',
+  /* Length limits. The form checks both first, so these only arrive if
+     something got past it — but a code that is raised and not listed here
+     becomes 'unknown', and the customer is told to try again at a problem
+     retrying cannot fix. tests/error-code-contract.test.js holds this list
+     and the SQL in step. */
+  name_too_long: 'name_too_long',
+  address_too_long: 'address_too_long',
+  /* Extras on one line. Unreachable today — the largest item offers nine
+     toppings and the cap is ten — but an Admin can add a tenth from the panel,
+     at which point this becomes reachable with no code change at all. */
+  too_many_toppings: 'too_many_toppings',
+  topping_unavailable: 'topping_unavailable',
   // deduct_order_stock(), reached through place_order()
   out_of_stock: 'out_of_stock',
   recipe_missing: 'recipe_missing',
