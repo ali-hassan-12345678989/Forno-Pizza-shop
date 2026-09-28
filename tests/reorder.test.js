@@ -161,6 +161,40 @@ describe('nothing to repeat', () => {
   })
 })
 
+describe('matching the size', () => {
+  /**
+   * Regression: the reorder button shipped matching on the label alone, which
+   * works until the shop renames a size. The order line keeps the size row's
+   * id, so use that first.
+   */
+  it('prefers the size id over the label, so a rename does not break repeats', () => {
+    const renamed = [{ ...MENU[0], sizes: [{ id: 'size-m', label: 'Regular', price: 1200 }] }]
+    const { lines, unavailable } = buildReorderPlan(
+      order(pastLine({ menuItemSizeId: 'size-m', sizeLabel: 'Medium' })),
+      renamed,
+    )
+
+    expect(unavailable).toEqual([])
+    expect(lines[0].size.label).toBe('Regular')
+  })
+
+  it('falls back to the label when the line carries no size id', () => {
+    // get_order_by_token() does not return menu_item_size_id.
+    const { lines } = buildReorderPlan(order(pastLine({ menuItemSizeId: null })), MENU)
+
+    expect(lines[0].size.id).toBe('size-m')
+  })
+
+  it('a size id that no longer exists still reports the dish and size', () => {
+    const { unavailable } = buildReorderPlan(
+      order(pastLine({ menuItemSizeId: 'withdrawn', sizeLabel: 'Family' })),
+      MENU,
+    )
+
+    expect(unavailable).toEqual(['Chicken Tikka (Family)'])
+  })
+})
+
 describe('canReorder', () => {
   it('is true when at least one line survives', () => {
     expect(canReorder(order(pastLine(), pastLine({ menuItemId: 'gone' })), MENU)).toBe(true)

@@ -48,10 +48,14 @@ export function buildReorderPlan(order, menu) {
       continue
     }
 
-    // Matched on the label rather than an id, because the line kept "Large"
-    // and not the size row it came from. Labels are unique within an item —
-    // there is no second Large — so this is exact, not a guess.
-    const size = item.sizes?.find((candidate) => candidate.label === past.sizeLabel)
+    // The size row's own id where the order line kept one, so renaming
+    // "Medium" to "Regular" does not break every repeat order overnight. The
+    // label is the fallback, because get_order_by_token() does not return the
+    // id and labels are unique within an item — there is no second Large.
+    const size =
+      (past.menuItemSizeId &&
+        item.sizes?.find((candidate) => candidate.id === past.menuItemSizeId)) ||
+      item.sizes?.find((candidate) => candidate.label === past.sizeLabel)
 
     if (!size) {
       // The dish is still sold, just not in that size. Naming both halves is

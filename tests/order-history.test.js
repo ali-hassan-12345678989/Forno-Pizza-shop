@@ -1,12 +1,23 @@
 import { describe, it, expect, beforeAll } from 'vitest'
-import { anonClient, signedInClient, placeOrderOrThrow, FIXTURES } from './helpers/supabase.js'
+import {
+  anonClient,
+  signedInClient,
+  placeOrderOrThrow,
+  toppingsFor,
+  FIXTURES,
+} from './helpers/supabase.js'
 
 // FR-3.4: a logged-in customer can see their past orders.
 //
-// The page runs exactly one query — select('*, order_items(*)') with no user
-// filter — and trusts RLS to decide which rows come back. These tests exercise
-// that same query shape, because an embed that ignored the policy on the joined
-// table would hand one customer another's food, name and address.
+// The page runs exactly one query, with no user filter, and trusts RLS to
+// decide which rows come back. These tests exercise that same query shape,
+// because an embed that ignored the policy on a joined table would hand one
+// customer another's food, name and address.
+//
+// The shape must stay in step with fetchMyOrders(). It did not once: the app
+// joined toppings and this file did not, so "order again" rebuilt orders
+// without their extras and every test here still passed. The assertion in
+// tests/contracts.test.js is what holds the two together now.
 
 describe('order history for a signed-in customer', () => {
   let alice
@@ -19,7 +30,10 @@ describe('order history for a signed-in customer', () => {
 
   /** The query the Orders page actually makes. */
   const history = (client) =>
-    client.from('orders').select('*, order_items(*)').order('created_at', { ascending: false })
+    client
+      .from('orders')
+      .select('*, order_items(*, order_item_toppings(toppings(*)))')
+      .order('created_at', { ascending: false })
 
   beforeAll(async () => {
     ;({ client: alice, userId: aliceId } = await signedInClient(process.env.TEST_USER_A_EMAIL))
@@ -49,6 +63,33 @@ describe('order history for a signed-in customer', () => {
       fulfillmentType: 'pickup',
       address: null,
     })
+  })
+
+  it('carries the extras a line was ordered with', async () => {
+    /**
+     * The regression that "order again" exposed. This query is the only path
+     * that reads order lines from the tables directly — the tracker goes
+     * through get_order_by_token(), which assembles toppings server-side — so
+     * a missing join here was invisible everywhere else, and a reordered pizza
+     * quietly arrived without its olives.
+     */
+    const toppings = await toppingsFor(alice, FIXTURES.menuItemId)
+    expect(toppings.length, 'fixture item must offer a topping to test with').toBeGreaterThan(0)
+
+    const withExtras = await placeOrderOrThrow(
+      alice,
+      { name: 'Alice Test', fulfillmentType: 'pickup', address: null },
+      [{ size_id: FIXTURES.sizeMediumId, quantity: 1, topping_ids: [toppings[0].id] }],
+    )
+
+    const { data, error } = await history(alice)
+    expect(error).toBeNull()
+
+    const row = data.find((order) => order.id === withExtras.order.id)
+    const line = row.order_items[0]
+
+    expect(line.order_item_toppings, 'the join must reach the history query').toBeTruthy()
+    expect(line.order_item_toppings.map((link) => link.toppings.id)).toEqual([toppings[0].id])
   })
 
   it('returns alice her orders', async () => {

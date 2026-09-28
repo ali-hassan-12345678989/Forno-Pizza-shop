@@ -143,7 +143,16 @@ export async function cancelOrder(token) {
 export async function fetchMyOrders() {
   const { data, error } = await supabase
     .from('orders')
-    .select('*, order_items(*)')
+    /* The toppings join is load-bearing, not decoration. Without it every
+       history line comes back with no extras, and "order again" silently
+       rebuilds the order without them — a customer who always has olives on
+       theirs gets a plain one and is never told why. The tracker never noticed
+       because it reads through get_order_by_token(), which assembles toppings
+       server-side; this is the only path that queries the tables directly.
+
+       RLS carries the join: order_item_toppings is reachable for a row whose
+       order the caller already owns, so this adds no access it did not have. */
+    .select('*, order_items(*, order_item_toppings(toppings(*)))')
     .order('created_at', { ascending: false })
 
   if (error) throw new OrderError(errorCodeFrom(error), error)
@@ -181,7 +190,15 @@ function normaliseHistoryRow(row) {
   return {
     ...normaliseOrder({
       order,
-      items: [...(items ?? [])].sort((a, b) => a.created_at.localeCompare(b.created_at)),
+      items: [...(items ?? [])]
+        .sort((a, b) => a.created_at.localeCompare(b.created_at))
+        /* PostgREST nests a join as [{ toppings: {...} }]; get_order_by_token()
+           hands back a flat array. Flattened here so normaliseOrder keeps one
+           shape to understand rather than two. */
+        .map((item) => ({
+          ...item,
+          toppings: (item.order_item_toppings ?? []).map((link) => link.toppings).filter(Boolean),
+        })),
       status_history: [],
     }),
     // The customer's own tracking credential, so history can link straight to
@@ -224,6 +241,10 @@ export function normaliseOrder(payload) {
          Larges and a Medium of the same pizza are three lines but one thing to
          have an opinion about, which is what the review panel keys on. */
       menuItemId: item.menu_item_id,
+      /* The exact size row, where the caller has it. Reorder matches on this
+         first so renaming "Medium" to "Regular" does not break repeat orders;
+         get_order_by_token() does not return it, hence the label fallback. */
+      menuItemSizeId: item.menu_item_size_id ?? null,
       name: item.item_name,
       sizeLabel: item.size_label,
       quantity: item.quantity,

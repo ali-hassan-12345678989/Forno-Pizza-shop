@@ -73,6 +73,31 @@ describe('every order error the database raises reaches the customer', () => {
   })
 })
 
+describe('the order history query carries everything the page needs', () => {
+  /**
+   * fetchMyOrders() once selected `order_items(*)` with no topping join, so
+   * every line in a customer's history came back with no extras — and "order
+   * again" quietly rebuilt the order without them. Nothing failed: the tracker
+   * reads through get_order_by_token(), which assembles toppings server-side,
+   * so this was the only path that saw the gap and it had no test.
+   */
+  const source = readFileSync(join(import.meta.dirname, '..', 'src', 'api', 'orders.js'), 'utf8')
+  const select = /fetchMyOrders[\s\S]*?\.select\('([^']+)'\)/.exec(source)?.[1] ?? ''
+
+  it('reads a select that this test can see', () => {
+    expect(select).toContain('order_items')
+  })
+
+  it('joins the toppings, or a reorder loses them', () => {
+    expect(select).toContain('order_item_toppings')
+  })
+
+  it('the integration test mirrors the same shape', () => {
+    const historyTest = readFileSync(join(import.meta.dirname, 'order-history.test.js'), 'utf8')
+    expect(historyTest).toContain(select)
+  })
+})
+
 describe('the SQL folder README labels every file in it', () => {
   /**
    * Audit 3's L-2. supabase/README.md exists because nothing in a filename says
