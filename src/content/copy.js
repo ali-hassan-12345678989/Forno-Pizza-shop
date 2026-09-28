@@ -20,6 +20,18 @@ export const COPY = {
     currencyNote: 'Prices include tax',
     settingsErrorTitle: 'We could not reach the kitchen',
     settingsErrorBody: 'Something went wrong loading the shop details. Please try again.',
+    /* Deliberately not "an error occurred". The customer's real question after
+       a failed checkout is whether the shop has their order, and the phone
+       number is in the header either way. */
+    /* Shown wherever a customer might start an order while the kitchen is
+       shut. It names a time to come back, because that is something they can
+       act on — "we are closed" on its own is not. */
+    closedTitle: 'The kitchen is closed right now.',
+    closedBody: 'We are not taking orders at the moment. Please check back soon.',
+    closedBackAt: (time) => `We start taking orders again at ${time}.`,
+    renderErrorTitle: 'Something went wrong on this page',
+    renderErrorBody:
+      'Your order has not been placed. Try again, or call us and we will take it over the phone.',
   },
 
   header: {
@@ -277,6 +289,20 @@ export const COPY = {
       item_unavailable: 'Something in your cart just sold out. Check your cart and try again.',
       rate_limited: 'That is a lot of orders at once. Give it a minute and try again.',
       settings_missing: 'We could not reach the kitchen. Please try again.',
+      /* Both of these are about the extras on one line, and both used to fall
+         through to `unknown` — "we could not place your order, please try
+         again" — which is the worst possible answer, because trying again
+         produces exactly the same result forever and never says which choice
+         is the problem. They name the step so there is something to change. */
+      /* Raised by the trigger on the orders table. A customer who got this far
+         saw the banner on the menu and the checkout already, so this is the
+         backstop rather than the announcement — it happens when the shop closed
+         between opening the page and pressing the button. */
+      shop_closed:
+        'The kitchen has closed. Your order has not been placed — please try again when we reopen.',
+      too_many_toppings: 'That is too many extras on one item. Remove a few and try again.',
+      topping_unavailable:
+        'One of the extras you picked is no longer available. Open that item and choose again.',
       /* Raised when the kitchen has run out of something the order needs. It
          deliberately does not say which ingredient — that is the shop's recipe,
          and it is not something a customer could act on anyway. Pointing them
@@ -460,6 +486,17 @@ export const COPY = {
 
     emptyTitle: 'No orders yet',
     emptyBody: 'Once you order with this account, everything you have had will be listed here.',
+    /* "Order again" rather than "Reorder": it is what a customer would say,
+       and it is a promise the button keeps — the same food, not a form. */
+    reorder: 'Order again',
+    reorderGoToCart: 'Go to cart',
+    reorderNothing: 'Nothing from this order is on the menu right now.',
+    /* Names what is missing rather than saying "some items are unavailable".
+       A customer who knows the olives were dropped can decide; one who is told
+       "some items" has to compare two lists themselves. */
+    reorderPartial: (added, missing) =>
+      `Added ${added} item${added === 1 ? '' : 's'} to your cart. ` +
+      `${missing.join(', ')} ${missing.length === 1 ? 'is' : 'are'} no longer available.`,
     browseMenu: 'Browse the menu',
 
     countHeading: (n) => `${n} order${n === 1 ? '' : 's'}`,

@@ -1,0 +1,33 @@
+/* The shop is shut.
+   Built from the tokens the error notice already uses — --red-tint ground,
+   --red-line border — because this is the same kind of message: something the
+   customer needs to read before they do anything else, not an alarm. */
+.closed-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+
+  background: var(--red-tint);
+  border: 1px solid var(--red-line);
+  border-radius: var(--r-lg);
+  padding: 13px 16px;
+  margin-bottom: 18px;
+
+  font-size: 14.5px;
+  color: var(--ink-2);
+}
+
+.closed-banner strong {
+  color: var(--red-dark);
+  font-size: 15px;
+}
+
+/* Wraps to two lines on a narrow window rather than squeezing the opening time
+   onto the end of a line nobody finishes reading. */
+@media (max-width: 460px) {
+  .closed-banner {
+    flex-direction: column;
+    gap: 3px;
+  }
+}

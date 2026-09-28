@@ -28,5 +28,17 @@ export async function fetchShopSettings() {
     deliveryEta: data.delivery_eta,
     pickupEta: data.pickup_eta,
     deliveryFee: Number(data.delivery_fee),
+    /* The ordering window, so the customer can be told the shop is shut before
+       they build a cart rather than after they press the button. The database
+       still decides — shop_is_open() and a trigger on the orders table — but
+       being refused at the last step is a bad way to learn a shop is closed.
+
+       Defaulted here rather than assumed present, so the app keeps working
+       against a database where supabase/opening_hours.sql has not been run:
+       equal times mean open around the clock, which is the behaviour before
+       any of this existed. */
+    opensAt: data.opens_at ?? '00:00',
+    closesAt: data.closes_at ?? '00:00',
+    acceptsOrders: data.accepts_orders ?? true,
   }
 }

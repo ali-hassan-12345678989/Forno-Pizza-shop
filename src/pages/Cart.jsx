@@ -6,6 +6,7 @@ import { COPY } from '../content/copy'
 import { sizedImage } from '../content/images'
 import { ROUTES } from '../config/routes'
 import { useShop } from '../context/SettingsContext'
+import ClosedBanner from '../components/ClosedBanner'
 import { formatPrice } from '../lib/format'
 import { calculateTotals } from '../lib/totals'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
@@ -31,6 +32,7 @@ export default function Cart() {
       <section className="wrap cart-page" aria-label={t.ariaLabel}>
         <BackLink to={ROUTES.menu} label={COPY.nav.backToMenu} />
         <h1 className="cart-title">{t.title}</h1>
+        <ClosedBanner />
         <div className="cart-empty">
           <strong>{t.emptyTitle}</strong>
           <p>{t.emptyBody}</p>
@@ -45,6 +47,7 @@ export default function Cart() {
   return (
     <section className="wrap cart-page" aria-label={t.ariaLabel}>
       <h1 className="cart-title">{t.title}</h1>
+      <ClosedBanner />
       <p className="cart-sub">{t.itemsHeading(count)}</p>
 
       <div className="cart-layout">

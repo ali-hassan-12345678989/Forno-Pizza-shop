@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom'
 import CustomerLayout from './components/CustomerLayout'
 import ScrollToTop from './components/ScrollToTop'
 import RouteFallback from './components/RouteFallback'
+import SettingsGate from './components/SettingsGate'
 import Home from './pages/Home'
 import Menu from './pages/Menu'
 import Cart from './pages/Cart'
@@ -112,8 +113,27 @@ export default function App() {
         <Route element={<CustomerLayout />}>
           <Route path={ROUTES.home} element={<Home />} />
           <Route path={ROUTES.menu} element={<Menu />} />
-          <Route path={ROUTES.cart} element={<Cart />} />
-          <Route path={ROUTES.checkout} element={<Checkout />} />
+          {/* The two screens that show a total wait for the database rather
+              than accepting last visit's delivery fee. Everything else renders
+              from the cached copy immediately — see SettingsGate. In practice
+              neither of these ever waits: nobody reaches a cart without
+              passing the menu, by which time the answer has arrived. */}
+          <Route
+            path={ROUTES.cart}
+            element={
+              <SettingsGate requireFresh>
+                <Cart />
+              </SettingsGate>
+            }
+          />
+          <Route
+            path={ROUTES.checkout}
+            element={
+              <SettingsGate requireFresh>
+                <Checkout />
+              </SettingsGate>
+            }
+          />
           <Route path={ROUTES.track} element={<Track />} />
           <Route path={ROUTES.trackOrder} element={<Track />} />
           <Route path={ROUTES.orders} element={<Orders />} />

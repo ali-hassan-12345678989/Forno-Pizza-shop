@@ -43,3 +43,37 @@
   # The site asks for none of these. Saying so means an injected script cannot
   # ask on its behalf either.
   Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()
+
+# ---------------------------------------------------------------------------
+# CACHING
+#
+# Everything above is about safety. This is about not asking the same question
+# twice.
+# ---------------------------------------------------------------------------
+
+/assets/*
+  # Vite puts a content hash in every filename here — index-BMPuQCF_.js can
+  # never change content, because a change produces a different filename. These
+  # files were being served `max-age=0, must-revalidate`, so a returning
+  # customer made a conditional request for all four entry assets and waited
+  # for four 304s before the app could start. From Pakistan that is four round
+  # trips spent confirming nothing changed.
+  #
+  # `immutable` is the half that matters: without it a browser still
+  # revalidates on a reload, which is exactly when someone is most likely to be
+  # waiting. A year is the conventional maximum and safe here precisely because
+  # the name changes whenever the bytes do.
+  Cache-Control: public, max-age=31536000, immutable
+
+/index.html
+  # The one file that must NOT be cached. It is what points at the hashed
+  # names above, so a stale copy pins a customer to an old deploy forever —
+  # every asset it names is still valid and still cached, so nothing forces a
+  # refresh. This is the file that makes a new deploy reachable at all.
+  Cache-Control: public, max-age=0, must-revalidate
+
+/
+  # Same file, the way it is actually requested. `/index.html` alone does not
+  # match a request for `/`, and a single-page app is almost always asked for
+  # by path rather than by filename.
+  Cache-Control: public, max-age=0, must-revalidate
