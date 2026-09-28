@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { logDev } from '../lib/logDev'
-import { fetchMenu, categoriesOf } from '../api/menu'
-import { fetchReviewSummary } from '../api/reviews'
+import { categoriesOf } from '../api/menu'
+import { consumeMenu } from '../lib/primeMenu'
 import MenuCard from '../components/MenuCard'
 import ItemModal from '../components/ItemModal'
 import BackLink from '../components/BackLink'
@@ -25,13 +25,21 @@ export default function Menu() {
   useEffect(() => {
     let cancelled = false
 
-    // The ratings are fetched alongside the menu, not inside each card: one
-    // request for the lot rather than seventeen. They are also allowed to fail
-    // on their own — a menu without stars is still a menu, but no stars at all
-    // is better than no menu.
-    fetchReviewSummary().then((summary) => !cancelled && setRatings(summary))
+    // Both requests were very likely started before React mounted — see
+    // lib/primeMenu.js. On a cold load that is the difference between the menu
+    // waiting for shop_settings to come back and the two of them travelling
+    // together. If nothing was primed (a client-side navigation, or a retry
+    // after a failure) this starts them here instead, unchanged.
+    //
+    // The ratings are still fetched alongside the menu, not inside each card:
+    // one request for the lot rather than seventeen. They are also allowed to
+    // fail on their own — a menu without stars is still a menu, but no stars
+    // at all is better than no menu.
+    const { menu, ratings: ratingsRequest } = consumeMenu()
 
-    fetchMenu()
+    ratingsRequest.then((summary) => !cancelled && setRatings(summary))
+
+    menu
       .then((data) => !cancelled && setItems(data))
       // The reason reaches a developer's console and nowhere else: a raw
       // PostgREST message ("permission denied for table menu_items") tells the

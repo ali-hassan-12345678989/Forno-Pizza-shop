@@ -8,8 +8,23 @@ import { AuthProvider } from './context/AuthContext'
 import { StaffProvider } from './context/StaffContext'
 import SettingsGate from './components/SettingsGate'
 import ErrorBoundary from './components/ErrorBoundary'
+import { primeMenu } from './lib/primeMenu'
+import { isStaffPath } from './config/routes'
 import './index.css'
 import App from './App.jsx'
+
+/**
+ * The menu request leaves before React does.
+ *
+ * SettingsGate holds the whole app back until shop_settings returns, so the
+ * Menu page could not fetch until that round trip had finished — measured at
+ * 24ms after, strictly one then the other. Starting here puts both calls in
+ * flight at the same moment, which is the earliest either can go.
+ *
+ * Staff routes are skipped: a Manager checking stock has no use for the
+ * customer menu, and two requests nobody reads still cost the shop's quota.
+ */
+if (!isStaffPath(window.location.pathname)) primeMenu()
 
 /**
  * The outermost boundary is the backstop, not the main event.

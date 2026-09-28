@@ -16,6 +16,28 @@
          without it warms a connection the browser then cannot use. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- The database, warmed at the same time as the fonts.
+
+         This one matters more than either font hint, because nothing on the
+         page renders without it: SettingsGate holds the entire app back until
+         shop_settings returns, so the first database call is the critical path
+         in a way the fonts never were.
+
+         That call cannot begin until the bundle has downloaded, parsed, mounted
+         React and run an effect — measured at ~1035ms — and only THEN does the
+         browser start looking up a host it has never contacted. On a genuinely
+         cold profile that cost 52ms of DNS plus 320ms of TCP and TLS before a
+         single byte of the request went out. This overlaps all of it with the
+         JavaScript download.
+
+         crossorigin is load-bearing for the same reason it is on the gstatic
+         hint above: PostgREST calls are CORS requests, and a connection opened
+         without it is one the browser will not reuse.
+
+         The URL comes from the env var Vite already substitutes here, so there
+         is still exactly one place the project's Supabase host is written down. -->
+    <link rel="preconnect" href="%VITE_SUPABASE_URL%" crossorigin />
     <link
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap"
