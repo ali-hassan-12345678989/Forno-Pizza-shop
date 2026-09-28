@@ -5,6 +5,7 @@ import { consumeMenu } from '../lib/primeMenu'
 import MenuCard from '../components/MenuCard'
 import ItemModal from '../components/ItemModal'
 import BackLink from '../components/BackLink'
+import ClosedBanner from '../components/ClosedBanner'
 import { COPY } from '../content/copy'
 import { ROUTES } from '../config/routes'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
@@ -75,6 +76,7 @@ export default function Menu() {
       </div>
 
       <section className="wrap menu-page" aria-label={t.ariaLabel}>
+        <ClosedBanner />
         <div className="menu-back">
           <BackLink to={ROUTES.home} label={COPY.nav.backToHome} />
         </div>

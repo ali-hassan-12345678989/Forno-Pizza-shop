@@ -63,6 +63,9 @@ describe('every order error the database raises reaches the customer', () => {
       ...codesRaisedIn('order_status.sql'),
       ...codesRaisedIn('deduct_stock.sql'),
       ...codesRaisedIn('schema.sql'),
+      // shop_closed comes from the trigger on the orders table, not from
+      // place_order() — see supabase/opening_hours.sql.
+      ...codesRaisedIn('opening_hours.sql'),
     ])
 
     const orphans = Object.keys(ORDER_ERRORS).filter((code) => !everywhere.has(code))

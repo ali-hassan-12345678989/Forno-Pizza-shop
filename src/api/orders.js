@@ -27,6 +27,10 @@ export const ORDER_ERRORS = {
   item_unavailable: 'item_unavailable',
   rate_limited: 'rate_limited',
   settings_missing: 'settings_missing',
+  /* Raised by trg_orders_shop_open on the orders table rather than by
+     place_order() itself, so it holds for every path that inserts an order.
+     See supabase/opening_hours.sql. */
+  shop_closed: 'shop_closed',
   /* Length limits. The form checks both first, so these only arrive if
      something got past it — but a code that is raised and not listed here
      becomes 'unknown', and the customer is told to try again at a problem

@@ -13,6 +13,7 @@ import { STORAGE_KEYS, writeStored } from '../config/storage'
 import { placeOrder, OrderError, fetchSavedDetails } from '../api/orders'
 import { logDev } from '../lib/logDev'
 import { useShop } from '../context/SettingsContext'
+import ClosedBanner from '../components/ClosedBanner'
 import { formatPrice } from '../lib/format'
 import { calculateTotals } from '../lib/totals'
 import { validateCheckout, toLocalPhone, MAX_NOTES_LENGTH } from '../lib/validation'
@@ -105,6 +106,7 @@ export default function Checkout() {
       <section className="wrap checkout-page" aria-label={t.ariaLabel}>
         <BackLink to={ROUTES.menu} label={COPY.nav.backToMenu} />
         <h1 className="checkout-title">{t.title}</h1>
+        <ClosedBanner />
         <div className="checkout-empty">
           <strong>{t.emptyTitle}</strong>
           <p>{t.emptyBody}</p>
@@ -173,6 +175,7 @@ export default function Checkout() {
     <section className="wrap checkout-page" aria-label={t.ariaLabel}>
       <BackLink to={ROUTES.cart} label={COPY.nav.backToCart} />
       <h1 className="checkout-title">{t.title}</h1>
+      <ClosedBanner />
       <CheckoutSteps current="details" />
 
       <div className="checkout-layout">
