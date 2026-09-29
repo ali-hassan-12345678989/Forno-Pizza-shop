@@ -119,9 +119,42 @@ describe('the SQL folder README labels every file in it', () => {
     expect(readme).toContain(file)
   })
 
+  /**
+   * Some files are deliberately not in the repository.
+   *
+   * `go_live_reset.sql` deletes every order in the database. It is kept out of
+   * git on purpose, so it cannot be run by somebody who cloned the project and
+   * was skimming the folder — which is exactly the hazard this README exists to
+   * warn about. It still belongs on the page: a safety label that omits the
+   * most destructive file is worse than no label.
+   *
+   * So the exemption is allowed, and then checked. A file may be named in the
+   * README without being on disk ONLY if .gitignore says it is kept out on
+   * purpose. That makes the exemption self-documenting and impossible to widen
+   * by accident — deleting a real file still fails, because .gitignore will not
+   * mention it.
+   *
+   * CI found this on its first run, in a clean checkout, which is the only
+   * place the two rules collide. Nobody working from a full local copy would
+   * ever have seen it.
+   */
+  const gitignore = readFileSync(join(import.meta.dirname, '..', '.gitignore'), 'utf8')
+  const keptOutOnPurpose = (file) =>
+    gitignore.split('\n').some((line) => line.trim() === `supabase/${file}` || line.trim() === file)
+
+  it('the deliberately untracked files really are untracked', () => {
+    // Guards the guard: if go_live_reset.sql is ever committed, this fails and
+    // the exemption below stops being a fiction.
+    expect(keptOutOnPurpose('go_live_reset.sql'), 'go_live_reset.sql must stay out of git').toBe(
+      true,
+    )
+  })
+
   it('README.md does not name files that no longer exist', () => {
     const named = [...readme.matchAll(/`?([a-z0-9_]+\.sql)`?/g)].map((m) => m[1])
-    const missing = [...new Set(named)].filter((f) => !files.includes(f))
+    const missing = [...new Set(named)]
+      .filter((f) => !files.includes(f))
+      .filter((f) => !keptOutOnPurpose(f))
     expect(missing, `named in README but not on disk: ${missing.join(', ')}`).toEqual([])
   })
 })
