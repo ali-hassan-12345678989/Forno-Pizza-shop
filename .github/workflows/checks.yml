@@ -1,4 +1,4 @@
-# What runs on every push, so that 825 tests mean something.
+# What runs on every push, so that the test suite means something.
 #
 # The fourth audit found the whole quality apparatus these audits built -- the
 # contract tests, the mutation-proven detectors, the UI suite that exists
@@ -8,14 +8,15 @@
 # tests but still compiled went straight to production, and the first sign was
 # a customer.
 #
-# WHAT THIS RUNS: lint, formatting, the build, and the 342 tests that need no
-# database. Those are derived automatically -- see vitest.ci.config.js -- so a
-# test added tomorrow lands on the correct side without anyone choosing.
+# WHAT THIS RUNS: lint, formatting, the build, and every test that needs no
+# database -- 400 of them today. That set is derived automatically -- see
+# vitest.ci.config.js -- so a test added tomorrow lands on the correct side
+# without anyone choosing, and the run's own output is the count that counts.
 #
-# WHAT IT DOES NOT RUN: the 580 tests that talk to the real Supabase project.
-# They place real orders and consume real stock, so running them on every push
-# would put a hundred orders into a live shop. They are run deliberately before
-# a release, and docs/OPERATIONS.md says how.
+# WHAT IT DOES NOT RUN: the rest of the suite, which talks to the real Supabase
+# project. Those place real orders and consume real stock, so running them on
+# every push would put a hundred orders into a live shop. They are run
+# deliberately before a release, and docs/OPERATIONS.md says how.
 #
 # NO SECRETS. Nothing here needs a credential, which means nothing here can
 # leak one. The placeholder values exist only because createClient() throws on
@@ -45,9 +46,14 @@ jobs:
       VITE_SUPABASE_ANON_KEY: placeholder-anon-key-not-a-credential
 
     steps:
-      - uses: actions/checkout@v4
+      # v5 rather than v4 on both: the v4 pins target Node 20, which GitHub
+      # has deprecated and now force-runs on Node 24, warning on every run.
+      # v5 targets Node 24 properly. setup-node v5's one breaking change is
+      # automatic cache detection, which does not apply here -- the cache is
+      # asked for explicitly on the next line.
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
