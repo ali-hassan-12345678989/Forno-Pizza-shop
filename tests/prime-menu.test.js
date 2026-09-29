@@ -11,7 +11,6 @@
  * prefetch on staff routes.
  */
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
-import { isStaffPath } from '../src/config/routes.js'
 
 const fetchMenu = vi.fn()
 const fetchReviewSummary = vi.fn()
@@ -22,7 +21,8 @@ vi.mock('../src/api/menu.js', () => ({
 }))
 vi.mock('../src/api/reviews.js', () => ({ fetchReviewSummary: (...a) => fetchReviewSummary(...a) }))
 
-const { primeMenu, consumeMenu, resetPrimedMenu } = await import('../src/lib/primeMenu.js')
+const { primeMenu, consumeMenu, resetPrimedMenu, shouldPrefetchMenu, PRIME_MAX_AGE_MS } =
+  await import('../src/lib/primeMenu.js')
 
 beforeEach(() => {
   resetPrimedMenu()
@@ -58,6 +58,42 @@ describe('priming the menu', () => {
 
     expect(fetchMenu).toHaveBeenCalledTimes(1)
     await expect(menu).resolves.toHaveLength(1)
+  })
+
+  it('goes back to the network once the primed answer is too old', async () => {
+    /**
+     * The fourth audit's M-2. This claimed to be a handover while behaving as
+     * a cache with no age limit: a customer landing on the home page, reading
+     * it, and clicking through to the menu ten minutes later was handed the
+     * answer fetched ten minutes earlier, with no refetch.
+     *
+     * It matters because the menu is exactly the data that goes stale —
+     * is_sold_out and out_of_stock flip during service — so the stale copy
+     * offers a dish that has gone, and the customer is refused at the last
+     * step after filling in an address.
+     */
+    const t0 = 1_000_000
+    primeMenu(t0)
+
+    consumeMenu(t0 + PRIME_MAX_AGE_MS + 1)
+
+    expect(fetchMenu).toHaveBeenCalledTimes(2)
+  })
+
+  it('still hands over an answer that is fresh enough', () => {
+    // The whole measured win is on the direct load, where the page mounts a
+    // few hundred milliseconds later — nowhere near the bound.
+    const t0 = 1_000_000
+    primeMenu(t0)
+
+    consumeMenu(t0 + 500)
+
+    expect(fetchMenu).toHaveBeenCalledTimes(1)
+  })
+
+  it('the staleness bound is short enough to matter and long enough to be useful', () => {
+    expect(PRIME_MAX_AGE_MS).toBeGreaterThanOrEqual(5_000)
+    expect(PRIME_MAX_AGE_MS).toBeLessThanOrEqual(60_000)
   })
 
   it('is a handover, not a cache — a second consume goes back to the network', async () => {
@@ -101,36 +137,37 @@ describe('priming the menu', () => {
   })
 })
 
-describe('staff routes are not prefetched', () => {
+describe('only the two pages that use it prefetch', () => {
   /**
-   * A Manager checking stock has no use for the customer menu, and two
-   * requests nobody reads still cost the shop's free-tier quota.
+   * The fourth audit found this firing on every non-staff route, so /cart,
+   * /checkout and /track each spent two requests on an answer nothing read.
+   * /menu reads it immediately; / is the page whose normal next step is the
+   * menu, so its prefetch is usually collected.
    */
   it.each([
-    ['/staff', true],
-    ['/manager', true],
-    ['/manager/stock', true],
-    ['/admin', true],
-    ['/admin/orders/123', true],
-    ['/chef', true],
-    ['/', false],
-    ['/menu', false],
+    ['/', true],
+    ['/menu', true],
     ['/cart', false],
     ['/checkout', false],
     ['/track/abc', false],
     ['/orders', false],
-  ])('%s -> staff: %s', (path, expected) => {
-    expect(isStaffPath(path)).toBe(expected)
+    ['/staff', false],
+    ['/manager', false],
+    ['/manager/stock', false],
+    ['/admin', false],
+    ['/admin/orders/123', false],
+    ['/chef', false],
+  ])('%s -> prefetch: %s', (path, expected) => {
+    expect(shouldPrefetchMenu(path)).toBe(expected)
   })
 
-  it('does not match a customer path that merely starts with the same letters', () => {
-    // `/administration` is not `/admin`, and `/staffroom` is not `/staff`.
-    expect(isStaffPath('/administration')).toBe(false)
-    expect(isStaffPath('/staffroom')).toBe(false)
+  it('does not match a path that merely starts the same way', () => {
+    expect(shouldPrefetchMenu('/menupage')).toBe(false)
+    expect(shouldPrefetchMenu('/menu/extra')).toBe(false)
   })
 
   it('handles a missing pathname rather than throwing', () => {
-    expect(isStaffPath(undefined)).toBe(false)
-    expect(isStaffPath(null)).toBe(false)
+    expect(shouldPrefetchMenu(undefined)).toBe(false)
+    expect(shouldPrefetchMenu(null)).toBe(false)
   })
 })

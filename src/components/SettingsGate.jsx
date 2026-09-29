@@ -26,7 +26,15 @@ export default function SettingsGate({ children, requireFresh = false }) {
   const { settings, error, reload } = useSettingsStatus()
   const fresh = useSettingsAreFresh()
 
-  if (error && !settings) {
+  /* Who sees the error, and who is allowed to carry on regardless.
+     Someone browsing from a cached copy does not need an error screen — the
+     menu works, the phone number is in the header, and interrupting them for a
+     failure that costs them nothing would be worse than staying quiet.
+     Someone on the cart or the checkout is a different case. They cannot be
+     served from cache, so a swallowed error leaves them on a spinner with no
+     way out — which is exactly what the fourth audit found. Here the error is
+     the thing they need, because the retry button is attached to it. */
+  if (error && (!settings || requireFresh)) {
     return (
       <div className="gate">
         <div className="gate-box">

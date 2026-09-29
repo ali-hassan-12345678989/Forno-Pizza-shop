@@ -29,6 +29,13 @@ export const COPY = {
     closedTitle: 'The kitchen is closed right now.',
     closedBody: 'We are not taking orders at the moment. Please check back soon.',
     closedBackAt: (time) => `We start taking orders again at ${time}.`,
+    /* A newer version of the site shipped while this tab was open, so the code
+       this page wants is no longer on the server. Deliberately not phrased as
+       an error: nothing is broken and nothing is lost, and "we updated" is
+       both true and reassuring where "something went wrong" is neither. */
+    staleChunkTitle: 'The shop has been updated',
+    staleChunkBody: 'Reload the page to pick up the latest version. Your cart is kept.',
+    reloadPage: 'Reload the page',
     renderErrorTitle: 'Something went wrong on this page',
     renderErrorBody:
       'Your order has not been placed. Try again, or call us and we will take it over the phone.',

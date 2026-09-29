@@ -56,6 +56,7 @@ harmless:
 |---|---|
 | `audit_fixes.sql` | The first audit's fixes in one file — `place_order()` stops silently truncating a name or address, `admin_delete_menu_size()` stops destroying the recipe behind it, tracking tokens expire after 30 days. Idempotent. |
 | `l4_revokes.sql` | The second audit's L-4. Postgres grants `EXECUTE` to `PUBLIC` by default, so ten functions were open to roles nobody had granted. Revokes that default and re-grants `anon` and `authenticated` explicitly, then verifies both halves and raises if either failed. `tests/function-grants.test.js` holds it. |
+| `order_indexes.sql` | The fourth audit's M-5. Three indexes `orders` has never had: the rate-limit lookup that runs on every checkout, the status filter the kitchen polls every ten seconds, and the newest-first sort behind every order list. Nothing is slow today — the table is empty — but all three get worse with success. Safe to run while the shop is trading. |
 | `opening_hours.sql` | The third audit's M-5. The shop advertised "Open daily 12pm – 11pm" and accepted orders at 4am, because `hours` was free text nothing read back. Adds an ordering window, `shop_is_open()`, and a trigger that refuses orders outside it. **Ships switched off** — the window defaults to 24 hours, which is exactly the old behaviour, and step 5 of the file is the one statement that turns it on. |
 
 **One ordering trap.** `schema.sql` and `place_order.sql` both define
