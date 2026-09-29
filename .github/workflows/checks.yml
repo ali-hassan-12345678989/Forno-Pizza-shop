@@ -1,0 +1,73 @@
+# What runs on every push, so that 825 tests mean something.
+#
+# The fourth audit found the whole quality apparatus these audits built -- the
+# contract tests, the mutation-proven detectors, the UI suite that exists
+# because a broken screen once shipped -- protected nothing automatically.
+# Cloudflare Workers Builds watches `main` and runs `npm run build`. It does not
+# run the tests. Merging to main IS the deploy, so a commit that broke fifty
+# tests but still compiled went straight to production, and the first sign was
+# a customer.
+#
+# WHAT THIS RUNS: lint, formatting, the build, and the 342 tests that need no
+# database. Those are derived automatically -- see vitest.ci.config.js -- so a
+# test added tomorrow lands on the correct side without anyone choosing.
+#
+# WHAT IT DOES NOT RUN: the 580 tests that talk to the real Supabase project.
+# They place real orders and consume real stock, so running them on every push
+# would put a hundred orders into a live shop. They are run deliberately before
+# a release, and docs/OPERATIONS.md says how.
+#
+# NO SECRETS. Nothing here needs a credential, which means nothing here can
+# leak one. The placeholder values exist only because createClient() throws on
+# a missing URL at module load; no request is ever made.
+
+name: checks
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+# A second push to the same branch cancels the first. Nobody needs the results
+# of a commit that has already been replaced.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    env:
+      VITE_SUPABASE_URL: https://placeholder.supabase.co
+      VITE_SUPABASE_ANON_KEY: placeholder-anon-key-not-a-credential
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # `ci` rather than `install`: it installs exactly what the lockfile says
+      # and fails if package.json and the lockfile disagree, which is the whole
+      # point of having a lockfile.
+      - run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Formatting
+        run: npm run format:check
+
+      # Runs before the tests on purpose. A build failure is usually a typo or
+      # a bad import, and finding that out in seconds beats finding it out
+      # after a test run.
+      - name: Build
+        run: npm run build
+
+      - name: Tests that need no database
+        run: npm run test:ci

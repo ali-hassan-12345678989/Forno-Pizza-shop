@@ -73,15 +73,18 @@ export function SettingsProvider({ children }) {
         writeJSON(STORAGE_KEYS.shopSettings, next)
       })
       .catch((err) => {
-        // A cached copy is better than an error screen: the shop is reachable
-        // by phone from the header either way, and the customer can still
-        // read the menu. With nothing cached there is nothing to show, so the
-        // gate's error and its retry stand.
-        if (!settings) setError(err.message)
+        /* ALWAYS recorded, even when a cached copy exists.
+           This used to be `if (!settings) setError(...)`, on the reasoning that
+           somebody browsing from a cache does not need an error screen. That
+           reasoning is right, and it is SettingsGate's to apply — recording the
+           failure and deciding who sees it are two different jobs, and merging
+           them cost the fourth audit's only HIGH.
+           What it cost, exactly: a returning customer whose connection failed
+           got the shopfront from cache, browsed, filled a cart, opened it, and
+           met a spinner that never stopped. No message, no retry, no timeout —
+           because no error had been recorded for the gate to show. */
+        setError(err.message)
       })
-    // `settings` is deliberately not a dependency. Including it would rebuild
-    // this callback the moment the cache loaded and fire a second request.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(load, [load])

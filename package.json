@@ -12,7 +12,9 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:ci": "vitest run --config vitest.ci.config.js",
+    "format:check": "prettier --check \"src/**/*.{js,jsx,css}\" \"tests/**/*.{js,jsx}\" index.html"
   },
   "repository": {
     "type": "git",

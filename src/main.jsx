@@ -8,8 +8,7 @@ import { AuthProvider } from './context/AuthContext'
 import { StaffProvider } from './context/StaffContext'
 import SettingsGate from './components/SettingsGate'
 import ErrorBoundary from './components/ErrorBoundary'
-import { primeMenu } from './lib/primeMenu'
-import { isStaffPath } from './config/routes'
+import { primeMenu, shouldPrefetchMenu } from './lib/primeMenu'
 import './index.css'
 import App from './App.jsx'
 
@@ -21,10 +20,11 @@ import App from './App.jsx'
  * until that gate opened, so priming here puts both calls in flight at the
  * same moment — the earliest either can go.
  *
- * Staff routes are skipped: a Manager checking stock has no use for the
- * customer menu, and two requests nobody reads still cost the shop's quota.
+ * Only `/` and `/menu` prefetch. The fourth audit found this firing on every
+ * non-staff route, so `/cart`, `/checkout` and `/track/<token>` each spent two
+ * requests on an answer nothing ever read. shouldPrefetchMenu decides.
  */
-if (!isStaffPath(window.location.pathname)) primeMenu()
+if (shouldPrefetchMenu(window.location.pathname)) primeMenu()
 
 /**
  * The outermost boundary is the backstop, not the main event.

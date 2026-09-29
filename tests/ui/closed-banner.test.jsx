@@ -7,7 +7,7 @@
  * the button.
  */
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { render, screen, cleanup } from '@testing-library/react'
+import { render, screen, cleanup, act } from '@testing-library/react'
 
 const shop = { current: {} }
 vi.mock('../../src/context/SettingsContext', () => ({ useShop: () => shop.current }))
@@ -74,5 +74,59 @@ describe('when the shop is shut', () => {
     expect(screen.getByText(/kitchen is closed/i)).not.toBeNull()
     expect(screen.queryByText(/12pm/)).toBeNull()
     expect(screen.getByText(/check back soon/i)).not.toBeNull()
+  })
+})
+
+describe('the clock is re-read while the page stays open', () => {
+  /**
+   * The fourth audit's L-3. The banner read the time once, during render, so a
+   * customer with the menu open at 22:58 never saw it appear at 23:00 —
+   * nothing re-rendered, so nothing re-checked. They would build a cart against
+   * a shop that had closed underneath them and be refused at the last step,
+   * which is the exact failure the banner exists to prevent.
+   */
+  it('appears when the shop closes with the page already open', async () => {
+    vi.useFakeTimers()
+    shop.current = { opensAt: '12:00', closesAt: '23:00' }
+    vi.setSystemTime(new Date('2026-09-28T17:59:30Z')) // 22:59:30 PKT
+
+    const { container } = render(<ClosedBanner />)
+    expect(container.firstChild, 'still open at 22:59').toBeNull()
+
+    await act(async () => {
+      vi.setSystemTime(new Date('2026-09-28T18:00:30Z')) // 23:00:30 PKT
+      await vi.advanceTimersByTimeAsync(31_000)
+    })
+
+    expect(container.textContent).toMatch(/kitchen is closed/i)
+  })
+
+  it('clears itself when the shop opens with the page already open', async () => {
+    vi.useFakeTimers()
+    shop.current = { opensAt: '12:00', closesAt: '23:00' }
+    vi.setSystemTime(new Date('2026-09-28T06:59:30Z')) // 11:59:30 PKT
+
+    const { container } = render(<ClosedBanner />)
+    expect(container.textContent).toMatch(/kitchen is closed/i)
+
+    await act(async () => {
+      vi.setSystemTime(new Date('2026-09-28T07:00:30Z')) // 12:00:30 PKT
+      await vi.advanceTimersByTimeAsync(31_000)
+    })
+
+    expect(container.firstChild, 'open now, so nothing to say').toBeNull()
+  })
+
+  it('stops ticking when the banner goes away', async () => {
+    vi.useFakeTimers()
+    shop.current = { opensAt: '00:00', closesAt: '00:00' }
+    vi.setSystemTime(new Date('2026-09-28T09:30:00Z'))
+
+    const { unmount } = render(<ClosedBanner />)
+    const before = vi.getTimerCount()
+    unmount()
+
+    expect(before).toBeGreaterThan(0)
+    expect(vi.getTimerCount(), 'the interval must be cleared on unmount').toBe(0)
   })
 })

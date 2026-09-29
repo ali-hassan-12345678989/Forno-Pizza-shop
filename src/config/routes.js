@@ -27,21 +27,6 @@ export const ROUTES = {
 /** Tracking link a guest keeps — the token is the only credential. */
 export const trackPath = (token) => `${ROUTES.track}/${token}`
 
-/** The four addresses only staff use, and everything underneath them. */
-const STAFF_PATHS = [ROUTES.staffLogin, ROUTES.manager, ROUTES.admin, ROUTES.chef]
-
-/**
- * Is this URL part of a staff panel?
- *
- * Read from ROUTES rather than spelled out, so adding a panel cannot leave this
- * behind. Used to decide what is worth prefetching, never to decide who may see
- * what — that is StaffGate's job, and the database's before it.
- */
-export function isStaffPath(pathname) {
-  const path = String(pathname ?? '')
-  return STAFF_PATHS.some((base) => path === base || path.startsWith(`${base}/`))
-}
-
 /**
  * Pulls a token out of whatever the customer pasted — the whole tracking URL,
  * or just the token on its own. Returns null when it is neither.
