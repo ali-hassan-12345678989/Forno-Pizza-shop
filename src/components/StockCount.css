@@ -1,0 +1,119 @@
+/* Counting the shelf. Tokens only — see the Part 3 audit on raw colour literals. */
+
+.stock-count {
+  margin-block-start: 1.25rem;
+}
+
+.count-form {
+  display: grid;
+  gap: 0.35rem;
+  margin-block-start: 0.8rem;
+}
+
+.count-chosen {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.3rem 0.75rem;
+  padding: 0.55rem 0.7rem;
+  margin-block-end: 0.5rem;
+  background: var(--wash-1);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+}
+
+.count-books {
+  font-size: 0.82rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.count-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.count-input,
+.count-note {
+  inline-size: 100%;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  background: var(--card);
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--ink);
+}
+
+.count-input {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.count-input:focus-visible,
+.count-note:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
+}
+
+/* Said before the button rather than after, because it describes something the
+   form is about to do that its name does not imply. */
+.count-warning {
+  margin: 0.5rem 0 0;
+  font-size: 0.78rem;
+  color: var(--ink-3);
+}
+
+.count-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-block-start: 0.6rem;
+}
+
+/* ---- what the count found -------------------------------------------------
+   Three outcomes, three colours, and none of them decorative: balanced is the
+   good result, short is the finding this feature exists for, and over is
+   usually a delivery booked in wrong rather than good fortune. */
+
+.count-outcome {
+  margin-block: 0.8rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--line);
+  border-inline-start-width: 3px;
+  border-radius: var(--r);
+}
+
+.count-outcome p {
+  margin: 0.25rem 0 0;
+  font-size: 0.85rem;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.count-outcome-note {
+  color: var(--ink-3);
+}
+
+.count-outcome.clean {
+  background: var(--green-tint);
+  border-inline-start-color: var(--green);
+}
+
+.count-outcome.short {
+  background: var(--red-tint);
+  border-inline-start-color: var(--red);
+}
+
+.count-outcome.over {
+  background: var(--gold-tint);
+  border-inline-start-color: var(--gold-deep);
+}
+
+/* The two panels beside the stock table: booking in, then counting. */
+.stock-side {
+  display: flex;
+  flex-direction: column;
+}

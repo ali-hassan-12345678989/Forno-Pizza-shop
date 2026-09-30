@@ -1,6 +1,8 @@
 import { useId, useMemo, useState } from 'react'
 import { COPY } from '../content/copy'
-import { formatQuantity } from '../lib/format'
+import { MAX_STOCK_RECEIPT, STOCK_DECIMALS } from '../config/inventory'
+import { coverRatio, stockBar } from '../lib/stockLevel'
+import { formatMultiple, formatQuantity } from '../lib/format'
 import './StockTable.css'
 import SearchField from './SearchField'
 
@@ -20,8 +22,23 @@ const VIEWS = { needs: 'needs', all: 'all' }
  * that says an ingredient is short is also the row that books more of it in.
  * Passing nothing leaves the read-only table the Admin gets, which is the whole
  * of FR-7.5 — receive_stock() refuses them regardless.
+ *
+ * BULK MODE, from the owner's review: pressing "Add stock" thirty times while a
+ * driver waits is not a workflow. Switching it on turns the action column into
+ * a quantity box on every row, so a delivery note is entered by reading down it
+ * the way it is written. The numbers land on the same sheet the panel beside it
+ * owns and are saved by the same button — one delivery, one save, whichever way
+ * it was typed.
  */
-export default function StockTable({ rows, onBookIn, queuedIds }) {
+export default function StockTable({
+  rows,
+  onBookIn,
+  queuedIds,
+  quantities,
+  onBulkQuantity,
+  bulk = false,
+  onBulkChange,
+}) {
   const t = COPY.staff.stock
 
   const low = rows.filter((row) => row.isLow && !row.isOut).length
@@ -49,6 +66,8 @@ export default function StockTable({ rows, onBookIn, queuedIds }) {
   }, [rows, query, view, queuedIds])
 
   if (rows.length === 0) return <p className="stock-empty">{t.empty}</p>
+
+  const canBook = Boolean(onBookIn)
 
   return (
     <section className="stock panel" aria-labelledby="stock-title">
@@ -81,7 +100,25 @@ export default function StockTable({ rows, onBookIn, queuedIds }) {
             {t.filterAll}
           </button>
         </div>
+
+        {/* Only where booking in is possible at all. The Admin's copy of this
+            table has no onBookIn, so offering them a bulk column would be
+            offering a control the database will refuse. */}
+        {canBook && onBulkChange && (
+          <div className="stock-filters" role="group" aria-label={t.bulkLabel}>
+            <button
+              type="button"
+              className="chip"
+              aria-pressed={bulk}
+              onClick={() => onBulkChange(!bulk)}
+            >
+              {t.bulkToggle}
+            </button>
+          </div>
+        )}
       </div>
+
+      {bulk && <p className="stock-bulk-note">{t.bulkNote}</p>}
 
       {shown.length === 0 && (
         <p className="stock-none">{query.trim() ? t.noMatch(query.trim()) : t.nothingLow}</p>
@@ -101,9 +138,9 @@ export default function StockTable({ rows, onBookIn, queuedIds }) {
                     {t.colThreshold}
                   </th>
                   <th scope="col">{t.colStatus}</th>
-                  {onBookIn && (
+                  {canBook && (
                     <th scope="col" className="stock-act">
-                      <span className="sr-only">{t.colBookIn}</span>
+                      {bulk ? t.colArrived : <span className="sr-only">{t.colBookIn}</span>}
                     </th>
                   )}
                 </tr>
@@ -115,6 +152,9 @@ export default function StockTable({ rows, onBookIn, queuedIds }) {
                     row={row}
                     onBookIn={onBookIn}
                     queued={Boolean(queuedIds?.has(row.id))}
+                    bulk={bulk}
+                    quantity={quantities?.get(row.id) ?? ''}
+                    onBulkQuantity={onBulkQuantity}
                   />
                 ))}
               </tbody>
@@ -130,34 +170,78 @@ export default function StockTable({ rows, onBookIn, queuedIds }) {
   )
 }
 
-function StockRow({ row, onBookIn, queued }) {
+function StockRow({ row, onBookIn, queued, bulk, quantity, onBulkQuantity }) {
   const t = COPY.staff.stock
   const r = COPY.staff.receive
   const state = row.isOut ? 'out' : row.isLow ? 'low' : 'ok'
+
+  // Sizes the bar; it does NOT decide the colour. `state` above comes from the
+  // database's own flags, which are the same ones that fire the alerts.
+  const bar = stockBar(row.stock, row.threshold)
+  const cover = coverRatio(row.stock, row.threshold)
 
   return (
     <tr className={`is-${state}${queued ? ' is-queued' : ''}`}>
       <th scope="row">{row.name}</th>
       <td className="num">{formatQuantity(row.stock, row.unit)}</td>
       <td className="num muted">{formatQuantity(row.threshold, row.unit)}</td>
+
       <td>
-        <span className={`stock-pill ${state}`}>
-          {row.isOut ? t.statusOut : row.isLow ? t.statusLow : t.statusOk}
-        </span>
+        <div className="stock-state">
+          <span className={`stock-pill ${state}`}>
+            {row.isOut ? t.statusOut : row.isLow ? t.statusLow : t.statusOk}
+          </span>
+
+          {/* Presentational. Every figure it encodes — the level, the threshold
+              and how far apart they are — is already in this row as text, so
+              the bar stays out of the accessibility tree rather than reading a
+              fourth version of the same fact. */}
+          <span className={`stock-meter ${state}`} aria-hidden="true">
+            <span className="stock-meter-fill" style={{ inlineSize: `${bar.fill * 100}%` }} />
+            {bar.marker !== null && (
+              <span
+                className="stock-meter-mark"
+                style={{ insetInlineStart: `${bar.marker * 100}%` }}
+              />
+            )}
+          </span>
+
+          {cover !== null && <span className="stock-cover">{t.cover(formatMultiple(cover))}</span>}
+        </div>
       </td>
-      {onBookIn && (
-        <td className="stock-act">
-          <button
-            type="button"
-            className={`stock-add${queued ? ' on' : ''}`}
-            disabled={queued}
-            aria-label={queued ? r.addedAria(row.name) : r.addAria(row.name)}
-            onClick={() => onBookIn(row.id)}
-          >
-            {queued ? r.added : r.add}
-          </button>
-        </td>
-      )}
+
+      {onBookIn &&
+        (bulk ? (
+          <td className="stock-act">
+            <label className="sr-only" htmlFor={`arrived-${row.id}`}>
+              {r.quantityAria(row.name, row.unit)}
+            </label>
+            <input
+              id={`arrived-${row.id}`}
+              className="stock-bulk-input"
+              type="number"
+              inputMode="decimal"
+              min="0"
+              max={MAX_STOCK_RECEIPT}
+              step={1 / 10 ** STOCK_DECIMALS}
+              placeholder={row.unit}
+              value={quantity}
+              onChange={(event) => onBulkQuantity?.(row.id, event.target.value)}
+            />
+          </td>
+        ) : (
+          <td className="stock-act">
+            <button
+              type="button"
+              className={`stock-add${queued ? ' on' : ''}`}
+              disabled={queued}
+              aria-label={queued ? r.addedAria(row.name) : r.addAria(row.name)}
+              onClick={() => onBookIn(row.id)}
+            >
+              {queued ? r.added : r.add}
+            </button>
+          </td>
+        ))}
     </tr>
   )
 }

@@ -7,6 +7,8 @@ const INVENTORY_ERRORS = {
   invalid_quantity: 'invalid_quantity',
   quantity_too_large: 'quantity_too_large',
   ingredient_not_found: 'ingredient_not_found',
+  invalid_count: 'invalid_count',
+  note_too_long: 'note_too_long',
 }
 
 function errorCodeFrom(error) {
@@ -100,6 +102,42 @@ export async function fetchStockAlerts() {
       triggeredAt: row.triggered_at,
       stillBelow: row.still_below,
     })),
+    errorCode: null,
+  }
+}
+
+/**
+ * Records what was actually on the shelf.
+ *
+ * THE ONLY FIGURE IN THIS SYSTEM THAT DOES NOT COME FROM A RECIPE. Every other
+ * stock number is the same arithmetic run at a different moment: place_order()
+ * multiplies a recipe by a quantity, and the ledger stores what it worked out.
+ * That is why "theoretical versus actual usage" could never find anything — the
+ * two were one calculation. A human looking at a shelf is the outside opinion
+ * that makes the comparison mean something.
+ *
+ * The count is sent as-is. The database reads the book figure under a row lock,
+ * writes both numbers, corrects the running total and files the difference in
+ * the ledger, all in one transaction — so an order placed while the Manager was
+ * counting cannot land between the read and the correction and quietly become
+ * a discrepancy.
+ */
+export async function recordStockCount(ingredientId, counted, note) {
+  const { data, error } = await supabase.rpc('record_stock_count', {
+    p_ingredient_id: ingredientId,
+    p_counted: counted,
+    p_note: note ?? null,
+  })
+
+  if (error) return { result: null, errorCode: errorCodeFrom(error) }
+
+  return {
+    result: {
+      ingredientId: data?.ingredient_id ?? ingredientId,
+      expected: Number(data?.expected),
+      counted: Number(data?.counted),
+      variance: Number(data?.variance),
+    },
     errorCode: null,
   }
 }

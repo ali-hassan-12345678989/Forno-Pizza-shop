@@ -1,104 +1,127 @@
 import { describe, expect, it } from 'vitest'
-import { movedCount, shareOfBusiest, usedIn, visibleRows } from '../src/lib/usageRows.js'
-import { USAGE_PERIODS } from '../src/config/usage.js'
+import {
+  countedCount,
+  movedCount,
+  shareOfBusiest,
+  varianceCount,
+  visibleRows,
+} from '../src/lib/usageRows.js'
 
 /**
  * Reading the usage table.
  *
  * Pure, so no Supabase here. Nothing in this module does arithmetic on the
- * figures — staff_ingredient_usage() nets cancellations off, excludes
- * deliveries and cuts the day in the shop's time zone. What is checked here is
- * that the screen never hides a row it should show, and never invents a number.
+ * figures — staff_usage_between() nets cancellations off, separates deliveries
+ * from consumption and cuts both ends of the window in the shop's time zone.
+ * What is checked here is that the screen never hides a row it should show, and
+ * never invents a number.
+ *
+ * REWRITTEN FOR THE WINDOWED SHAPE. This file used to test a `usedToday` /
+ * `usedTotal` pair and a `period` argument that chose between them. The owner's
+ * review retired all-time usage — it can never be reconciled against a physical
+ * count, because nobody has ever counted "all time" — so a row now carries one
+ * `used` figure for the window that was asked for, plus what a count found.
  */
 
-const row = (name, usedToday, usedTotal, extra = {}) => ({
+const row = (name, used, extra = {}) => ({
   id: name.toLowerCase(),
   name,
   unit: 'g',
-  usedToday,
-  usedTotal,
+  used,
+  received: 0,
   stock: 1000,
   threshold: 200,
   isLow: false,
   isOut: false,
+  variance: null,
+  countsTaken: 0,
+  lastCountedAt: null,
   ...extra,
 })
 
-const dough = row('Pizza Dough', 5000, 40000)
-const cheese = row('Mozzarella', 1500, 22000)
-const basil = row('Fresh Basil', 0, 300) // used before, but not today
-const buns = row('Burger Bun', 0, 0) // never used at all
-
-const rows = [dough, cheese, basil, buns]
-const names = (list) => list.map((r) => r.name)
-
-describe('which figure a row is read for', () => {
-  it('gives today or all time', () => {
-    expect(usedIn(dough, USAGE_PERIODS.today)).toBe(5000)
-    expect(usedIn(dough, USAGE_PERIODS.total)).toBe(40000)
-  })
-
-  it('treats anything that is not "total" as today', () => {
-    expect(usedIn(dough, undefined)).toBe(5000)
-  })
+const dough = row('Pizza Dough', 5000)
+const cheese = row('Mozzarella', 1500, {
+  // Counted, and the shelf was short.
+  variance: -400,
+  countsTaken: 1,
+  lastCountedAt: '2026-09-30T09:00:00Z',
+})
+const basil = row('Fresh Basil', 0, {
+  // Counted, and it balanced. NOT the same as never counted.
+  variance: 0,
+  countsTaken: 1,
+  lastCountedAt: '2026-09-30T09:05:00Z',
+})
+const buns = row('Burger Bun', 0) // never used, never counted
+/* Nothing sold it, and the shelf still came up short. The most suspicious
+   reading this screen can produce, and the one the default filter used to
+   hide — found by feature-testing the real page, not by any test. */
+const oil = row('Olive Oil', 0, {
+  variance: -350,
+  countsTaken: 1,
+  lastCountedAt: '2026-09-30T10:00:00Z',
 })
 
-describe('which rows are shown', () => {
-  it('shows everything when nothing is filtering', () => {
-    expect(names(visibleRows(rows))).toEqual([
-      'Pizza Dough',
-      'Mozzarella',
-      'Fresh Basil',
-      'Burger Bun',
-    ])
+const rows = [dough, cheese, basil, buns, oil]
+const names = (list) => list.map((r) => r.name)
+
+describe('which rows the table shows', () => {
+  it('shows everything by default, including what never moved', () => {
+    // An ingredient nothing touched is still an answer, and hiding it would
+    // make this screen disagree with the stock table about how many
+    // ingredients the shop has.
+    expect(names(visibleRows(rows))).toEqual(names(rows))
   })
 
-  it('keeps the order it was given, rather than re-ranking', () => {
-    // The database orders by busiest first. Re-sorting here would be a second
-    // opinion about what matters, and would disagree the moment the SQL changes.
-    const shuffled = [buns, dough, basil, cheese]
-    expect(names(visibleRows(shuffled))).toEqual([
-      'Burger Bun',
-      'Pizza Dough',
-      'Fresh Basil',
-      'Mozzarella',
-    ])
+  it('filters to what actually moved', () => {
+    expect(names(visibleRows(rows, { onlyUsed: true }))).toContain('Pizza Dough')
+    expect(names(visibleRows(rows, { onlyUsed: true }))).toContain('Mozzarella')
+    expect(names(visibleRows(rows, { onlyUsed: true }))).not.toContain('Burger Bun')
   })
 
-  it('narrows by name, whatever the case', () => {
+  it('keeps a shelf that is off the books even when nothing sold it', () => {
+    // Stock gone with no orders to account for it is the most suspicious thing
+    // this screen can show, and the default filter used to hide exactly that
+    // row while the summary line above it said one shelf did not match.
+    expect(names(visibleRows(rows, { onlyUsed: true }))).toContain('Olive Oil')
+  })
+
+  it('does not extend that reprieve to a shelf that counted clean', () => {
+    // Basil balanced. It has no usage and no discrepancy, so "only what moved"
+    // should still hide it — otherwise the filter stops meaning anything.
+    expect(names(visibleRows(rows, { onlyUsed: true }))).not.toContain('Fresh Basil')
+  })
+
+  it('filters to shelves that did not match the books', () => {
+    expect(names(visibleRows(rows, { onlyVariance: true }))).toEqual(['Mozzarella', 'Olive Oil'])
+  })
+
+  it('does not treat a clean count as a discrepancy', () => {
+    // Basil was counted and balanced. Putting it in a list of problems would
+    // punish the one shelf somebody checked and found correct.
+    expect(names(visibleRows(rows, { onlyVariance: true }))).not.toContain('Fresh Basil')
+  })
+
+  it('does not treat an uncounted shelf as a clean one either', () => {
+    // Buns were never counted. It must not appear in a variance list, and it
+    // must not be mistaken for a shelf that matched.
+    expect(names(visibleRows(rows, { onlyVariance: true }))).not.toContain('Burger Bun')
+    // Three shelves were counted (cheese, basil, oil); two of them disagreed.
+    expect(countedCount(rows)).toBe(3)
+    expect(varianceCount(rows)).toBe(2)
+  })
+
+  it('applies the search and the filter together, not one instead of the other', () => {
     expect(names(visibleRows(rows, { query: 'mozz' }))).toEqual(['Mozzarella'])
-    expect(names(visibleRows(rows, { query: 'PIZZA' }))).toEqual(['Pizza Dough'])
+    // Mozzarella matches the search AND moved, so it survives both.
+    expect(names(visibleRows(rows, { query: 'mozz', onlyUsed: true }))).toEqual(['Mozzarella'])
+    // Basil matches the search but did not move, so the filter still excludes
+    // it. Anything else would mean typing a name silently turned a filter off.
+    expect(names(visibleRows(rows, { query: 'basil', onlyUsed: true }))).toEqual([])
   })
 
-  it('ignores a blank query', () => {
-    expect(visibleRows(rows, { query: '   ' })).toHaveLength(4)
-    expect(visibleRows(rows, { query: null })).toHaveLength(4)
-  })
-
-  it('"only what moved" drops rows with nothing used in THIS window', () => {
-    // Basil moved historically but not today, so it belongs in one and not
-    // the other. A single "has it ever moved" test would get this wrong.
-    expect(names(visibleRows(rows, { period: USAGE_PERIODS.today, onlyUsed: true }))).toEqual([
-      'Pizza Dough',
-      'Mozzarella',
-    ])
-    expect(names(visibleRows(rows, { period: USAGE_PERIODS.total, onlyUsed: true }))).toEqual([
-      'Pizza Dough',
-      'Mozzarella',
-      'Fresh Basil',
-    ])
-  })
-
-  it('shows an untouched ingredient when not filtering', () => {
-    // That it has not moved is itself the answer. Hiding it would make this
-    // screen disagree with the stock table about how many ingredients exist.
-    expect(names(visibleRows(rows, { onlyUsed: false }))).toContain('Burger Bun')
-  })
-
-  it('combines the search and the filter rather than letting one escape', () => {
-    expect(
-      visibleRows(rows, { query: 'basil', onlyUsed: true, period: USAGE_PERIODS.today }),
-    ).toHaveLength(0)
+  it('ignores case and surrounding space in a search', () => {
+    expect(names(visibleRows(rows, { query: '  DOUGH ' }))).toEqual(['Pizza Dough'])
   })
 
   it('survives being handed nothing', () => {
@@ -107,48 +130,40 @@ describe('which rows are shown', () => {
   })
 })
 
-describe('how many moved', () => {
-  it('counts only rows with usage in that window', () => {
-    expect(movedCount(rows, USAGE_PERIODS.today)).toBe(2)
-    expect(movedCount(rows, USAGE_PERIODS.total)).toBe(3)
+describe('the counts in the summary line', () => {
+  it('counts what moved', () => {
+    expect(movedCount(rows)).toBe(2)
+    expect(movedCount([buns])).toBe(0)
+    expect(movedCount(null)).toBe(0)
   })
 
-  it('is zero on a day nothing happened', () => {
-    expect(movedCount([buns], USAGE_PERIODS.today)).toBe(0)
-    expect(movedCount(null, USAGE_PERIODS.today)).toBe(0)
+  it('counts shelves checked, not shelves that disagreed', () => {
+    expect(countedCount(rows)).toBe(3)
+    expect(varianceCount(rows)).toBe(2)
+  })
+
+  it('reports nothing counted as zero rather than failing', () => {
+    expect(countedCount([buns])).toBe(0)
+    expect(varianceCount(null)).toBe(0)
   })
 })
 
 describe('the bar beside each figure', () => {
-  it('fills for the busiest row and scales the rest against it', () => {
-    const share = shareOfBusiest(rows, USAGE_PERIODS.today)
-    expect(share(dough)).toBe(1)
-    expect(share(cheese)).toBeCloseTo(1500 / 5000)
-    expect(share(buns)).toBe(0)
+  it('fills the width for the busiest row', () => {
+    expect(shareOfBusiest(rows)(dough)).toBe(1)
   })
 
-  it('is a share of the BUSIEST row, not of the column total', () => {
+  it('scales the rest against that row, not against the total', () => {
     // Shares of a sum are all slivers once there are thirty ingredients.
-    const share = shareOfBusiest(rows, USAGE_PERIODS.today)
-    const total = 5000 + 1500
-    expect(share(dough)).toBe(1)
-    expect(share(dough)).not.toBeCloseTo(5000 / total)
+    expect(shareOfBusiest(rows)(cheese)).toBeCloseTo(1500 / 5000)
   })
 
-  it('ranks within one window only', () => {
-    const today = shareOfBusiest(rows, USAGE_PERIODS.today)
-    const total = shareOfBusiest(rows, USAGE_PERIODS.total)
-    expect(today(cheese)).toBeCloseTo(0.3)
-    expect(total(cheese)).toBeCloseTo(22000 / 40000)
+  it('gives an unused row no bar at all', () => {
+    expect(shareOfBusiest(rows)(buns)).toBe(0)
   })
 
-  it('never divides by zero on a day nothing was used', () => {
-    const share = shareOfBusiest([buns], USAGE_PERIODS.today)
-    expect(share(buns)).toBe(0)
-    expect(Number.isFinite(share(buns))).toBe(true)
-  })
-
-  it('survives being handed nothing', () => {
-    expect(shareOfBusiest(null, USAGE_PERIODS.today)(dough)).toBe(0)
+  it('does not divide by zero on a window where nothing moved', () => {
+    expect(shareOfBusiest([buns])(buns)).toBe(0)
+    expect(shareOfBusiest(null)(dough)).toBe(0)
   })
 })

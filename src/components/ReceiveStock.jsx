@@ -31,6 +31,11 @@ export default function ReceiveStock({
   // Whether a stock table sits beside this sheet to add lines from. The
   // dashboard has none, so it does not tell the Manager to use one.
   fromTable = false,
+  // Whether that table is currently taking quantities down a column. The sheet
+  // is the same sheet and saves the same way; only the sentence telling an
+  // empty one how to fill itself changes, because pointing at an "Add stock"
+  // button that is not on screen is worse than saying nothing.
+  bulk = false,
 }) {
   const t = COPY.staff.receive
 
@@ -97,7 +102,7 @@ export default function ReceiveStock({
         {lines.length === 0 ? (
           <div className="sheet-empty">
             <b>{t.empty}</b>
-            <span>{fromTable ? t.emptyHintTable : t.emptyHintAlone}</span>
+            <span>{bulk ? t.emptyHintBulk : fromTable ? t.emptyHintTable : t.emptyHintAlone}</span>
           </div>
         ) : (
           <ul className="sheet-lines">

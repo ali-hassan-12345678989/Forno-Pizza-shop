@@ -27,17 +27,45 @@
   color: var(--red-deep);
 }
 
+/* The all-clear, collapsed to one line. A dot, a label and a sentence on a
+   single row, so the fact is still reported but the dashboard spends its
+   vertical space on something actionable. */
 .alerts-clear {
-  padding: 0.9rem 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.6rem;
+  margin-bottom: 1.1rem;
+  padding: 0.5rem 0.8rem;
   background: var(--green-tint);
   border: 1px solid var(--line);
-  border-radius: var(--r-lg);
+  border-radius: 999px;
+}
+
+.alerts-clear-title {
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  font-family: var(--sans);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--green-deep);
+}
+
+.alerts-clear-title::before {
+  content: '';
+  inline-size: 0.45rem;
+  block-size: 0.45rem;
+  border-radius: 50%;
+  background: var(--green);
 }
 
 .alerts-clear p {
-  margin: 0.25rem 0 0;
+  margin: 0;
   color: var(--ink-2);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 
 .alerts-list {

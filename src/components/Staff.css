@@ -368,7 +368,16 @@
   align-items: start;
 }
 
-@media (max-width: 64rem) {
+/* 88rem, not 64rem. Used by exactly one screen — the Manager's stock page —
+   where the left column holds a five-column table and the right holds two
+   panels. Below this the left column falls under ~570px, which is narrower
+   than that table has ever been, so the last column (the one with "Add stock"
+   in it) was sliced off the panel edge on any 1280 or 1366 laptop. The scroll
+   container meant nothing was unreachable, but a primary action you have to
+   scroll sideways to find is a broken screen. Stacking sooner gives the table
+   the full width and the panels beside it lose nothing by sitting underneath.
+   Measured at 1680, 1440, 1366, 1280, 1024 and 900. */
+@media (max-width: 88rem) {
   .staff-split {
     grid-template-columns: 1fr;
   }

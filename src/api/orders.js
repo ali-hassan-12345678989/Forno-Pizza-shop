@@ -51,6 +51,11 @@ export const ORDER_ERRORS = {
   order_not_found: 'order_not_found',
   already_cancelled: 'already_cancelled',
   cancel_window_closed: 'cancel_window_closed',
+  // Only reachable if the browser sends a word the check constraint on
+  // orders.cancelled_reason does not know. Named rather than left to fall
+  // through to 'unknown', so a vocabulary that drifts out of step announces
+  // itself instead of reading as a network problem.
+  invalid_reason: 'invalid_reason',
 }
 
 /** Thrown with a `code` the checkout form can map to a message. */
@@ -119,9 +124,23 @@ export async function fetchOrderByToken(token) {
  *
  * Returns the cancelled order in the same shape as every other read, so the
  * tracking page re-renders from the result instead of fetching again.
+ *
+ * `reason` is what the Manager's cancellation breakdown is built from. It is
+ * the CUSTOMER'S reason, not the kitchen's, because this is the only way an
+ * order can be cancelled in this system — set_order_status() walks an order
+ * along order_status_flow() and 'cancelled' is not on that ladder. The word is
+ * validated in cancel_order(), which raises invalid_reason rather than storing
+ * something the breakdown could never group.
  */
-export async function cancelOrder(token) {
-  const { data, error } = await supabase.rpc('cancel_order', { p_access_token: token })
+export async function cancelOrder(token, reason = null) {
+  const { data, error } = await supabase.rpc('cancel_order', {
+    p_access_token: token,
+    // Optional by design, all the way down. A customer who wants out should
+    // never be held there by a required question, and a cancellation that
+    // failed because somebody skipped a radio button would be a worse outcome
+    // than a null in a report.
+    p_reason: reason,
+  })
 
   if (error) throw new OrderError(errorCodeFrom(error), error)
   if (!data) throw new OrderError('unknown')

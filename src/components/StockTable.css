@@ -65,7 +65,11 @@
 
 .stock-table th,
 .stock-table td {
-  padding: 0.65rem 0.9rem;
+  /* 0.75rem across, not 0.9. The status column grew a meter and a cover
+     multiple, and five cells of generous padding was the difference between
+     this table fitting its panel and slicing the "Add stock" button off the
+     right edge. Measured both ways rather than guessed. */
+  padding: 0.65rem 0.75rem;
   text-align: left;
   border-bottom: 1px solid var(--line-2);
   white-space: nowrap;
@@ -171,4 +175,107 @@
   border-color: transparent;
   color: var(--green);
   cursor: default;
+}
+
+/* ---- the level meter ------------------------------------------------------
+   Answers "is 8,000 g close to 1,600 g?" without asking anybody to divide.
+   The COLOUR is not decided here: it comes from is_low / is_out on the row,
+   which are the same flags that fire the real alerts, so a green bar can never
+   sit on an ingredient the alerts list is shouting about. */
+
+.stock-state {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  align-items: flex-start;
+}
+
+.stock-meter {
+  position: relative;
+  display: block;
+  /* 4.5rem, not 6.5. Measured: at the wider size this table came to 603px
+     inside a 577px panel, and the column it pushed out was the one with the
+     "Add stock" button in it. The scroll container meant nothing was lost, but
+     a primary action sliced off at the panel edge reads as broken however
+     scrollable it is. */
+  inline-size: 4.5rem;
+  max-inline-size: 100%;
+  block-size: 0.4rem;
+  background: var(--sand-2);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.stock-meter-fill {
+  display: block;
+  block-size: 100%;
+  border-radius: inherit;
+  background: var(--green);
+}
+
+.stock-meter.low .stock-meter-fill {
+  background: var(--gold-deep);
+}
+
+.stock-meter.out .stock-meter-fill {
+  background: var(--red);
+}
+
+/* Where the reorder level sits. A third of the way along by construction —
+   see FULL_AT_MULTIPLE in lib/stockLevel.js — so the two thirds to its right
+   are the headroom an ingredient drains through before it needs ordering. */
+.stock-meter-mark {
+  position: absolute;
+  inset-block: 0;
+  inline-size: 2px;
+  margin-inline-start: -1px;
+  /* Dark enough to read against the filled part of the bar as well as the
+     empty track — a mid grey disappeared into both. */
+  background: var(--ink);
+  /* Above the fill, so the line is still visible on a well-stocked row. */
+  z-index: 1;
+}
+
+.stock-cover {
+  font-size: 0.7rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ---- bulk receiving -------------------------------------------------------
+   A quantity box on every row, so a delivery note is entered by reading down
+   it. The values go onto the same sheet the panel beside this owns, and are
+   saved by its one button. */
+
+.stock-bulk-note {
+  margin: 0 0 0.6rem;
+  font-size: 0.82rem;
+  color: var(--ink-2);
+}
+
+.stock-bulk-input {
+  inline-size: 5.5rem;
+  padding: 0.3rem 0.45rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  background: var(--card);
+  font: inherit;
+  font-size: 0.82rem;
+  color: var(--ink);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.stock-bulk-input:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
+}
+
+/* A row with something typed into it is already on the delivery, and reads the
+   same as one added from the panel — the sheet does not care which way it got
+   there, so neither should the table. */
+.stock-bulk-input:not(:placeholder-shown) {
+  border-color: var(--green);
+  background: var(--green-tint);
 }

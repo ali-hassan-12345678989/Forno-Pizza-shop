@@ -1,4 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import CancelledOrders from './CancelledOrders'
+import Dayparts from './Dayparts'
+import TrendChart from './TrendChart'
 import { COPY } from '../content/copy'
 import {
   ALL_REPORT_PERIODS,
@@ -6,8 +9,11 @@ import {
   REPORT_WINDOW,
   SHOP_TIME_ZONE,
 } from '../config/reports'
+import { CANCELLED_DAYS, DAYPART_DAYS } from '../config/insights'
 import { fetchSalesReport } from '../api/reports'
+import { fetchCancelledOrders, fetchDayparts } from '../api/insights'
 import { formatPeriod, formatPrice } from '../lib/format'
+import { useAsyncData } from '../lib/useAsyncData'
 import './SalesReport.css'
 
 /**
@@ -19,6 +25,19 @@ import './SalesReport.css'
  * Every figure comes from sales_report(). The totals below are a sum of the
  * rows the database returned, not an independent calculation, so the strip and
  * the table can never disagree.
+ *
+ * THREE THINGS THE OWNER'S REVIEW ADDED.
+ *
+ * A chart, because the period toggle used to change nothing but a static table
+ * and a peak was something you found by reading down a column of figures.
+ *
+ * A way into the cancelled figure. They saw "168 cancelled" against "6 orders"
+ * and read it as the shop bleeding customers; it was the regression suite's
+ * test orders, since cleared. A number that alarming has to be openable, or
+ * every future one gets taken on trust and worried about.
+ *
+ * A day-part breakdown, because a daily total cannot tell anybody whether to
+ * put a second driver on at seven or at eleven.
  */
 export default function SalesReport() {
   const t = COPY.staff.sales
@@ -27,6 +46,7 @@ export default function SalesReport() {
   const [rows, setRows] = useState(null)
   const [errorCode, setErrorCode] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [showCancelled, setShowCancelled] = useState(false)
 
   const load = useCallback(async (next) => {
     setLoading(true)
@@ -41,6 +61,16 @@ export default function SalesReport() {
     load(period)
   }, [load, period])
 
+  const dayparts = useAsyncData(async () => {
+    const { rows: data, errorCode: code } = await fetchDayparts(DAYPART_DAYS)
+    return { data, errorCode: code }
+  })
+
+  const cancelled = useAsyncData(async () => {
+    const { rows: data, errorCode: code } = await fetchCancelledOrders(CANCELLED_DAYS)
+    return { data, errorCode: code }
+  })
+
   const totals = useMemo(() => {
     if (!rows) return null
     return rows.reduce(
@@ -53,6 +83,19 @@ export default function SalesReport() {
       { orders: 0, revenue: 0, goods: 0, cancelled: 0 },
     )
   }, [rows])
+
+  /* Oldest first. sales_report() returns newest first, which is right for a
+     table somebody scans from the top and wrong for a chart, where time has to
+     run left to right or the shape means the opposite of what it looks like. */
+  const points = useMemo(
+    () =>
+      [...(rows ?? [])].reverse().map((r) => ({
+        key: r.periodStart,
+        value: r.revenue,
+        label: formatPeriod(r.periodStart, period),
+      })),
+    [rows, period],
+  )
 
   return (
     <section className="sales" aria-labelledby="sales-title">
@@ -108,9 +151,46 @@ export default function SalesReport() {
             </div>
             <div className={totals.cancelled > 0 ? 'warn' : ''}>
               <dt>{t.totalCancelled}</dt>
-              <dd>{totals.cancelled}</dd>
+              <dd>
+                {/* A figure you can open. Only when there is something behind
+                    it — a button that reveals "nothing to show" has wasted a
+                    click and taught the reader not to try again. */}
+                {totals.cancelled > 0 ? (
+                  <button
+                    type="button"
+                    className="sales-drill"
+                    aria-expanded={showCancelled}
+                    aria-controls="cancelled-detail"
+                    onClick={() => setShowCancelled((open) => !open)}
+                  >
+                    {totals.cancelled}
+                  </button>
+                ) : (
+                  totals.cancelled
+                )}
+              </dd>
             </div>
           </dl>
+
+          {showCancelled && (
+            <div id="cancelled-detail" className="sales-detail">
+              <CancelledOrders
+                rows={cancelled.data}
+                days={CANCELLED_DAYS}
+                total={totals.cancelled}
+                loading={cancelled.loading}
+                errorCode={cancelled.errorCode}
+                onRetry={() => cancelled.reload()}
+              />
+            </div>
+          )}
+
+          <TrendChart
+            points={points}
+            label={t.chartAria(period)}
+            formatLabel={(point) => point.label}
+            formatValue={(point) => t.chartPeak(point.label, formatPrice(point.value))}
+          />
 
           <div className="sales-scroll">
             <table className="sales-table">
@@ -149,6 +229,17 @@ export default function SalesReport() {
           <p className="sales-note">{t.timeZoneNote(SHOP_TIME_ZONE)}</p>
         </>
       )}
+
+      {/* Outside the period toggle on purpose. Day-parts are a fixed window
+          because their whole job is to average out the noise of a single day,
+          and re-cutting them by "yearly" would be a chart of nothing. */}
+      <Dayparts
+        rows={dayparts.data}
+        days={DAYPART_DAYS}
+        loading={dayparts.loading}
+        errorCode={dayparts.errorCode}
+        onRetry={() => dayparts.reload()}
+      />
     </section>
   )
 }

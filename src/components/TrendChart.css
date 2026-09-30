@@ -1,0 +1,87 @@
+/* Takings over time. Tokens only — see the Part 3 audit on raw colour literals. */
+
+.trend {
+  margin-block: 1rem 1.25rem;
+}
+
+/* One track per bucket, so the columns and the labels under them share a grid
+   and cannot drift apart at any width. */
+.trend-plot,
+.trend-axis {
+  display: grid;
+  grid-template-columns: repeat(var(--trend-count), minmax(0, 1fr));
+  gap: 2px;
+}
+
+.trend-plot {
+  align-items: end;
+  block-size: 9rem;
+  padding-block-end: 0.3rem;
+  border-block-end: 1px solid var(--line-2);
+}
+
+/* Capped, and centred in its track. Without a ceiling a week of data draws
+   seven columns an inch wide each, which is a chart of rectangles rather than
+   a shape. Thirty days never reach the cap and are unaffected. */
+.trend-col {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  block-size: 100%;
+}
+
+.trend-col .trend-bar {
+  max-inline-size: 3.5rem;
+}
+
+.trend-bar {
+  inline-size: 100%;
+  block-size: var(--trend-height);
+  background: var(--gold);
+  border-radius: 2px 2px 0 0;
+}
+
+/* The peak is the thing the chart exists to show, so it is the one column that
+   is not the same colour as the rest. State, not decoration. */
+.trend-col.is-peak .trend-bar {
+  background: var(--red);
+}
+
+.trend-axis {
+  margin-block-start: 0.35rem;
+}
+
+.trend-tick {
+  font-size: 0.68rem;
+  color: var(--ink-3);
+  text-align: center;
+  /* Labels are printed on three buckets only; the rest are empty tracks that
+     hold the grid's shape. Letting one overflow its track is what keeps
+     "September 2026" readable in a column two pixels wide. */
+  overflow: visible;
+  white-space: nowrap;
+}
+
+.trend-tick.is-peak {
+  color: var(--red-deep);
+  font-weight: 600;
+}
+
+.trend-peak {
+  margin: 0.45rem 0 0;
+  font-size: 0.8rem;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+/* On a narrow screen thirty columns are a millimetre each, which is still a
+   readable shape but not a readable axis. The ticks go, the chart stays. */
+@media (max-width: 34rem) {
+  .trend-plot {
+    block-size: 6.5rem;
+  }
+
+  .trend-axis {
+    display: none;
+  }
+}

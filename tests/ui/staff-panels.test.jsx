@@ -40,7 +40,18 @@ const INGREDIENTS = [
   },
 ]
 
-const USAGE = INGREDIENTS.map((i) => ({ ...i, ingredient_id: i.id, used_today: 0, used_total: 0 }))
+/* The shape staff_usage_between() returns. `variance: null` is the honest
+   default — nobody has counted these shelves — and the screen must render that
+   as "not counted" rather than as a clean zero. */
+const USAGE = INGREDIENTS.map((i) => ({
+  ...i,
+  ingredient_id: i.id,
+  used: 0,
+  received: 0,
+  variance: null,
+  counts_taken: 0,
+  last_counted_at: null,
+}))
 
 const ORDERS = [
   {
@@ -77,7 +88,10 @@ const MENU = [
 
 const STAFF_RPCS = {
   staff_ingredients: INGREDIENTS,
-  staff_ingredient_usage: USAGE,
+  staff_usage_between: USAGE,
+  staff_top_items: [],
+  staff_cancelled_orders: [],
+  sales_by_daypart: [],
   staff_stock_alerts: [],
   admin_orders: ORDERS,
   admin_active_orders: ORDERS,

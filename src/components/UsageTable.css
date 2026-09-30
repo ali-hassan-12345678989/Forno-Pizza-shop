@@ -23,7 +23,6 @@
   color: var(--ink-2);
 }
 
-.usage-periods,
 .usage-filters {
   display: flex;
   flex-wrap: wrap;
@@ -143,4 +142,38 @@
 .usage-out {
   color: var(--red-deep);
   font-weight: 600;
+}
+
+/* ---- the counted variance -------------------------------------------------
+   Three states that must never look alike. A blank means nobody counted; zero
+   means somebody counted and it balanced; a figure means the shelf and the
+   books disagreed. Rendering the first two the same way would turn "we never
+   looked" into "all clear", which is the exact misreading this column exists
+   to prevent — so the uncounted state is deliberately the quietest thing in
+   the table and the matched state is deliberately not. */
+
+.usage-uncounted {
+  color: var(--ink-3);
+  font-style: italic;
+  font-size: 0.8rem;
+}
+
+.usage-clean {
+  color: var(--green-deep);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+/* Short is the finding this whole feature exists for: stock that left without
+   an order to explain it. */
+.usage-short {
+  color: var(--red-deep);
+  font-weight: 700;
+}
+
+/* More on the shelf than the books expected. Usually a delivery booked in
+   wrong rather than good fortune, so it warns rather than congratulates. */
+.usage-over {
+  color: var(--gold-deep);
+  font-weight: 700;
 }

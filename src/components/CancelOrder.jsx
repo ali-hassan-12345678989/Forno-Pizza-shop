@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react'
 import { COPY } from '../content/copy'
+import { ALL_CANCEL_REASONS } from '../config/cancelReasons'
 import { ORDER_STATUS } from '../config/orderStatus'
 import { useShop } from '../context/SettingsContext'
 import { useDialog } from '../lib/useDialog'
@@ -23,6 +24,11 @@ export default function CancelOrder({ order, token, onCancelled }) {
   const [confirming, setConfirming] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
+  /* Starts unchosen, and stays optional. The Manager's cancellation breakdown
+     is built from this, but a customer who wants out should never be held there
+     by a required question — a cancellation that failed because somebody
+     skipped a radio button would be a worse outcome than a blank in a report. */
+  const [reason, setReason] = useState(null)
 
   const close = useCallback(() => {
     if (!busy) setConfirming(false)
@@ -39,7 +45,7 @@ export default function CancelOrder({ order, token, onCancelled }) {
     setBusy(true)
     setError(null)
     try {
-      onCancelled(await cancelOrder(token))
+      onCancelled(await cancelOrder(token, reason))
       setConfirming(false)
     } catch (thrown) {
       setError(t.errors[thrown.code] ?? t.errors.unknown)
@@ -60,6 +66,25 @@ export default function CancelOrder({ order, token, onCancelled }) {
           <div className="cancelorder-panel">
             <h2>{t.confirmTitle(order.orderNumber)}</h2>
             <p className="cancelorder-body">{t.confirmBody}</p>
+
+            {/* Asked here rather than on a second screen, because a second
+                screen between somebody and cancelling is a dark pattern however
+                politely it is worded. Skipping it costs nothing. */}
+            <fieldset className="cancelorder-reasons" disabled={busy}>
+              <legend>{t.reasonLegend}</legend>
+              {ALL_CANCEL_REASONS.map((value) => (
+                <label key={value} className="cancelorder-reason">
+                  <input
+                    type="radio"
+                    name="cancel-reason"
+                    value={value}
+                    checked={reason === value}
+                    onChange={() => setReason(value)}
+                  />
+                  <span>{t.reasons[value]}</span>
+                </label>
+              ))}
+            </fieldset>
 
             {error && (
               <div className="cancelorder-error" role="alert">

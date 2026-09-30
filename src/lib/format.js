@@ -30,17 +30,70 @@ export function formatDateTime(value) {
 }
 
 /**
- * A stock reading with its unit, e.g. "40,000 g" or "12.5 kg".
+ * A stock reading with its unit, e.g. "40,000 g" or "180 pcs".
  *
- * Quantities are numeric(12,3) in Postgres, so whole numbers arrive as "40000"
- * and fractions matter. Trailing zeros are dropped because "1.500 kg" reads
- * like a precision the shop does not actually measure to.
+ * WHOLE NUMBERS, ON PURPOSE. Quantities are numeric(12,3) in Postgres because
+ * a recipe can call for a third of a litre and the arithmetic has to land
+ * somewhere, but the thousandths are an artefact of that division and not a
+ * measurement anybody took. The owner's review put it exactly right: a shelf
+ * reading "8,000.005 g" is three digits of noise on a number the kitchen works
+ * in kilos. Every unit this shop stocks — grams, millilitres, pieces — is
+ * already the smallest fraction it counts in, so there is no "logical fraction"
+ * below them to round to.
+ *
+ * The stored value is untouched. This is display only, and the arithmetic that
+ * decides whether an ingredient is low still happens in Postgres against the
+ * full precision.
+ *
+ * THE ONE CASE WORTH SPELLING OUT. A quantity that is genuinely non-zero but
+ * rounds to nothing would print "0 g" — which reads as an empty shelf and is
+ * the one reading a stock screen must never get wrong. It says "< 1 g" instead.
  */
 export function formatQuantity(amount, unit) {
+  // Number(null) is 0, which is finite — so without this a missing figure
+  // prints as a confident "0 g". Harmless on a NOT NULL stock column; wrong on
+  // a variance, where null means nobody counted and zero means they counted
+  // and it balanced. Those must never render the same.
+  if (amount === null || amount === undefined || amount === '') return '—'
+
   const n = Number(amount)
   if (!Number.isFinite(n)) return '—'
-  const rounded = Math.round(n * 1000) / 1000
-  return `${rounded.toLocaleString('en-PK')} ${unit}`
+
+  const whole = Math.round(n)
+  if (whole === 0 && n !== 0) return n > 0 ? `< 1 ${unit}` : `> -1 ${unit}`
+
+  return `${whole.toLocaleString('en-PK')} ${unit}`
+}
+
+/**
+ * A difference, with its sign kept: "+240 g", "−1,150 g", "0 g".
+ *
+ * Used where the sign carries the meaning rather than the size — a counted
+ * variance is a different fact depending on which way it points, and a bare
+ * "1,150 g" beside the words "variance" leaves the reader to guess.
+ *
+ * A true minus sign, not a hyphen: it is the character this is, it lines up
+ * with digits in a tabular-figures column, and a hyphen at the start of a
+ * number is easy to lose against a table rule.
+ */
+export function formatSignedQuantity(amount, unit) {
+  // Number(null) is 0, which is finite — so without this a missing figure
+  // prints as a confident "0 g". Harmless on a NOT NULL stock column; wrong on
+  // a variance, where null means nobody counted and zero means they counted
+  // and it balanced. Those must never render the same.
+  if (amount === null || amount === undefined || amount === '') return '—'
+
+  const n = Number(amount)
+  if (!Number.isFinite(n)) return '—'
+
+  const whole = Math.round(n)
+  if (whole === 0) {
+    if (n === 0) return `0 ${unit}`
+    return n > 0 ? `< +1 ${unit}` : `> −1 ${unit}`
+  }
+
+  const sign = whole > 0 ? '+' : '−'
+  return `${sign}${Math.abs(whole).toLocaleString('en-PK')} ${unit}`
 }
 
 /**
@@ -81,4 +134,33 @@ export function formatShopDate(date, timeZone) {
     month: 'long',
     timeZone,
   }).format(date)
+}
+
+/**
+ * Just the weekday, in the shop's zone: "Wednesday".
+ *
+ * Used by the dashboard's pacing lines, which compare today against the same
+ * day of previous weeks and need to name that day. Formatted in the shop's own
+ * zone for the same reason formatShopDate is — a staff member checking from
+ * elsewhere should see the shop's day, not their own.
+ */
+export function formatWeekday(date, timeZone) {
+  return new Intl.DateTimeFormat('en-GB', { weekday: 'long', timeZone }).format(date)
+}
+
+/**
+ * A multiple, for "5× the reorder level".
+ *
+ * One decimal while the number is small enough for it to mean something, and
+ * none above ten — "23.4× the reorder level" is three characters of precision
+ * on a fact that only needs to say "plenty". A trailing ".0" is dropped for the
+ * same reason: it reads as a measurement when it is an artefact of the format.
+ */
+export function formatMultiple(ratio) {
+  const n = Number(ratio)
+  if (!Number.isFinite(n)) return '—'
+  if (n >= 10) return String(Math.round(n))
+
+  const oneDecimal = Math.round(n * 10) / 10
+  return Number.isInteger(oneDecimal) ? String(oneDecimal) : oneDecimal.toFixed(1)
 }

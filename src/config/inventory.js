@@ -24,3 +24,25 @@ export function isValidReceipt(quantity) {
   const n = Number(quantity)
   return Number.isFinite(n) && n > MIN_STOCK_RECEIPT && n <= MAX_STOCK_RECEIPT
 }
+
+/**
+ * Counting a shelf.
+ *
+ * Mirrors record_stock_count() in supabase/manager_insights.sql. Zero is a
+ * legitimate count — a shelf genuinely can be empty — which is the one rule
+ * that differs from a delivery, where zero means somebody has not typed
+ * anything yet.
+ */
+export const MIN_STOCK_COUNT = 0
+
+/** Matches c_max_count in record_stock_count(). Above this is a typo. */
+export const MAX_STOCK_COUNT = 1000000
+
+/** Matches the length check on stock_counts.note. */
+export const MAX_COUNT_NOTE = 200
+
+export function isValidCount(quantity) {
+  if (String(quantity ?? '').trim() === '') return false
+  const n = Number(quantity)
+  return Number.isFinite(n) && n >= MIN_STOCK_COUNT && n <= MAX_STOCK_COUNT
+}

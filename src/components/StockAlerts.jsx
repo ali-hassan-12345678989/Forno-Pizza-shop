@@ -16,10 +16,20 @@ import './StockAlerts.css'
 export default function StockAlerts({ alerts }) {
   const t = COPY.staff.alerts
 
+  /* Nothing to act on collapses to a single line.
+     It used to be a full panel with a heading and a paragraph, occupying the
+     most valuable strip on the dashboard to report an absence — and on a
+     well-run shop that is its normal state, every day. The information is
+     still here, because "we checked and it is fine" is worth saying; what it
+     no longer does is take the room that what-is-selling now uses.
+     Still a section with the same heading, so the page outline and anything
+     navigating by headings are unchanged. */
   if (alerts.length === 0) {
     return (
       <section className="alerts alerts-clear" aria-labelledby="alerts-title">
-        <h2 id="alerts-title">{t.title}</h2>
+        <h2 id="alerts-title" className="alerts-clear-title">
+          {t.title}
+        </h2>
         <p>{t.none}</p>
       </section>
     )
