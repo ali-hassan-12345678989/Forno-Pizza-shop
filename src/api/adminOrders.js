@@ -25,9 +25,19 @@ function errorCodeFrom(error) {
  * No phone number or address is in this payload. The list does not show them,
  * so it does not ask for them; admin_order_detail() is the only reader that
  * hands over contact details.
+ *
+ * `search` is why that stays true even though the Admin can now find an order
+ * by phone number. The matching happens inside admin_orders(), so the number
+ * the customer read out over the phone never travels back — the list on screen
+ * still carries no contact details, and a screenshot of it still leaks none.
+ * Order number and customer name are matched there too, so one box covers all
+ * three rather than the browser filtering some and the database others.
  */
-export async function fetchAdminOrders(limit = ADMIN_ORDERS_LIMIT) {
-  const { data, error } = await supabase.rpc('admin_orders', { p_limit: limit })
+export async function fetchAdminOrders(limit = ADMIN_ORDERS_LIMIT, search = null) {
+  const { data, error } = await supabase.rpc('admin_orders', {
+    p_limit: limit,
+    p_search: search || null,
+  })
 
   if (error) return { orders: null, errorCode: errorCodeFrom(error) }
 

@@ -773,6 +773,227 @@ export const COPY = {
     },
 
     /** FR-5.4 — low-stock alerts, where they finally get seen. */
+    /* Orders past the promise the customer was given. The deadline comes from
+       shop_settings, not from a number in the code — see lib/sla.js. */
+    sla: {
+      title: (n) => `${n} order${n === 1 ? '' : 's'} past the promised time`,
+      alsoDue: (n) => `${n} more close to it`,
+      dueOnly: (n) => `${n} order${n === 1 ? '' : 's'} approaching the promised time.`,
+      promised: (type, minutes) => `${type} · promised in ${minutes} min`,
+      /* The ETA text could not be read as a number, so the deadline is the
+         fallback. Said out loud, so nobody acts on a figure they did not set
+         believing they did. */
+      assumed: '(assumed)',
+      over: (duration) => `${duration} over`,
+      openOrder: (n) => `Open order #${n}`,
+    },
+
+    /* What the food costs. The one column four other reports stand on. */
+    costs: {
+      title: 'What the food costs',
+      summary: (priced, total) =>
+        priced === 0
+          ? `Nothing priced yet, out of ${total} ingredients`
+          : `${priced} of ${total} ingredients priced`,
+
+      valueLabel: 'Stock on hand',
+      partial: (priced, total) => `Covers ${priced} of ${total} ingredients`,
+
+      searchLabel: 'Search ingredients',
+      colIngredient: 'Ingredient',
+      colStock: 'In stock',
+      colCost: 'Cost',
+      colValue: 'Value',
+      colSave: 'Save',
+
+      /* Per ONE unit — a gram, not a kilo. That is a mistake made once and
+         believed for months, so the unit is beside the box as well as in the
+         label a screen reader hears. */
+      perUnit: (unit) => `per ${unit}`,
+      costAria: (name, unit) => `Cost of one ${unit} of ${name}`,
+      notPriced: 'Not priced',
+
+      save: 'Save',
+      saving: 'Saving…',
+      empty: 'No ingredients yet.',
+      noMatch: 'No ingredients match that.',
+      footnote:
+        'Clearing a price sets it back to unknown. Cost of goods, margins and the product mix all read this column, and each says how much of it they cover.',
+
+      errors: {
+        not_admin: 'Only the Admin can set costs.',
+        invalid_cost: 'That is not a price this can record.',
+        ingredient_not_found: 'That ingredient no longer exists.',
+        unknown: 'Could not save that price. Check your connection and try again.',
+      },
+    },
+
+    /* Cost of goods sold, and the leak counting found beside it. */
+    cogs: {
+      title: 'Cost of goods',
+      nothingPriced:
+        'No ingredient has a price yet, so there is nothing to cost this against. Set prices under Inventory.',
+      partial: (priced, total) =>
+        `Only ${priced} of ${total} ingredients are priced, so these figures are lower than the real cost.`,
+
+      goodsRevenue: 'Goods sold',
+      theoretical: 'Recipes say',
+      leak: 'Counted missing',
+      actual: 'Actual cost',
+      foodCostPercent: 'Food cost',
+      noSales: '—',
+
+      leakNote:
+        'The leak is stock that left without an order to explain it — waste, over-portioning or breakage. It only exists because somebody counted a shelf.',
+      noLeak: 'Every shelf counted in this window matched the books.',
+    },
+
+    /* How long an order actually takes. */
+    timings: {
+      title: 'How long orders take',
+      subtitle: (days) => `Last ${days} days · typical time first`,
+      empty: (days) => `No completed orders in the last ${days} days to time.`,
+
+      colStage: 'Stage',
+      colTypical: 'Typical',
+      colMean: 'Average',
+      colWorst: 'Worst',
+      colOrders: 'Orders',
+
+      /* Said plainly, because the owner asked for make, bake, rack and transit
+         and this kitchen has no such stations. Four numbers over a three-stage
+         ladder would be one number nobody measured. */
+      stagesNote:
+        'These are the stages this kitchen actually records. Typical is the middle order — one forgotten overnight drags an average, and never the middle.',
+    },
+
+    /* Which items are worth selling. */
+    mix: {
+      title: 'What is worth selling',
+      subtitle: (days) => `Last ${days} days · each item against the middle of the menu`,
+      empty: (days) => `Nothing sold in the last ${days} days.`,
+      unpriced: (n) =>
+        `${n} item${n === 1 ? ' has' : 's have'} an unpriced ingredient, so ${n === 1 ? 'it cannot' : 'they cannot'} be placed yet.`,
+
+      colItem: 'Item',
+      colSold: 'Sold',
+      colRevenue: 'Revenue',
+      colMarginEach: 'Margin each',
+      colClass: 'Verdict',
+      notPriced: 'Not priced',
+
+      classes: {
+        star: 'Star',
+        plowhorse: 'Plowhorse',
+        puzzle: 'Puzzle',
+        dog: 'Dog',
+        unknown: 'Needs a price',
+      },
+
+      legend:
+        'Stars sell well and make money — protect them. Plowhorses sell well and make little: raise the price or cut the cost. Puzzles make money but nobody orders them: push them. Dogs do neither.',
+    },
+
+    /* What each day of the week is expected to take. */
+    targets: {
+      title: 'Weekly targets',
+      intro:
+        'What each day is expected to take. Set once — trade runs on a weekly cycle, so seven numbers keep working.',
+      /* Keyed by Postgres extract(dow), where 0 is Sunday. WEEKDAY_ORDER in
+         config/adminInsights.js decides the order they are shown in. */
+      days: {
+        0: 'Sunday',
+        1: 'Monday',
+        2: 'Tuesday',
+        3: 'Wednesday',
+        4: 'Thursday',
+        5: 'Friday',
+        6: 'Saturday',
+      },
+      notSet: 'No target',
+      save: 'Save',
+      saving: 'Saving…',
+      footnote: (weekly) => `Clearing a box removes that day's target. Full week: ${weekly}.`,
+
+      errors: {
+        not_admin: 'Only the Admin can set targets.',
+        invalid_target: 'That is not a target this can record.',
+        invalid_day: 'That is not a day of the week.',
+        unknown: 'Could not save that target. Check your connection and try again.',
+      },
+    },
+
+    /* Editing the bill of materials. */
+    recipe: {
+      title: (size) => `What goes on a ${size}`,
+      intro:
+        'These quantities are what the stock engine takes off the shelf on every order. Changing one changes the next order, not past ones.',
+      costs: (cost, price) => `Food cost ${cost} · sells for ${price}`,
+      costUnknown: 'not priced',
+
+      none: 'This size has no recipe, so it cannot be ordered. Add at least one ingredient.',
+      quantityAria: (name, unit) => `How much ${name}, in ${unit}`,
+      inStock: (quantity) => `${quantity} in stock`,
+
+      save: 'Save',
+      remove: 'Remove',
+      removeAria: (name) => `Remove ${name} from this recipe`,
+      loading: 'Loading recipe…',
+
+      picker: {
+        pickerLabel: 'Add an ingredient',
+        pickerPlaceholder: 'Start typing a name',
+        pickerHint: (total) => `${total} ingredients — typing beats scrolling.`,
+        pickerNone: (query) => `Nothing matches “${query}”.`,
+        pickerDone: 'Every ingredient is already on this recipe.',
+        pickerCount: (n) => `${n} match${n === 1 ? '' : 'es'}`,
+      },
+
+      errors: {
+        not_admin: 'Only the Admin can change a recipe.',
+        invalid_quantity: 'That is not a quantity this can record.',
+        size_not_found: 'That size no longer exists.',
+        ingredient_not_found: 'That ingredient no longer exists.',
+        recipe_line_not_found: 'That ingredient is not on this recipe.',
+        /* The database refusing to break ordering, not a failure. */
+        would_break_ordering:
+          'This is the last ingredient, and the item is live on the menu. An item with no recipe cannot be ordered — hide the item first, then remove it.',
+        unknown: 'Could not save that change. Check your connection and try again.',
+      },
+    },
+
+    /* What every size on the menu makes, thinnest first. */
+    margins: {
+      title: 'What each size makes',
+      subtitle: (priced, total) => `${priced} of ${total} sizes costed · thinnest margin first`,
+      nonePriced:
+        'No size can be costed yet — set ingredient prices under Inventory and these fill in.',
+      unpriced: (n) =>
+        `${n} size${n === 1 ? '' : 's'} cannot be costed yet, so ${n === 1 ? 'it shows' : 'they show'} what is missing instead of a margin.`,
+
+      colItem: 'Item',
+      colPrice: 'Price',
+      colCost: 'Food cost',
+      colMargin: 'Margin',
+      /* Names the obstacle rather than showing a figure built on half a
+         recipe — the flattering number a keep-or-cut decision would be made on. */
+      missing: (n) => `${n} unpriced`,
+
+      footnote:
+        'Margin is what is left after the food, as a share of the price. A hidden item is dimmed — it still needs pricing, but it is not what a thin-margin list is for.',
+
+      loading: 'Loading margins…',
+      retry: 'Try again',
+      errors: {
+        not_admin: 'This account cannot view margins.',
+        unknown: 'Could not load margins. The menu below is fine.',
+      },
+    },
+
+    exportCsv: {
+      label: 'Export CSV',
+    },
+
     /* Counting the shelf. The only number in this system a recipe did not
        produce — see components/StockCount.jsx for why that matters. */
     count: {
@@ -1167,15 +1388,26 @@ export const COPY = {
        Separate from `active` above, which still describes the dashboard's
        how-busy-are-we table. Two screens, two jobs, two vocabularies. */
     orders: {
-      searchLabel: 'Search by order number or name',
+      /* Says the phone number is searchable, because nothing else on the screen
+         could tell you: the list has never shown one and still does not. The
+         matching happens inside admin_orders(), so the number never reaches the
+         browser. */
+      searchLabel: 'Search by order number, name or phone',
       filterLabel: 'Show',
 
       filters: {
         all: 'All',
         active: 'In progress',
+        /* Not a bucket of its own — a delayed order is also in progress and
+           appears under both. See ORDER_VIEWS in lib/adminOrderList.js. */
+        delayed: 'Delayed',
         completed: 'Completed',
         cancelled: 'Cancelled',
       },
+
+      /* On the row itself, so a late order is visible in every view rather than
+         only under its own filter. */
+      late: 'Late',
 
       /* Appended to the chip so the Admin can see where the orders are before
          clicking a filter that turns out to be empty. */
@@ -1451,6 +1683,14 @@ export const COPY = {
          confident 0% invented from a single sample. */
       pacingNoHistory: 'No history for this day yet',
 
+      /* Against the target for this weekday, where one is set. One line for
+         both directions: the percentage already says which side of the target
+         the day is on, and the tile's tone carries the rest. Two keys holding
+         the same sentence is a wording that will drift apart for no reason. */
+      targetProgress: (percent, target) => `${percent}% of today's ${target} target`,
+      /* No target set is not a miss. The tile stays neutral and says so. */
+      targetNone: 'No target set for today',
+
       openNow: 'Open right now',
       openNoneNow: 'Nothing in progress',
       oldestWaiting: (timeText) => `Oldest since ${timeText}`,
@@ -1494,6 +1734,10 @@ export const COPY = {
       usageSub: 'What the kitchen has got through',
       reportsTitle: 'Reports',
       reportsSub: 'How the shop is doing over time',
+      /* The half the sales table above has never covered: revenue alone
+         cannot say whether a pizza is worth making. */
+      costingTitle: 'What it cost',
+      costingSub: 'Food cost across a window, and the leak counting found in it',
     },
   },
 }

@@ -1,0 +1,184 @@
+/* Costing reports. Tokens only — see the Part 3 audit on raw colour literals. */
+
+.cogs,
+.timings,
+.mix {
+  margin-block-start: 1.5rem;
+}
+
+/* ---- cost of goods sold --------------------------------------------------- */
+
+.cogs-none,
+.cogs-partial {
+  margin: 0.5rem 0 0.8rem;
+  padding: 0.5rem 0.8rem;
+  border-radius: var(--r);
+  font-size: 0.84rem;
+}
+
+/* Nothing priced yet is the shop's starting state, not a fault. */
+.cogs-none {
+  background: var(--wash-1);
+  border: 1px solid var(--line);
+  color: var(--ink-2);
+}
+
+/* Half-priced is worse than unpriced: the figure looks complete. */
+.cogs-partial {
+  background: var(--gold-tint);
+  border: 1px solid var(--line);
+  color: var(--gold-deep);
+  font-weight: 600;
+}
+
+.cogs-figures {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+  gap: 0.7rem;
+  margin: 0.8rem 0 0;
+}
+
+.cogs-figures div {
+  padding: 0.6rem 0.75rem;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+}
+
+.cogs-figures dt {
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.cogs-figures dd {
+  margin: 0.2rem 0 0;
+  font-family: var(--serif);
+  font-size: 1.15rem;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Stock that left without an order to explain it. */
+.cogs-figures div.warn {
+  background: var(--red-tint);
+  border-color: var(--red-line);
+}
+
+.cogs-figures div.warn dd {
+  color: var(--red-deep);
+}
+
+/* ---- shared table shell --------------------------------------------------- */
+
+.timings-scroll,
+.mix-scroll {
+  overflow-x: auto;
+  margin-block-start: 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--card);
+}
+
+.timings-table,
+.mix-table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.timings-table th,
+.timings-table td,
+.mix-table th,
+.mix-table td {
+  padding: 0.5rem 0.7rem;
+  text-align: start;
+  border-block-end: 1px solid var(--line-2);
+  white-space: nowrap;
+}
+
+.timings-table thead th,
+.mix-table thead th {
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  background: var(--sand-1);
+}
+
+.timings-table tbody th,
+.mix-table tbody th {
+  font-weight: 600;
+  color: var(--ink);
+  white-space: normal;
+}
+
+.timings-table .num,
+.mix-table .num {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.timings-table .strong {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.timings-table tbody tr:last-child th,
+.timings-table tbody tr:last-child td,
+.mix-table tbody tr:last-child th,
+.mix-table tbody tr:last-child td {
+  border-block-end: 0;
+}
+
+/* ---- product mix ---------------------------------------------------------- */
+
+.mix-unpriced {
+  margin: 0.5rem 0 0;
+  font-size: 0.82rem;
+  color: var(--gold-deep);
+  font-weight: 600;
+}
+
+/* Four verdicts, four colours, and none of them decorative: this is the column
+   somebody acts on. Unknown is deliberately the quietest — it is an absence of
+   information, not a fifth verdict. */
+.mix-pill {
+  display: inline-block;
+  padding: 0.12rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.mix-pill.star {
+  background: var(--green-tint);
+  color: var(--green-deep);
+}
+
+.mix-pill.plowhorse {
+  background: var(--gold-tint);
+  color: var(--gold-deep);
+}
+
+.mix-pill.puzzle {
+  background: var(--wash-2);
+  color: var(--ink-2);
+}
+
+.mix-pill.dog {
+  background: var(--red-tint);
+  color: var(--red-deep);
+}
+
+.mix-pill.unknown {
+  background: transparent;
+  border: 1px dashed var(--line-2);
+  color: var(--ink-3);
+  font-weight: 400;
+  font-style: italic;
+}

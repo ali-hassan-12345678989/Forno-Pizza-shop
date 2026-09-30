@@ -1,0 +1,92 @@
+/* What each pizza makes. Tokens only — see the Part 3 audit on colour literals. */
+
+.margins {
+  margin-block-end: 1.5rem;
+}
+
+.margins-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+}
+
+.margins-unpriced {
+  margin: 0.5rem 0 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--gold-deep);
+}
+
+.margins-scroll {
+  overflow-x: auto;
+  margin-block-start: 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--card);
+}
+
+.margins-table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.margins-table th,
+.margins-table td {
+  padding: 0.5rem 0.7rem;
+  text-align: start;
+  border-block-end: 1px solid var(--line-2);
+  white-space: nowrap;
+}
+
+.margins-table thead th {
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  background: var(--sand-1);
+}
+
+.margins-table tbody th {
+  display: flex;
+  flex-direction: column;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.margins-size {
+  font-size: 0.74rem;
+  font-weight: 400;
+  color: var(--ink-3);
+}
+
+.margins-table .num {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.margins-abs {
+  display: block;
+  font-size: 0.74rem;
+  color: var(--ink-3);
+}
+
+/* An item that is off the menu still needs pricing, but it is not what anybody
+   is looking for in a list of thin margins. */
+.margins-table tr.is-hidden-item {
+  opacity: 0.55;
+}
+
+.margins-missing {
+  color: var(--gold-deep);
+  font-style: italic;
+  font-size: 0.78rem;
+}
+
+.margins-table tbody tr:last-child th,
+.margins-table tbody tr:last-child td {
+  border-block-end: 0;
+}

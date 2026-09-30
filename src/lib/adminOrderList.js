@@ -1,4 +1,5 @@
 import { ORDER_STATUS } from '../config/orderStatus'
+import { SLA_STATES, slaFor } from './sla'
 
 /**
  * Filtering the Admin's order list.
@@ -23,6 +24,11 @@ import { ORDER_STATUS } from '../config/orderStatus'
 export const ORDER_VIEWS = {
   all: 'all',
   active: 'active',
+  /* NOT a bucket, and deliberately not in bucketOf(). A late order is still an
+     active order — it appears under both chips, because it is genuinely both,
+     and moving it out of "in progress" would make that list quietly incomplete
+     at exactly the moment somebody is counting what is still out. */
+  delayed: 'delayed',
   completed: 'completed',
   cancelled: 'cancelled',
 }
@@ -40,8 +46,9 @@ export function bucketOf(order) {
   return order.isActive ? ORDER_VIEWS.active : ORDER_VIEWS.completed
 }
 
-export function matchesView(order, view) {
+export function matchesView(order, view, sla = {}) {
   if (view === ORDER_VIEWS.all) return true
+  if (view === ORDER_VIEWS.delayed) return slaFor(order, sla)?.state === SLA_STATES.late
   return bucketOf(order) === view
 }
 
@@ -51,6 +58,12 @@ export function matchesView(order, view) {
  * Those are the two things a person has in front of them — a number read off a
  * ticket or a name from a phone call. Searching the delivery address as well
  * would turn "F-7" into forty matches.
+ *
+ * THE PHONE NUMBER IS NOT MATCHED HERE, and cannot be: it is never sent to the
+ * browser. admin_orders() matches it server-side, so this narrows what already
+ * came back and the database does the part that needs data this list does not
+ * hold. Both run, and neither is redundant — this one is instant while the
+ * other is a round trip.
  */
 export function matchesQuery(order, query) {
   const needle = String(query ?? '')
@@ -61,8 +74,10 @@ export function matchesQuery(order, query) {
   return `${order.orderNumber} ${order.customerName}`.toLowerCase().includes(needle)
 }
 
-export function filterOrders(orders, { view = ORDER_VIEWS.all, query = '' } = {}) {
-  return (orders ?? []).filter((order) => matchesView(order, view) && matchesQuery(order, query))
+export function filterOrders(orders, { view = ORDER_VIEWS.all, query = '', sla = {} } = {}) {
+  return (orders ?? []).filter(
+    (order) => matchesView(order, view, sla) && matchesQuery(order, query),
+  )
 }
 
 /**
@@ -71,11 +86,16 @@ export function filterOrders(orders, { view = ORDER_VIEWS.all, query = '' } = {}
  * Counted from the whole list rather than the filtered one, so the chips keep
  * saying how much is behind them while a search is narrowing what is shown.
  */
-export function countsByView(orders) {
+export function countsByView(orders, sla = {}) {
   const counts = Object.fromEntries(ALL_ORDER_VIEWS.map((view) => [view, 0]))
   counts[ORDER_VIEWS.all] = (orders ?? []).length
 
-  for (const order of orders ?? []) counts[bucketOf(order)] += 1
+  for (const order of orders ?? []) {
+    counts[bucketOf(order)] += 1
+    // Counted separately, and on top: a late order has already been counted as
+    // active above. See the note on ORDER_VIEWS.delayed.
+    if (slaFor(order, sla)?.state === SLA_STATES.late) counts[ORDER_VIEWS.delayed] += 1
+  }
 
   return counts
 }

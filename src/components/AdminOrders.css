@@ -353,3 +353,25 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* An order past the promise the customer was given. Shown on the row in every
+   view, not only under the delayed filter — somebody scanning "in progress"
+   should see which of them is in trouble without changing filter. */
+.aord-late {
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: var(--red);
+  color: var(--on-ink);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+/* The one chip that is ever a problem, and only while something is behind it. */
+.chip.is-late {
+  border-color: var(--red);
+  color: var(--red-deep);
+  font-weight: 700;
+}

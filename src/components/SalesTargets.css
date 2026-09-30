@@ -1,0 +1,68 @@
+/* Weekly targets. Tokens only — see the Part 3 audit on colour literals. */
+
+.targets {
+  margin-block-start: 1.5rem;
+}
+
+.targets-list {
+  list-style: none;
+  margin: 0.8rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.targets-row {
+  display: grid;
+  grid-template-columns: minmax(5rem, 9rem) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.targets-day {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.targets-row input {
+  inline-size: 100%;
+  max-inline-size: 11rem;
+  padding: 0.32rem 0.5rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  background: var(--card);
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--ink);
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.targets-row input:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
+}
+
+.targets-save {
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  background: var(--card);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.targets-save:hover:not(:disabled) {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--on-ink);
+}
+
+.targets-save:disabled {
+  opacity: 0.4;
+  cursor: default;
+}

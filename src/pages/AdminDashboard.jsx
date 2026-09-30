@@ -11,7 +11,12 @@ import { SECTION_IDS, pathTo } from '../config/staffNav'
 import { fetchActiveOrders } from '../api/activeOrders'
 import { fetchAdminMenu } from '../api/adminMenu'
 import { fetchStockLevels } from '../api/inventory'
+import { fetchAdminOrders } from '../api/adminOrders'
+import { fetchSalesTargets } from '../api/adminInsights'
 import { fetchSalesReport } from '../api/reports'
+import SlaWire from '../components/SlaWire'
+import { useShop } from '../context/SettingsContext'
+import { weekdayOf } from '../lib/shopDays'
 import { formatPrice, formatShopDate, formatTime } from '../lib/format'
 import { shopDayKey } from '../lib/shopDays'
 import { STAFF_POLL_MS } from '../config/staffPoll'
@@ -33,6 +38,10 @@ export default function AdminDashboard() {
   const t = COPY.staff
   const d = t.dashboard
   useDocumentTitle(`${d.adminTitle} · ${t.adminTitle}`)
+
+  /* The deadline the wire judges against is the shop's own promise — the ETA
+     text printed on the menu — not a number kept in the code. */
+  const shop = useShop()
 
   const open = useAsyncData(async () => {
     const { groups, errorCode } = await fetchActiveOrders()
@@ -59,6 +68,25 @@ export default function AdminDashboard() {
     return { data: rows, errorCode }
   })
 
+  /* The individual orders, for the exception wire. fetchActiveOrders() above
+     returns them GROUPED by status, which is right for "how busy are we" and
+     useless for "which one is late" — a group has no placed-at to measure. */
+  const orders = useAsyncData(async () => {
+    const { orders: rows, errorCode } = await fetchAdminOrders()
+    return { data: rows, errorCode }
+  })
+
+  useAutoRefresh(orders.reload, STAFF_POLL_MS)
+
+  const targets = useAsyncData(async () => {
+    const { rows, errorCode } = await fetchSalesTargets()
+    return { data: rows, errorCode }
+  })
+
+  /* Neither the order list nor the targets are in the blocking pair.
+     The four figures above are the pulse; the wire and the target are context
+     on top of them, and one slow read should not replace a working dashboard
+     with a retry button. The wire simply does not draw without its orders. */
   const loading = open.loading || sales.loading || menu.loading || stock.loading
   const errorCode = open.errorCode ?? sales.errorCode ?? menu.errorCode ?? stock.errorCode
 
@@ -67,6 +95,8 @@ export default function AdminDashboard() {
     sales.reload()
     menu.reload()
     stock.reload()
+    orders.reload()
+    targets.reload()
   }
 
   if (loading) return <p aria-busy="true">{d.loading}</p>
@@ -101,6 +131,21 @@ export default function AdminDashboard() {
 
   const lowCount = (stock.data ?? []).filter((r) => r.isLow).length
 
+  /* Today's target, from the seven weekly ones. A target per calendar date is a
+     spreadsheet somebody has to keep filling in; a target per weekday is set
+     once and keeps working, which is the same reason the Manager's dashboard
+     compares against the same weekday. */
+  const todayTarget =
+    (targets.data ?? []).find((row) => row.dayOfWeek === weekdayOf(today))?.target ?? null
+  const takenToday = todayBucket ? todayBucket.revenue : 0
+
+  const targetMeta = () => {
+    if (todayTarget === null)
+      return todayBucket ? d.goodsOf(formatPrice(todayBucket.goodsRevenue)) : d.noOrdersYet
+    if (todayTarget === 0) return d.targetNone
+    return d.targetProgress(Math.round((takenToday / todayTarget) * 100), formatPrice(todayTarget))
+  }
+
   return (
     <>
       <PageHead
@@ -121,8 +166,15 @@ export default function AdminDashboard() {
         />
         <Kpi
           label={d.revenueToday}
-          value={formatPrice(todayBucket ? todayBucket.revenue : 0)}
-          meta={todayBucket ? d.goodsOf(formatPrice(todayBucket.goodsRevenue)) : d.noOrdersYet}
+          value={formatPrice(takenToday)}
+          meta={targetMeta()}
+          /* Only once there is a target to miss. Amber on a day nobody set an
+             expectation for would be the dashboard inventing a problem. */
+          tone={
+            todayTarget !== null && todayTarget > 0 && takenToday < todayTarget
+              ? 'attention'
+              : undefined
+          }
         />
         <Kpi label={d.liveOnMenu} value={live} meta={d.menuBreakdown(hidden, unavailable)} />
         <Kpi
@@ -132,6 +184,11 @@ export default function AdminDashboard() {
           meta={lowCount > 0 ? undefined : d.stockProblemsNone}
         />
       </KpiRow>
+
+      {/* Only drawn when something is actually past its promise — see SlaWire.
+          A permanent panel reading "0 late" is a panel people stop seeing,
+          which is the failure this is meant to prevent. */}
+      <SlaWire orders={orders.data} settings={shop} />
 
       <section className="staff-section aorders" aria-labelledby="dash-open-title">
         <div className="aorders-head">

@@ -164,3 +164,44 @@ export function formatMultiple(ratio) {
   const oneDecimal = Math.round(n * 10) / 10
   return Number.isInteger(oneDecimal) ? String(oneDecimal) : oneDecimal.toFixed(1)
 }
+
+/**
+ * A duration, said the way somebody would say it out loud: "8 min", "1 h 12 m",
+ * "45 s".
+ *
+ * Used for fulfilment timings and for how far past its promise an order is.
+ * Seconds only below a minute, because "0 min" is not an answer; hours only
+ * once there is an hour, because "0 h 8 m" is padding.
+ */
+export function formatDuration(seconds) {
+  // Number(null) is 0, so without this a stage nobody has timed reports as
+  // "0 s" — the fastest kitchen in Islamabad. Same guard as formatQuantity.
+  if (seconds === null || seconds === undefined || seconds === '') return '—'
+
+  const n = Number(seconds)
+  if (!Number.isFinite(n) || n < 0) return '—'
+
+  if (n < 60) return `${Math.round(n)} s`
+
+  const minutes = Math.round(n / 60)
+  if (minutes < 60) return `${minutes} min`
+
+  const hours = Math.floor(minutes / 60)
+  const rest = minutes % 60
+  return rest === 0 ? `${hours} h` : `${hours} h ${rest} m`
+}
+
+/**
+ * A price that may not be known.
+ *
+ * formatPrice() rounds, which turns a null into "Rs. 0" — and "this pizza costs
+ * nothing to make" is the single most misleading thing a margin screen could
+ * say. Unpriced ingredients are the normal state of a shop that has just
+ * switched costing on, so this is the common case, not the edge.
+ */
+export function formatPriceOrUnknown(amount, unknownText) {
+  if (amount === null || amount === undefined || !Number.isFinite(Number(amount))) {
+    return unknownText
+  }
+  return formatPrice(amount)
+}

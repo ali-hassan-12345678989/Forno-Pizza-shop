@@ -1,10 +1,12 @@
 import { Link, useParams } from 'react-router-dom'
 import MenuItemEditor from '../components/MenuItemEditor'
+import RecipeEditor from '../components/RecipeEditor'
 import StaffError from '../components/StaffError'
 import { COPY } from '../content/copy'
 import { STAFF_ROLES } from '../config/staff'
 import { DETAIL_PARAM, NEW_RECORD_ID, SECTION_IDS, pathTo } from '../config/staffNav'
 import { blankMenuItem, fetchAdminMenu } from '../api/adminMenu'
+import { fetchStockLevels } from '../api/inventory'
 import { useAsyncData } from '../lib/useAsyncData'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 
@@ -34,6 +36,14 @@ export default function AdminMenuItemPage() {
     return { data, errorCode: code }
   })
 
+  /* For the recipe editors below. Deliberately not in the blocking pair: a
+     slow ingredient read should leave the item still editable, and the recipe
+     editor simply has nothing to offer its picker until this arrives. */
+  const ingredients = useAsyncData(async () => {
+    const { rows, errorCode: code } = await fetchStockLevels()
+    return { data: rows, errorCode: code }
+  })
+
   const found = items?.find((item) => item.id === recordId) ?? null
   const item = isNew ? blankMenuItem() : found
 
@@ -58,13 +68,32 @@ export default function AdminMenuItemPage() {
   }
 
   return (
-    <MenuItemEditor
-      // Remounts when the Admin opens a different item, so the draft starts
-      // from that item rather than carrying the last one's edits across.
-      key={recordId}
-      item={item}
-      items={items ?? []}
-      onSaved={() => reload({ silent: true })}
-    />
+    <>
+      <MenuItemEditor
+        // Remounts when the Admin opens a different item, so the draft starts
+        // from that item rather than carrying the last one's edits across.
+        key={recordId}
+        item={item}
+        items={items ?? []}
+        onSaved={() => reload({ silent: true })}
+      />
+
+      {/* One recipe per SAVED size. A size the Admin has just added in the
+          editor above has no id yet, so there is nothing for a recipe line to
+          reference — it appears once the item is saved. */}
+      {!isNew &&
+        (item.sizes ?? [])
+          .filter((size) => size.id)
+          .map((size) => (
+            <RecipeEditor
+              key={size.id}
+              sizeId={size.id}
+              sizeLabel={size.size}
+              price={size.price}
+              ingredients={ingredients.data ?? []}
+              onChanged={() => reload({ silent: true })}
+            />
+          ))}
+    </>
   )
 }

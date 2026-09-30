@@ -1,0 +1,170 @@
+/* The bill of materials, editable. Tokens only — see the Part 3 audit. */
+
+.recipe {
+  margin-block-start: 1.25rem;
+  padding-block-start: 1rem;
+  border-block-start: 1px solid var(--line);
+}
+
+.recipe-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.25rem 1rem;
+}
+
+.recipe-head h3 {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 1rem;
+  color: var(--ink);
+}
+
+.recipe-cost {
+  font-size: 0.82rem;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.recipe-empty {
+  margin: 0.6rem 0;
+  padding: 0.6rem 0.8rem;
+  background: var(--red-tint);
+  border: 1px solid var(--red-line);
+  border-radius: var(--r);
+  font-size: 0.85rem;
+  color: var(--red-deep);
+}
+
+.recipe-lines {
+  list-style: none;
+  margin: 0.7rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.recipe-line {
+  display: grid;
+  grid-template-columns: minmax(6rem, 1fr) auto auto auto;
+  align-items: center;
+  gap: 0.4rem 0.7rem;
+  padding: 0.5rem 0.6rem;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  font-size: 0.85rem;
+}
+
+.recipe-name {
+  font-weight: 600;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.recipe-qty {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.3rem;
+}
+
+.recipe-qty input {
+  inline-size: 5.5rem;
+  padding: 0.28rem 0.4rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  background: var(--card);
+  font: inherit;
+  font-size: 0.82rem;
+  color: var(--ink);
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.recipe-qty input:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
+}
+
+.recipe-unit {
+  font-size: 0.75rem;
+  color: var(--ink-3);
+}
+
+.recipe-line-cost {
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.recipe-actions {
+  display: inline-flex;
+  gap: 0.35rem;
+}
+
+.recipe-save,
+.recipe-remove {
+  padding: 0.25rem 0.6rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  background: var(--card);
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.recipe-save {
+  color: var(--ink);
+}
+
+.recipe-save:hover:not(:disabled) {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--on-ink);
+}
+
+.recipe-remove {
+  color: var(--red-deep);
+}
+
+.recipe-remove:hover:not(:disabled) {
+  background: var(--red);
+  border-color: var(--red);
+  color: var(--on-ink);
+}
+
+.recipe-save:disabled,
+.recipe-remove:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* Beside the line it belongs to, on its own row so it never squeezes the
+   controls. */
+.recipe-stock {
+  grid-column: 1 / -1;
+  font-size: 0.72rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.recipe-add {
+  margin-block-start: 0.9rem;
+}
+
+@media (max-width: 34rem) {
+  .recipe-line {
+    grid-template-columns: 1fr auto;
+  }
+
+  .recipe-line-cost {
+    grid-column: 1;
+  }
+
+  .recipe-actions {
+    grid-column: 2;
+    justify-content: end;
+  }
+}

@@ -12,6 +12,8 @@ import {
   filterOrders,
 } from '../lib/adminOrderList'
 import { formatDateTime, formatPrice } from '../lib/format'
+import { SLA_STATES, slaFor } from '../lib/sla'
+import { useShop } from '../context/SettingsContext'
 import './AdminOrders.css'
 import SearchField from './SearchField'
 
@@ -27,32 +29,43 @@ import SearchField from './SearchField'
  * open, so the screen is never an empty state sitting on top of a full list —
  * the same mistake the stock table shipped with and had to be fixed.
  */
-export default function AdminOrderList({ orders }) {
+export default function AdminOrderList({ orders, query, onQuery }) {
   const t = COPY.staff.orders
 
-  const counts = useMemo(() => countsByView(orders), [orders])
+  /* The deadline a "delayed" order is measured against is the shop's own
+     promise — the ETA text on the menu — not a number kept in the code. */
+  const settings = useShop()
+  const sla = useMemo(() => ({ settings }), [settings])
+
+  const counts = useMemo(() => countsByView(orders, sla), [orders, sla])
   const [view, setView] = useState(() =>
     counts[ORDER_VIEWS.active] > 0 ? ORDER_VIEWS.active : ORDER_VIEWS.all,
   )
-  const [query, setQuery] = useState('')
   const searchId = useId()
 
-  const shown = useMemo(() => filterOrders(orders, { view, query }), [orders, view, query])
+  const shown = useMemo(
+    () => filterOrders(orders, { view, query, sla }),
+    [orders, view, query, sla],
+  )
 
   if (orders.length === 0) return <p className="aord-empty">{t.empty}</p>
 
   return (
     <div className="aord">
       <div className="aord-controls">
-        <SearchField id={searchId} label={t.searchLabel} value={query} onChange={setQuery} />
+        <SearchField id={searchId} label={t.searchLabel} value={query} onChange={onQuery} />
 
         <div className="aord-filters" role="group" aria-label={t.filterLabel}>
           {ALL_ORDER_VIEWS.map((key) => (
             <button
               key={key}
               type="button"
-              className="chip"
+              /* The delayed chip is the only one that is ever a problem, so it
+                 is the only one that looks like one — and only while there is
+                 something behind it. */
+              className={key === ORDER_VIEWS.delayed && counts[key] > 0 ? 'chip is-late' : 'chip'}
               aria-pressed={view === key}
+              disabled={key === ORDER_VIEWS.delayed && counts[key] === 0}
               onClick={() => setView(key)}
             >
               {t.filterCount(t.filters[key], counts[key])}
@@ -67,7 +80,7 @@ export default function AdminOrderList({ orders }) {
         <>
           <ul className="aord-list">
             {shown.map((order) => (
-              <OrderRow key={order.id} order={order} />
+              <OrderRow key={order.id} order={order} sla={sla} />
             ))}
           </ul>
 
@@ -83,8 +96,9 @@ export default function AdminOrderList({ orders }) {
   )
 }
 
-function OrderRow({ order }) {
+function OrderRow({ order, sla }) {
   const t = COPY.staff.orders
+  const late = slaFor(order, sla)?.state === SLA_STATES.late
 
   /* Stage names come from COPY.track.statuses — the same words the customer
      reads on their own tracking page. Two vocabularies for one ladder is a
@@ -115,6 +129,11 @@ function OrderRow({ order }) {
         </span>
 
         <span className="aord-total">{formatPrice(order.total)}</span>
+
+        {/* Shown in every view, not only under the delayed chip: somebody
+            scanning "in progress" should see which of them is in trouble
+            without changing filter. */}
+        {late && <span className="aord-late">{t.late}</span>}
 
         <span className={`aord-pill ${bucketOf(order)}`}>{stage}</span>
 

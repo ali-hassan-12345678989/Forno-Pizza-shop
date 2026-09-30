@@ -8,6 +8,7 @@ import {
   matchesQuery,
   matchesView,
 } from '../src/lib/adminOrderList.js'
+import { slaFor } from '../src/lib/sla.js'
 import { ORDER_STATUS } from '../src/config/orderStatus.js'
 
 /**
@@ -136,11 +137,85 @@ describe('the search', () => {
   })
 })
 
+describe('the delayed view', () => {
+  /* The deadline is the shop's own promise, so these fixtures carry one.
+     25 minutes for delivery, 15 for pickup — the same words that are on the
+     live menu today. */
+  const settings = { deliveryEta: '25–35 min', pickupEta: '15 min' }
+  const now = Date.parse('2026-09-30T12:00:00Z')
+  const minutesAgo = (n) => new Date(now - n * 60000).toISOString()
+
+  const late = order({
+    orderNumber: '2001',
+    status: ORDER_STATUS.preparing,
+    isActive: true,
+    fulfillmentType: 'delivery',
+    placedAt: minutesAgo(50), // promise was 35
+  })
+  const fine = order({
+    orderNumber: '2002',
+    status: ORDER_STATUS.preparing,
+    isActive: true,
+    fulfillmentType: 'delivery',
+    placedAt: minutesAgo(5),
+  })
+  const lateButFinished = order({
+    orderNumber: '2003',
+    status: ORDER_STATUS.delivered,
+    isActive: false,
+    fulfillmentType: 'delivery',
+    placedAt: minutesAgo(200),
+  })
+
+  const sla = { settings, now }
+  const rows = [late, fine, lateButFinished]
+
+  it('picks out an order past the promise the customer was given', () => {
+    const shown = filterOrders(rows, { view: ORDER_VIEWS.delayed, sla })
+    expect(shown.map((o) => o.orderNumber)).toEqual(['2001'])
+  })
+
+  it('does not call a finished order late, however long it took', () => {
+    // This board exists to dispatch somebody, not to keep score. An order that
+    // has arrived is nobody's deadline any more.
+    const shown = filterOrders(rows, { view: ORDER_VIEWS.delayed, sla })
+    expect(shown.map((o) => o.orderNumber)).not.toContain('2003')
+  })
+
+  it('counts a late order as active as well, because it is both', () => {
+    const counts = countsByView(rows, sla)
+    expect(counts.delayed).toBe(1)
+    expect(counts.active).toBe(2)
+  })
+
+  it('still judges without a promise, using the documented fallback', () => {
+    /* Settings have not loaded yet on a first render, and an order that has
+       been out for an hour is late whether or not the browser has fetched the
+       shop's ETA text. So it falls back rather than going quiet — and flags the
+       deadline as assumed, which is what lets the screen say so.
+       Asserted with an explicit `now`: without one this reads the real clock,
+       and the fixture timestamps would decide the result by accident. */
+    expect(filterOrders(rows, { view: ORDER_VIEWS.delayed, sla: { now } })).toHaveLength(1)
+    expect(slaFor(late, { now }).assumed).toBe(true)
+    expect(slaFor(late, { settings, now }).assumed).toBe(false)
+  })
+
+  it("reads the deadline off the shop's own promise, upper bound first", () => {
+    // "25–35 min" promises thirty-five. Judging against twenty-five would flag
+    // orders that arrived inside the window the customer was actually given.
+    expect(slaFor(fine, { settings, now }).limitMinutes).toBe(35)
+    expect(slaFor(late, { settings, now }).overdueMinutes).toBeCloseTo(15)
+  })
+})
+
 describe('the chip counts', () => {
   it('counts each bucket and the whole list', () => {
     expect(countsByView(all)).toEqual({
       all: 3,
       active: 1,
+      // Nothing carries a placedAt in this fixture, so nothing can be judged
+      // late — which is the right answer, not a missing one.
+      delayed: 0,
       completed: 1,
       cancelled: 1,
     })

@@ -1,0 +1,172 @@
+/* What the food costs. Tokens only — see the Part 3 audit on colour literals. */
+
+.costs {
+  margin-block-end: 1.5rem;
+}
+
+.costs-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+  margin-block-end: 0.85rem;
+}
+
+.costs-head h2 {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 1.15rem;
+  color: var(--ink);
+}
+
+.costs-summary {
+  margin: 0.15rem 0 0;
+  font-size: 0.85rem;
+  color: var(--ink-2);
+}
+
+/* The headline the whole screen exists to produce. */
+.costs-value {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: end;
+}
+
+.costs-value-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.costs-value-figure {
+  font-family: var(--serif);
+  font-size: 1.5rem;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Says how much of the shelf the figure above actually covers. Amber rather
+   than grey: a valuation missing a third of its ingredients is not a footnote. */
+.costs-partial {
+  font-size: 0.75rem;
+  color: var(--gold-deep);
+  font-weight: 600;
+}
+
+.costs-scroll {
+  overflow-x: auto;
+  margin-block-start: 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--card);
+}
+
+.costs-table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font-size: 0.86rem;
+}
+
+.costs-table th,
+.costs-table td {
+  padding: 0.5rem 0.7rem;
+  text-align: start;
+  border-block-end: 1px solid var(--line-2);
+  white-space: nowrap;
+}
+
+.costs-table thead th {
+  position: sticky;
+  inset-block-start: 0;
+  background: var(--sand-1);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.costs-table tbody th {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.costs-table .num {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.costs-table tbody tr:last-child th,
+.costs-table tbody tr:last-child td {
+  border-block-end: 0;
+}
+
+/* Not an error — most of the shelf starts here — but it is the to-do list,
+   so it reads as one. */
+.costs-table tr.is-unpriced {
+  background: var(--wash-1);
+}
+
+.costs-unknown {
+  color: var(--ink-3);
+  font-style: italic;
+}
+
+.costs-input-wrap {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.3rem;
+}
+
+.costs-input {
+  inline-size: 6.5rem;
+  padding: 0.3rem 0.45rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  background: var(--card);
+  font: inherit;
+  font-size: 0.82rem;
+  color: var(--ink);
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.costs-input:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
+}
+
+/* Says which unit the number is per, beside the box rather than in a sentence
+   somewhere else. A price per kilo typed into a per-gram field is wrong by a
+   thousand, and that mistake is made once and believed for months. */
+.costs-unit {
+  font-size: 0.72rem;
+  color: var(--ink-3);
+}
+
+.costs-save {
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  background: var(--card);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.costs-save:hover:not(:disabled) {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--on-ink);
+}
+
+.costs-save:disabled {
+  opacity: 0.4;
+  cursor: default;
+}

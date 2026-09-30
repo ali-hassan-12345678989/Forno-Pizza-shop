@@ -416,3 +416,11 @@
   font-size: 0.75rem;
   opacity: 0.75;
 }
+
+/* Puts an export control on the same line as the heading of what it exports,
+   so there is never a question about which figures are in the file. */
+.staff-mix-head {
+  display: flex;
+  justify-content: flex-end;
+  margin-block-start: 1.5rem;
+}
