@@ -1,0 +1,84 @@
+/* What is selling. Tokens only — see the Part 3 audit on raw colour literals. */
+
+.top-items {
+  margin-block-start: 0.25rem;
+}
+
+.top-list {
+  list-style: none;
+  margin: 0.8rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+
+/* One grid, so the name, the bar, the count and the money line up down the
+   column rather than each row finding its own edges. */
+.top-row {
+  display: grid;
+  grid-template-columns: minmax(6rem, 1fr) minmax(3rem, 7rem) auto auto;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.86rem;
+}
+
+.top-name {
+  font-weight: 600;
+  color: var(--ink);
+  /* A long item name wraps rather than pushing the figures off the row. */
+  overflow-wrap: anywhere;
+}
+
+.top-bar {
+  display: block;
+  block-size: 0.45rem;
+  background: var(--sand-2);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.top-fill {
+  display: block;
+  block-size: 100%;
+  background: var(--gold);
+  border-radius: inherit;
+}
+
+.top-qty {
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.top-revenue {
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  text-align: end;
+}
+
+/* On a narrow panel the four columns stop fitting, so the figures drop to
+   their own line under the name rather than each being squeezed to a few
+   characters wide. */
+@media (max-width: 30rem) {
+  .top-row {
+    grid-template-columns: 1fr auto;
+    row-gap: 0.25rem;
+  }
+
+  .top-bar {
+    grid-column: 1 / -1;
+    order: 3;
+  }
+
+  .top-qty {
+    order: 2;
+    text-align: end;
+  }
+
+  .top-revenue {
+    order: 4;
+    grid-column: 1 / -1;
+    text-align: start;
+  }
+}

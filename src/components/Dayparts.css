@@ -1,0 +1,95 @@
+/* When the shop is busy. Tokens only — see the Part 3 audit. */
+
+.dayparts {
+  margin-block-start: 1.5rem;
+}
+
+.daypart-list {
+  list-style: none;
+  margin: 0.8rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.daypart {
+  display: grid;
+  grid-template-columns: minmax(7rem, 1fr) minmax(4rem, 9rem) auto auto;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.86rem;
+}
+
+.daypart-name {
+  display: flex;
+  flex-direction: column;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.daypart-hours {
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.daypart-bar {
+  display: block;
+  block-size: 0.5rem;
+  background: var(--sand-2);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.daypart-fill {
+  display: block;
+  block-size: 100%;
+  background: var(--gold);
+  border-radius: inherit;
+}
+
+/* The busiest stretch is what a rota is written around, so it is the one row
+   that does not look like the others. State, not decoration. */
+.daypart.is-peak .daypart-fill {
+  background: var(--red);
+}
+
+.daypart.is-peak .daypart-name {
+  color: var(--red-deep);
+}
+
+.daypart-orders,
+.daypart-revenue {
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.daypart-revenue {
+  color: var(--ink-3);
+  text-align: end;
+}
+
+@media (max-width: 34rem) {
+  .daypart {
+    grid-template-columns: 1fr auto;
+    row-gap: 0.25rem;
+  }
+
+  .daypart-bar {
+    grid-column: 1 / -1;
+    order: 3;
+  }
+
+  .daypart-orders {
+    order: 2;
+    text-align: end;
+  }
+
+  .daypart-revenue {
+    order: 4;
+    grid-column: 1 / -1;
+    text-align: start;
+  }
+}

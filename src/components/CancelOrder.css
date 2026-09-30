@@ -147,3 +147,45 @@
     animation: none;
   }
 }
+
+/* ---- why they are cancelling ----------------------------------------------
+   Optional, and asked in the same dialog rather than on a second screen: a
+   screen between somebody and cancelling is a dark pattern however politely it
+   is worded. */
+
+.cancelorder-reasons {
+  margin: 0 0 1rem;
+  padding: 0;
+  border: 0;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.cancelorder-reasons legend {
+  padding: 0;
+  margin-block-end: 0.45rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.cancelorder-reason {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.88rem;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.cancelorder-reason input {
+  inline-size: 1rem;
+  block-size: 1rem;
+  accent-color: var(--red);
+  cursor: pointer;
+}
+
+.cancelorder-reason input:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}

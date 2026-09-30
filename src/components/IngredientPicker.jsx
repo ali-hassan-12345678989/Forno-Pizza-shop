@@ -13,9 +13,16 @@ import { formatQuantity } from '../lib/format'
  *
  * Options already on the sheet are left out rather than shown and refused —
  * there is nothing useful to do with a match that cannot be picked.
+ *
+ * `labels` exists because a second screen now picks ingredients for a different
+ * reason. Counting a shelf is not booking in a delivery, and a picker that says
+ * "Everything is already on this delivery" while somebody is taking a stock
+ * count is a control describing the wrong job. The behaviour is identical, so
+ * it is the same component; only the words change, and they come from the call
+ * site rather than from a second copy of this file.
  */
-export default function IngredientPicker({ ingredients, taken, onPick }) {
-  const t = COPY.staff.receive
+export default function IngredientPicker({ ingredients, taken, onPick, labels }) {
+  const t = labels ?? COPY.staff.receive
 
   const [query, setQuery] = useState('')
   const [active, setActive] = useState(0)

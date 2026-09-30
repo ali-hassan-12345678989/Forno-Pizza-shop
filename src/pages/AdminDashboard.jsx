@@ -13,6 +13,7 @@ import { fetchAdminMenu } from '../api/adminMenu'
 import { fetchStockLevels } from '../api/inventory'
 import { fetchSalesReport } from '../api/reports'
 import { formatPrice, formatShopDate, formatTime } from '../lib/format'
+import { shopDayKey } from '../lib/shopDays'
 import { STAFF_POLL_MS } from '../config/staffPoll'
 import { useAsyncData } from '../lib/useAsyncData'
 import { useAutoRefresh } from '../lib/useAutoRefresh'
@@ -77,7 +78,18 @@ export default function AdminDashboard() {
   const openTotal = groups.reduce((sum, g) => sum + g.count, 0)
   const oldest = groups[0]?.oldestAt
 
-  const todayBucket = sales.data?.[0]
+  /* The first row is the most recent day the shop TOOK AN ORDER, which is not
+     the same thing as today — sales_report() groups orders, so a day with none
+     produces no bucket at all. Reading row zero as today meant that on a quiet
+     morning both dashboards showed yesterday's takings under the words "today",
+     with no hint the figure was a day old. Confirmed on the live site: the
+     panel read "Orders today 6 · Rs. 7050" while the sales table underneath
+     attributed those exact figures to the previous day.
+     Comparing the bucket's own date against the shop's date is the fix; the
+     shop's zone is what decides, because that is the zone sales_report()
+     bucketed by. */
+  const today = shopDayKey(new Date(), SHOP_TIME_ZONE)
+  const todayBucket = sales.data?.[0]?.periodStart === today ? sales.data[0] : null
   const trend = [...(sales.data ?? [])].reverse()
 
   const items = menu.data ?? []

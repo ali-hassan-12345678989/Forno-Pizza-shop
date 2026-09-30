@@ -6,6 +6,18 @@
  * Anything that depends on shop data is a function taking that data, because
  * the shop's own details live in the database (shop_settings), not here.
  */
+/**
+ * "last Wednesday" or "the last 4 Wednesdays".
+ *
+ * Shared by the dashboard's three pacing lines so they cannot phrase the same
+ * comparison three slightly different ways. Naming the weekday is the point:
+ * "the last 4 same days" is technically accurate and reads like a machine
+ * wrote it.
+ */
+function samplesText(samples, weekday) {
+  return samples === 1 ? `last ${weekday}` : `the last ${samples} ${weekday}s`
+}
+
 export const COPY = {
   brand: {
     homeAriaLabel: (name) => `${name} — home`,
@@ -442,6 +454,19 @@ export const COPY = {
       confirmTitle: (orderNumber) => `Cancel order #${orderNumber}?`,
       confirmBody:
         'The kitchen has not started it yet, so nothing is wasted — but this cannot be undone.',
+      /* Optional, and it says so. Every word here is the customer's own
+         reason: staff cannot cancel an order in this system, so this is the
+         only place a cancellation ever comes from. Must match the check
+         constraint on orders.cancelled_reason. */
+      reasonLegend: 'Why are you cancelling? (optional)',
+      reasons: {
+        changed_mind: 'Changed my mind',
+        ordered_by_mistake: 'Ordered by mistake',
+        wrong_details: 'Wrong address or details',
+        too_slow: 'Taking too long',
+        other: 'Another reason',
+      },
+
       confirmKeep: 'Keep my order',
       confirmCancel: 'Yes, cancel it',
       working: 'Cancelling…',
@@ -453,6 +478,7 @@ export const COPY = {
         cancel_window_closed: 'Too late — the kitchen has already started this one.',
         already_cancelled: 'This order is already cancelled.',
         order_not_found: 'We could not find that order.',
+        invalid_reason: 'That reason was not one we recognise. Try again without picking one.',
         unknown: 'Something went wrong cancelling that.',
       },
       /* A failed cancellation is the one moment a phone number beats a retry
@@ -650,6 +676,20 @@ export const COPY = {
       nothingLow: 'Nothing needs ordering right now.',
       colBookIn: 'Add stock',
 
+      /* Beside the meter. Says in words what the bar says in pixels, which is
+         also why the bar itself is hidden from assistive technology — one fact,
+         announced once. "0.9× reorder level" on a low row reads as plainly as
+         "5× reorder level" on a healthy one. */
+      cover: (times) => `${times}× reorder level`,
+
+      /* Bulk receiving. The owner's review: pressing "Add stock" thirty times
+         while a driver waits is not a workflow. */
+      bulkLabel: 'Entry mode',
+      bulkToggle: 'Bulk receive',
+      colArrived: 'Arrived',
+      bulkNote:
+        'Type what arrived beside each ingredient, then save the delivery once. Clearing a box takes that line off.',
+
       loading: 'Loading stock levels…',
       empty: 'No ingredients yet.',
       retry: 'Try again',
@@ -676,6 +716,9 @@ export const COPY = {
          and pointing at one that is not there is worse than saying less. */
       emptyHintTable: 'Press “Add stock” beside an ingredient, or search for one below.',
       emptyHintAlone: 'Search for an ingredient below to start one.',
+      /* Bulk mode: the table beside this is taking the quantities, so the sheet
+         points there rather than at a button that is no longer on screen. */
+      emptyHintBulk: 'Type what arrived in the “Arrived” column, then save here.',
 
       add: 'Add stock',
       added: 'On the sheet',
@@ -730,6 +773,53 @@ export const COPY = {
     },
 
     /** FR-5.4 — low-stock alerts, where they finally get seen. */
+    /* Counting the shelf. The only number in this system a recipe did not
+       produce — see components/StockCount.jsx for why that matters. */
+    count: {
+      title: 'Stock count',
+      intro:
+        'Count what is really on the shelf. Every other figure here is worked out from the recipes, so this is the only one that can tell you they were wrong.',
+
+      booksSay: (quantity) => `Books say ${quantity}`,
+      countedLabel: (unit) => `Counted, in ${unit}`,
+      noteLabel: 'Note (optional)',
+      notePlaceholder: 'Dropped a tray, found a spare box…',
+
+      /* Said before the button, not after. Correcting the running total is the
+         right behaviour — a count nobody acts on is a note in a drawer — but it
+         is not what somebody expects a form called "count" to do, so it is
+         stated while they can still change their mind. */
+      willCorrect: 'Saving sets the stock level to your count and records the difference.',
+
+      save: 'Save count',
+      saving: 'Saving…',
+      cancel: 'Cancel',
+
+      outcomeClean: (counted) => `Counted ${counted}. The books were right.`,
+      outcomeOff: (variance, expected, counted) =>
+        `${variance}. Books said ${expected}, you counted ${counted}.`,
+      outcomeCorrected: 'Stock has been set to your count.',
+
+      /* Its own words rather than the delivery sheet's. The same control doing
+         a different job should not claim to be doing that job. */
+      picker: {
+        pickerLabel: 'Which ingredient?',
+        pickerPlaceholder: 'Start typing a name',
+        pickerHint: (total) => `${total} ingredients — typing beats scrolling.`,
+        pickerNone: (query) => `Nothing matches “${query}”.`,
+        pickerDone: 'No ingredients to count.',
+        pickerCount: (n) => `${n} match${n === 1 ? '' : 'es'}`,
+      },
+
+      errors: {
+        not_staff: 'This account cannot record a stock count.',
+        invalid_count: 'That is not a quantity this can record.',
+        note_too_long: 'That note is too long.',
+        ingredient_not_found: 'That ingredient no longer exists.',
+        unknown: 'Could not save that count. Check your connection and try again.',
+      },
+    },
+
     alerts: {
       title: 'Low stock',
       none: 'Nothing is below its threshold right now.',
@@ -747,6 +837,81 @@ export const COPY = {
       errors: {
         not_staff: 'This account cannot view stock alerts.',
         unknown: 'Could not load alerts. Check your connection and try again.',
+      },
+    },
+
+    /* What is selling, on the dashboard. The panel that took over the space
+       the delivery sheet and the all-clear banner used to occupy. */
+    topItems: {
+      title: 'Selling best',
+      subtitle: (days) => `Last ${days} days · by number sold`,
+      /* Distinguishes a quiet week from a broken panel. A shop that took no
+         orders has no best seller, and saying so is not an error state. */
+      empty: (days) => `Nothing sold in the last ${days} days yet.`,
+      sold: (n) => `${n} sold`,
+
+      loading: 'Loading…',
+      retry: 'Try again',
+      errors: {
+        not_staff: 'This account cannot view what is selling.',
+        invalid_range: 'That window is not one this report can cover.',
+        unknown: 'Could not load what is selling. The rest of this page is fine.',
+      },
+    },
+
+    /* Opening the cancelled figure. See components/CancelledOrders.jsx for
+       why the reasons are the customer's rather than the kitchen's. */
+    cancelled: {
+      intro: (n, days) =>
+        `${n} cancelled order${n === 1 ? '' : 's'} in the last ${days} days. All were cancelled by the customer before the kitchen started.`,
+      empty: (days) => `No orders were cancelled in the last ${days} days.`,
+
+      colOrder: 'Order',
+      colWhen: 'Placed',
+      colReason: 'Reason',
+      colTotal: 'Total',
+      orderNumber: (n) => `#${n}`,
+
+      /* Must match the check constraint on orders.cancelled_reason. A word
+         here that the database will not accept is a breakdown row nobody can
+         ever land in. */
+      reasons: {
+        changed_mind: 'Changed their mind',
+        ordered_by_mistake: 'Ordered by mistake',
+        wrong_details: 'Wrong details',
+        too_slow: 'Taking too long',
+        other: 'Another reason',
+        /* Not a stored value. Covers orders cancelled before the question
+           existed, and anybody who declined to answer it. */
+        notGiven: 'Not given',
+      },
+
+      loading: 'Loading cancellations…',
+      retry: 'Try again',
+      errors: {
+        not_staff: 'This account cannot view cancellations.',
+        invalid_range: 'That window is not one this report can cover.',
+        unknown: 'Could not load the cancellations. The figures above are fine.',
+      },
+    },
+
+    /* When the shop is busy, for writing a rota against. */
+    dayparts: {
+      title: 'When the orders come in',
+      subtitle: (days, peak) => `Last ${days} days · busiest at ${peak.toLowerCase()}`,
+      empty: (days) => `No orders in the last ${days} days to break down.`,
+      /* 24-hour, because a rota is written in 24-hour and "11 – 4" is ambiguous
+         in exactly the part of the day this is about. */
+      hours: (from, to) =>
+        `${String(from).padStart(2, '0')}:00 – ${String(to).padStart(2, '0')}:00`,
+      orders: (n) => `${n} order${n === 1 ? '' : 's'}`,
+
+      loading: 'Loading…',
+      retry: 'Try again',
+      errors: {
+        not_staff: 'This account cannot view the day-part breakdown.',
+        invalid_range: 'That window is not one this report can cover.',
+        unknown: 'Could not load the day-part breakdown.',
       },
     },
 
@@ -776,6 +941,17 @@ export const COPY = {
       totalRevenue: 'Revenue',
       totalGoods: 'Goods revenue',
       totalCancelled: 'Cancelled',
+
+      /* The chart. role=img with one sentence, because every exact figure it
+         encodes is in the table directly underneath — a chart that read out
+         thirty numbers would be repeating that table badly. */
+      chartAria: (period) =>
+        period === 'day'
+          ? 'Revenue by day, tallest column is the best day'
+          : period === 'month'
+            ? 'Revenue by month, tallest column is the best month'
+            : 'Revenue by year, tallest column is the best year',
+      chartPeak: (label, amount) => `Best: ${label} · ${amount}`,
 
       goodsNote:
         'Goods revenue excludes delivery fees — it is the figure that matches ingredients used.',
@@ -1075,56 +1251,87 @@ export const COPY = {
       title: 'Ingredients used',
 
       searchLabel: 'Search ingredients',
-      periodLabel: 'Period',
+      filterLabel: 'Show',
 
-      periods: {
-        today: 'Today',
-        total: 'All time',
-      },
-
-      /* Said under the heading so nobody has to guess whose midnight it is.
-         The same zone the sales report buckets by, which is what makes the two
-         screens comparable at all. */
-      dayNote: (day) => `Today is ${day} in the shop's own time zone`,
+      /* Which window, and whose midnight decides its ends. The same zone the
+         sales report buckets by, which is what makes the two comparable. */
+      rangeNote: (label, zone) => `${label} · days start and end in ${zone}`,
 
       summary: (moved, total) =>
         moved === 0
-          ? `Nothing used yet out of ${total} ingredients`
+          ? `Nothing used in this window out of ${total} ingredients`
           : `${moved} of ${total} ingredients used`,
 
+      /* Counting is what makes the variance column mean anything, so a window
+         with no counts in it says so rather than showing an empty column and
+         letting it read as "all clear". */
+      noCounts:
+        'Nobody counted a shelf in this window, so there is nothing to check the books against.',
+      countsTaken: (counted, total, off) =>
+        off === 0
+          ? `${counted} of ${total} shelves counted — all matched the books.`
+          : `${counted} of ${total} shelves counted · ${off} did not match the books.`,
+
       onlyUsed: 'Only what moved',
+      onlyVariance: 'Off the books',
       showAll: 'Every ingredient',
 
       colIngredient: 'Ingredient',
       colUsed: 'Used',
+      colReceived: 'Received',
+      colVariance: 'Counted variance',
       colStock: 'Left in stock',
 
       /* An ingredient nothing has touched. A dash rather than "0 g", because
          zero of something is a measurement and this is the absence of one. */
       none: '—',
 
+      /* The three states of the variance column, and they are NOT shades of
+         one another. Rendering "nobody looked" and "looked, it balanced" the
+         same way would turn an unchecked shelf into an all-clear, which is the
+         exact misreading this column exists to prevent. */
+      notCounted: 'Not counted',
+      balanced: 'Matched',
+      countedAt: (when) => `Last counted ${when}`,
+
       empty: 'No ingredients yet.',
       noMatch: 'No ingredients match that.',
+      noneUsed: 'Nothing was used in this window.',
+      noVariance: 'Every shelf that was counted matched the books.',
 
-      /* A genuinely quiet day, which is NOT the same as a search that found
-         nothing. Saying "no ingredients match that" when nobody typed anything
-         blames the reader for a search they never made. */
-      noneUsed: {
-        today: 'Nothing has been used today yet.',
-        total: 'Nothing has been used yet.',
-      },
       showing: (shown, total) => `Showing ${shown} of ${total}`,
 
       /* The ledger starts when it is switched on, and says so rather than
-         letting an empty first day read as a broken screen. */
+         letting an empty first window read as a broken screen. */
       ledgerNote: 'Counts what has moved since stock tracking was switched on.',
 
       loading: 'Loading usage…',
 
       errors: {
         not_staff: 'This account cannot view ingredient usage.',
+        invalid_range: 'Those dates are not a window this can report on.',
+        range_too_long: 'That window is longer than a year. Choose a shorter one.',
         unknown: 'Could not load usage. Check your connection and try again.',
       },
+    },
+
+    /* The window a report covers. Shared by the usage and sales screens, so
+       "last week" cannot mean two different things on two pages. */
+    ranges: {
+      label: 'Window',
+      presets: {
+        today: 'Today',
+        weekToDate: 'Week to date',
+        priorWeek: 'Prior week',
+        last7: 'Last 7 days',
+        last30: 'Last 30 days',
+        custom: 'Custom',
+      },
+      fromLabel: 'From',
+      toLabel: 'To',
+      spanned: (from, to) => `${from} – ${to}`,
+      invalid: (maxDays) =>
+        `Pick an end date on or after the start, and no more than ${maxDays} days apart.`,
     },
 
     /* The kitchen screen. Written for someone with flour on their hands
@@ -1221,6 +1428,23 @@ export const COPY = {
       goodsOf: (amount) => `${amount} goods`,
       noOrdersYet: 'No orders yet today',
 
+      /* The comparison behind each trend line. Against the SAME WEEKDAY,
+         because trade runs on a weekly cycle and six orders is a fine Tuesday
+         and a poor Saturday — comparing today to yesterday would say nothing.
+         `samples` is printed because two Wednesdays is not yet a pattern and
+         the reader deserves to see what the claim rests on. */
+      pacingAhead: (percent, samples, weekday) =>
+        `${percent}% ahead of ${samplesText(samples, weekday)}`,
+      pacingBehind: (percent, samples, weekday) =>
+        `${percent}% behind ${samplesText(samples, weekday)}`,
+      pacingLevel: (samples, weekday) => `About the same as ${samplesText(samples, weekday)}`,
+      /* Shown when the usual figure is zero, where a percentage would be a
+         division by nothing dressed up as insight. */
+      pacingFromNothing: 'First orders on this day of the week',
+      /* Not enough history to compare against. Says so rather than printing a
+         confident 0% invented from a single sample. */
+      pacingNoHistory: 'No history for this day yet',
+
       openNow: 'Open right now',
       openNoneNow: 'Nothing in progress',
       oldestWaiting: (timeText) => `Oldest since ${timeText}`,
@@ -1239,10 +1463,8 @@ export const COPY = {
 
       weekTitle: 'Last seven days',
       weekSub: 'Orders per day',
-      weekEmpty: 'No orders in the last seven days.',
       weekAria: (min, max) => `Orders per day over the last seven days, between ${min} and ${max}`,
 
-      quickBookIn: 'Book in a delivery',
       seeAllStock: 'See all stock',
       seeAllOrders: 'See all orders',
 

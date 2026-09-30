@@ -1,0 +1,60 @@
+/* Which window a report covers. Tokens only — see the Part 3 audit. */
+
+.range {
+  display: grid;
+  gap: 0.6rem;
+  margin-block-end: 0.9rem;
+}
+
+.range-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.range-custom {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.6rem;
+}
+
+.range-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.range-date {
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  background: var(--card);
+  font: inherit;
+  font-size: 0.82rem;
+  color: var(--ink);
+}
+
+.range-date:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
+}
+
+/* Present but inert while a preset is driving the dates, so choosing Custom
+   does not push the report down the page at the moment somebody is reading it.
+   Muted rather than hidden: the dates still show what the preset resolved to,
+   which is often the answer somebody wanted anyway. */
+.range-date:disabled {
+  background: var(--wash-1);
+  color: var(--ink-3);
+  cursor: not-allowed;
+}
+
+.range-invalid {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--red-deep);
+}

@@ -1,43 +1,53 @@
 import { Link } from 'react-router-dom'
 import { Kpi, KpiRow } from '../components/Kpi'
 import PageHead from '../components/PageHead'
-import ReceiveStock from '../components/ReceiveStock'
-import Sparkline from '../components/Sparkline'
 import StaffError from '../components/StaffError'
 import StockAlerts from '../components/StockAlerts'
+import TopItems from '../components/TopItems'
 import { COPY } from '../content/copy'
 import { REPORT_PERIODS, SHOP_TIME_ZONE } from '../config/reports'
+import { TOP_ITEMS_DAYS, TREND_DAYS } from '../config/insights'
 import { SECTION_IDS, pathTo } from '../config/staffNav'
 import { STAFF_ROLES } from '../config/staff'
 import { fetchStockAlerts, fetchStockLevels } from '../api/inventory'
 import { fetchActiveOrders } from '../api/activeOrders'
 import { fetchSalesReport } from '../api/reports'
-import { formatPrice, formatShopDate, formatTime } from '../lib/format'
+import { fetchTopItems } from '../api/insights'
+import { dailySeries, describePacing, pacingAgainstWeekday } from '../lib/pacing'
+import { shopDayKey } from '../lib/shopDays'
+import { formatPrice, formatShopDate, formatTime, formatWeekday } from '../lib/format'
 import { STAFF_POLL_MS } from '../config/staffPoll'
 import { useAsyncData } from '../lib/useAsyncData'
 import { useAutoRefresh } from '../lib/useAutoRefresh'
-import { useDeliverySheet } from '../lib/useDeliverySheet'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
-
-/** How many days the dashboard's trend line covers. */
-const TREND_DAYS = 7
 
 /**
  * The Manager's first screen: is anything wrong, and how is today going.
  *
- * Everything here already existed as a separate block on the old single page.
- * What is new is the ordering — the number somebody has to act on is the
- * largest thing on screen, and the rest is context beneath it.
+ * WHAT CHANGED, AND WHY. The owner's review said this screen was giving its
+ * best space to a data-entry form and its headline figures no context. Both
+ * were fair.
  *
- * All four figures come from functions the database already exposes; nothing
- * is recomputed in the browser from raw rows it should not be able to see.
+ * The delivery sheet has moved to the stock section — not deleted, moved to
+ * where the stock it books in already is. Booking in a delivery means reading
+ * a note against a shelf, which is the stock screen's whole job; here it was a
+ * form with no table beside it, taking the top third of the page whether or not
+ * a van had been anywhere near the shop.
+ *
+ * The two trading figures now carry the last four weeks behind them and a line
+ * saying how today compares with the SAME WEEKDAY. "Orders today: 6" is a
+ * number with nothing to lean on — six is a good Tuesday and a poor Saturday,
+ * and the screen could not tell the difference. The comparison is weekday to
+ * weekday because that is the cycle this trade actually runs on.
+ *
+ * Every figure still comes from a function the database exposes. The only
+ * arithmetic here is averaging rows sales_report() already grouped, which is
+ * the same posture as the totals strip on the sales screen.
  */
 export default function ManagerDashboard() {
   const t = COPY.staff
   const d = t.dashboard
   useDocumentTitle(`${d.managerTitle} · ${t.managerTitle}`)
-
-  const { sheet } = useDeliverySheet()
 
   const stock = useAsyncData(async () => {
     const { rows, errorCode } = await fetchStockLevels()
@@ -65,6 +75,19 @@ export default function ManagerDashboard() {
     return { data: groups, errorCode }
   })
 
+  const top = useAsyncData(async () => {
+    const { rows, errorCode } = await fetchTopItems(TOP_ITEMS_DAYS)
+    return { data: rows, errorCode }
+  })
+
+  /* Top sellers is deliberately NOT in either of these.
+     The four figures above are the operational pulse — what is short, how
+     today is going, what is still open — and if any of them cannot be read the
+     screen is not safe to act on and says so. What is selling is context: it is
+     interesting on Monday and it is not why anybody opened this page. Letting
+     it into the blocking error would mean one slow panel replacing a working
+     dashboard with a retry button, which is a worse screen than the same
+     dashboard with one panel apologising in the corner. */
   const loading = stock.loading || alerts.loading || sales.loading || open.loading
   const errorCode = stock.errorCode ?? alerts.errorCode ?? sales.errorCode ?? open.errorCode
 
@@ -73,6 +96,7 @@ export default function ManagerDashboard() {
     alerts.reload(opts)
     sales.reload(opts)
     open.reload(opts)
+    top.reload(opts)
   }
 
   if (loading) return <p aria-busy="true">{d.loading}</p>
@@ -90,19 +114,31 @@ export default function ManagerDashboard() {
   )[0]
 
   // sales_report returns newest first, so the first row is today only if the
-  // shop has taken an order today. No orders yet means no bucket at all.
-  const trend = [...(sales.data ?? [])].reverse()
-  const todayBucket = sales.data?.[0]
+  // shop has taken an order today. No orders yet means no bucket at all — which
+  // is exactly why dailySeries() fills the gaps rather than reading these rows
+  // as a continuous run of trading days.
+  const now = new Date()
+  const today = shopDayKey(now, SHOP_TIME_ZONE)
+  const weekday = formatWeekday(now, SHOP_TIME_ZONE)
+  const series = dailySeries(sales.data, { days: TREND_DAYS, today })
+
+  const todayBucket = sales.data?.[0]?.periodStart === today ? sales.data[0] : null
   const openGroups = open.data ?? []
   const openTotal = openGroups.reduce((sum, g) => sum + g.count, 0)
   const oldest = openGroups[0]?.oldestAt
 
+  const paceMeta = (field) => {
+    const said = describePacing(pacingAgainstWeekday(series, { date: today, field }))
+    if (said.kind === 'ahead') return d.pacingAhead(said.percent, said.samples, weekday)
+    if (said.kind === 'behind') return d.pacingBehind(said.percent, said.samples, weekday)
+    if (said.kind === 'level') return d.pacingLevel(said.samples, weekday)
+    if (said.kind === 'fromNothing') return d.pacingFromNothing
+    return d.pacingNoHistory
+  }
+
   return (
     <>
-      <PageHead
-        title={d.managerTitle}
-        subtitle={d.subtitle(formatShopDate(new Date(), SHOP_TIME_ZONE))}
-      >
+      <PageHead title={d.managerTitle} subtitle={d.subtitle(formatShopDate(now, SHOP_TIME_ZONE))}>
         <Link className="btn-ghost" to={pathTo(STAFF_ROLES.manager, SECTION_IDS.stock)}>
           {d.seeAllStock}
         </Link>
@@ -126,12 +162,14 @@ export default function ManagerDashboard() {
         <Kpi
           label={d.ordersToday}
           value={todayBucket ? todayBucket.orders : 0}
-          meta={todayBucket ? undefined : d.noOrdersYet}
+          meta={paceMeta('orders')}
+          trend={series.map((point) => point.orders)}
         />
         <Kpi
           label={d.revenueToday}
           value={formatPrice(todayBucket ? todayBucket.revenue : 0)}
-          meta={todayBucket ? d.goodsOf(formatPrice(todayBucket.goodsRevenue)) : undefined}
+          meta={paceMeta('revenue')}
+          trend={series.map((point) => point.revenue)}
         />
         <Kpi
           label={d.openNow}
@@ -140,29 +178,20 @@ export default function ManagerDashboard() {
         />
       </KpiRow>
 
-      <div className="staff-section">
-        <StockAlerts alerts={alerts.data ?? []} />
-      </div>
+      {/* Collapses to a single line when nothing is below its threshold, which
+          on a well-run shop is most days. The room it used to hold open for
+          that is what the panel below now occupies. */}
+      <StockAlerts alerts={alerts.data ?? []} />
 
       <div className="staff-section">
-        {/* The same sheet the stock section uses. There is no table to pick
-            from here, so lines are added with its own search field. */}
-        <ReceiveStock ingredients={rows} {...sheet} onSaved={() => reloadAll({ silent: true })} />
+        <TopItems
+          rows={top.data}
+          days={TOP_ITEMS_DAYS}
+          loading={top.loading}
+          errorCode={top.errorCode}
+          onRetry={() => top.reload()}
+        />
       </div>
-
-      {trend.length > 1 && (
-        <div className="staff-section panel">
-          <h2 className="staff-panel-title">{d.weekTitle}</h2>
-          <p className="staff-note">{d.weekSub}</p>
-          <Sparkline
-            points={trend.map((r) => r.orders)}
-            label={d.weekAria(
-              Math.min(...trend.map((r) => r.orders)),
-              Math.max(...trend.map((r) => r.orders)),
-            )}
-          />
-        </div>
-      )}
     </>
   )
 }

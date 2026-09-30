@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react'
-import { addLine, removeLine, setQuantity } from './deliverySheet'
+import { addLine, removeLine, setQuantity, upsertQuantity } from './deliverySheet'
 
 /**
  * Holds one delivery sheet, and hands back everything ReceiveStock needs.
@@ -25,8 +25,27 @@ export function useDeliverySheet() {
     setLines((current) => setQuantity(current, ingredientId, quantity))
   }, [])
 
+  /** Bulk mode: typing on a stock row puts it on the sheet, clearing it takes it off. */
+  const onBulkQuantity = useCallback((ingredientId, quantity) => {
+    setLines((current) => upsertQuantity(current, ingredientId, quantity))
+  }, [])
+
   /** For the stock table, so a row already on the sheet stops offering itself. */
   const queuedIds = useMemo(() => new Set(lines.map((line) => line.ingredientId)), [lines])
 
-  return { sheet: { lines, onAdd, onRemove, onQuantity }, queuedIds, onBookIn: onAdd }
+  /* What the bulk column shows in each box. Derived from the sheet rather than
+     held separately, so the table and the panel beside it are two views of one
+     delivery and cannot drift apart mid-entry. */
+  const quantities = useMemo(
+    () => new Map(lines.map((line) => [line.ingredientId, line.quantity])),
+    [lines],
+  )
+
+  return {
+    sheet: { lines, onAdd, onRemove, onQuantity },
+    queuedIds,
+    quantities,
+    onBookIn: onAdd,
+    onBulkQuantity,
+  }
 }

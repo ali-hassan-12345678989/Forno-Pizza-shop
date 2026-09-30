@@ -28,6 +28,28 @@ export function setQuantity(lines, ingredientId, quantity) {
 }
 
 /**
+ * Typing a quantity straight onto a stock row.
+ *
+ * The bulk-receive column needs one action where the side panel needed two:
+ * there is no "add this line" step, because typing a number IS adding it. The
+ * inverse matters just as much — clearing the box removes the line rather than
+ * leaving an empty one behind, so a Manager who types into the wrong row can
+ * undo it the obvious way instead of hunting for a remove button.
+ *
+ * It writes to the same sheet the side panel does, deliberately. Two ways to
+ * assemble a delivery are fine; two ways to SAVE one would mean two code paths
+ * that could each commit half a van-load, and no way to tell which had run.
+ */
+export function upsertQuantity(lines, ingredientId, quantity) {
+  if (!ingredientId) return lines
+
+  if (String(quantity ?? '').trim() === '') return removeLine(lines, ingredientId)
+  if (!hasLine(lines, ingredientId)) return [...lines, { ingredientId, quantity }]
+
+  return setQuantity(lines, ingredientId, quantity)
+}
+
+/**
  * The lines actually worth sending.
  *
  * A line with nothing typed into it is not an error — it is a row the Manager

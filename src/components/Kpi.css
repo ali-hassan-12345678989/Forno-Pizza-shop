@@ -8,11 +8,34 @@
 }
 
 .kpi {
+  position: relative;
   padding: 0.85rem 0.95rem;
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: var(--r-lg);
   box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+/* Context, not a second figure. Anchored to the bottom of the tile and held
+   well back so the value stays the thing the eye lands on — a trend line that
+   competes with the number it describes has stopped being background. */
+.kpi-trend {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0;
+  block-size: 2.6rem;
+  opacity: 0.22;
+  pointer-events: none;
+}
+
+.kpi-trend .spark {
+  block-size: 100%;
+}
+
+/* Lifts the text above the trend line behind it. */
+.kpi-body {
+  position: relative;
 }
 
 .kpi-label {

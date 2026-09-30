@@ -7,6 +7,11 @@ import './Sparkline.css'
  * describe the same numbers. Colours come from tokens rather than literals, so
  * it follows the palette like everything else. Given fewer than two points
  * there is no shape to draw, and the caller shows its empty state instead.
+ *
+ * Without a `label` it is decorative and leaves the accessibility tree — used
+ * behind a KPI tile, where the figure and its meta line already say in words
+ * what the shape says in pixels. An unlabelled role="img" would announce an
+ * anonymous graphic and tell the listener nothing.
  */
 export default function Sparkline({ points, label }) {
   if (!points || points.length < 2) return null
@@ -35,8 +40,7 @@ export default function Sparkline({ points, label }) {
       className="spark"
       viewBox={`0 0 ${width} ${height}`}
       preserveAspectRatio="none"
-      role="img"
-      aria-label={label}
+      {...(label ? { role: 'img', 'aria-label': label } : { 'aria-hidden': 'true' })}
     >
       <path className="spark-area" d={area} />
       <path className="spark-line" d={line} />

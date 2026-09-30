@@ -147,3 +147,38 @@
   font-size: 0.78rem;
   color: var(--ink-3);
 }
+
+/* ---- opening the cancelled figure -----------------------------------------
+   The number itself is the control. A separate "details" link beside it would
+   be a second thing to find; making the figure the button means the thing you
+   are looking at is the thing you press. */
+
+.sales-drill {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 0.2em;
+}
+
+.sales-drill:hover {
+  text-decoration-style: solid;
+}
+
+.sales-drill:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.sales-detail {
+  margin-block: 0.9rem 1.2rem;
+  padding: 0.9rem 1rem;
+  background: var(--wash-1);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+}
