@@ -29,10 +29,23 @@ export function visibleRows(rows, { query = '', onlyUsed = false, onlyVariance =
 
   return (rows ?? []).filter((row) => {
     if (needle && !row.name.toLowerCase().includes(needle)) return false
-    if (onlyVariance) return row.variance !== null && row.variance !== 0
-    if (onlyUsed && row.used <= 0) return false
+    if (onlyVariance) return offBooks(row)
+
+    /* A shelf that disagrees with the books counts as having moved, even when
+       no order touched it. Found by feature-testing the real screen: a count
+       came up 350 g short on an ingredient nothing had sold that day, the
+       summary line correctly said one shelf did not match — and the default
+       filter hid the only row that said which. That case is not an edge case,
+       it is the most suspicious reading the screen can produce: stock gone
+       with no sales to account for it. */
+    if (onlyUsed && row.used <= 0 && !offBooks(row)) return false
     return true
   })
+}
+
+/** Counted, and the shelf did not agree. Null (uncounted) is not a discrepancy. */
+function offBooks(row) {
+  return row.variance !== null && row.variance !== 0
 }
 
 /** How many ingredients moved at all in the window. */
@@ -42,7 +55,7 @@ export function movedCount(rows) {
 
 /** How many came back from a count disagreeing with the books. */
 export function varianceCount(rows) {
-  return (rows ?? []).filter((row) => row.variance !== null && row.variance !== 0).length
+  return (rows ?? []).filter(offBooks).length
 }
 
 /** How many were counted at all. Zero means the variance column is empty by default, not broken. */

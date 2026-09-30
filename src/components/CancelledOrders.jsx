@@ -27,7 +27,7 @@ import './CancelledOrders.css'
  * shown as a group of their own rather than dropped. A breakdown that quietly
  * omitted them would not add up to the total printed above it.
  */
-export default function CancelledOrders({ rows, days, loading, errorCode, onRetry }) {
+export default function CancelledOrders({ rows, days, total, loading, errorCode, onRetry }) {
   const t = COPY.staff.cancelled
 
   const groups = useMemo(() => groupByReason(rows), [rows])
@@ -51,7 +51,12 @@ export default function CancelledOrders({ rows, days, loading, errorCode, onRetr
 
   return (
     <div className="cancelled">
-      <p className="staff-note">{t.intro(rows.length, days)}</p>
+      {/* The TRUE total, not the number of rows fetched. staff_cancelled_orders()
+          caps at 200, so on a busy month this list is a window onto a larger
+          figure — and a sentence saying "200 cancelled orders" directly under a
+          summary reading 210 is the kind of quiet contradiction that makes a
+          reader distrust both numbers. */}
+      <p className="staff-note">{t.intro(total ?? rows.length, days)}</p>
 
       <ul className="cancelled-reasons">
         {groups.map((group) => (
@@ -63,6 +68,8 @@ export default function CancelledOrders({ rows, days, loading, errorCode, onRetr
           </li>
         ))}
       </ul>
+
+      <p className="cancelled-showing">{t.showing(rows.length, total ?? rows.length)}</p>
 
       <div className="cancelled-scroll">
         <table className="cancelled-table">

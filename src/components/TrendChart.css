@@ -20,10 +20,18 @@
   border-block-end: 1px solid var(--line-2);
 }
 
+/* Capped, and centred in its track. Without a ceiling a week of data draws
+   seven columns an inch wide each, which is a chart of rectangles rather than
+   a shape. Thirty days never reach the cap and are unaffected. */
 .trend-col {
   display: flex;
   align-items: flex-end;
+  justify-content: center;
   block-size: 100%;
+}
+
+.trend-col .trend-bar {
+  max-inline-size: 3.5rem;
 }
 
 .trend-bar {

@@ -65,7 +65,11 @@
 
 .stock-table th,
 .stock-table td {
-  padding: 0.65rem 0.9rem;
+  /* 0.75rem across, not 0.9. The status column grew a meter and a cover
+     multiple, and five cells of generous padding was the difference between
+     this table fitting its panel and slicing the "Add stock" button off the
+     right edge. Measured both ways rather than guessed. */
+  padding: 0.65rem 0.75rem;
   text-align: left;
   border-bottom: 1px solid var(--line-2);
   white-space: nowrap;
@@ -189,7 +193,12 @@
 .stock-meter {
   position: relative;
   display: block;
-  inline-size: 6.5rem;
+  /* 4.5rem, not 6.5. Measured: at the wider size this table came to 603px
+     inside a 577px panel, and the column it pushed out was the one with the
+     "Add stock" button in it. The scroll container meant nothing was lost, but
+     a primary action sliced off at the panel edge reads as broken however
+     scrollable it is. */
+  inline-size: 4.5rem;
   max-inline-size: 100%;
   block-size: 0.4rem;
   background: var(--sand-2);
@@ -220,7 +229,9 @@
   inset-block: 0;
   inline-size: 2px;
   margin-inline-start: -1px;
-  background: var(--ink-3);
+  /* Dark enough to read against the filled part of the bar as well as the
+     empty track — a mid grey disappeared into both. */
+  background: var(--ink);
   /* Above the fill, so the line is still visible on a well-stocked row. */
   z-index: 1;
 }

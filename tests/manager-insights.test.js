@@ -54,9 +54,11 @@ const stockOf = async (client, ingredientId) => {
 
 beforeAll(async () => {
   if (!staffConfigured()) return
-  manager = await managerClient()
-  admin = await adminClient()
-})
+  // signedInClient() hands back a session object, not a client — the same
+  // unwrapping every other staff test does.
+  manager = (await managerClient()).client
+  admin = (await adminClient()).client
+}, 30_000)
 
 afterAll(async () => {
   await releasePlacedOrders()
@@ -202,7 +204,7 @@ describe.runIf(staffConfigured())('usage over a window', () => {
     const today = shopToday()
     const before = await usedBetween(manager, today, today)
 
-    const customer = await signedInClient(customerEmail)
+    const customer = (await signedInClient(customerEmail)).client
     await placeOrderOrThrow(customer)
 
     const after = await usedBetween(manager, today, today)
@@ -291,7 +293,7 @@ describe.runIf(staffConfigured())('cancelling with a reason', () => {
     // The browser's vocabulary and the check constraint must be the same list.
     // A word in one and not the other is a cancellation that fails at the last
     // step, for somebody already trying to leave.
-    const customer = await signedInClient(customerEmail)
+    const customer = (await signedInClient(customerEmail)).client
 
     for (const reason of ALL_CANCEL_REASONS) {
       const order = await placeOrderOrThrow(customer)
@@ -304,7 +306,7 @@ describe.runIf(staffConfigured())('cancelling with a reason', () => {
   })
 
   it('refuses a reason the breakdown could never group', async () => {
-    const customer = await signedInClient(customerEmail)
+    const customer = (await signedInClient(customerEmail)).client
     const order = await placeOrderOrThrow(customer)
 
     const { error } = await customer.rpc('cancel_order', {
@@ -321,7 +323,7 @@ describe.runIf(staffConfigured())('cancelling with a reason', () => {
   it('still cancels when no reason is given', async () => {
     // Optional all the way down. A customer who wants out must never be held
     // there by a required question.
-    const customer = await signedInClient(customerEmail)
+    const customer = (await signedInClient(customerEmail)).client
     const order = await placeOrderOrThrow(customer)
 
     const { error } = await customer.rpc('cancel_order', { p_access_token: order.access_token })
@@ -329,7 +331,7 @@ describe.runIf(staffConfigured())('cancelling with a reason', () => {
   })
 
   it('shows the reason on the Manager’s list', async () => {
-    const customer = await signedInClient(customerEmail)
+    const customer = (await signedInClient(customerEmail)).client
     const order = await placeOrderOrThrow(customer)
     await customer.rpc('cancel_order', {
       p_access_token: order.access_token,
@@ -339,7 +341,9 @@ describe.runIf(staffConfigured())('cancelling with a reason', () => {
     const { data, error } = await manager.rpc('staff_cancelled_orders', { p_days: 1 })
     expect(error).toBeNull()
 
-    const row = data.find((r) => r.order_number === order.order_number)
+    // place_order() returns { access_token, order, items } — the token is
+    // top-level because it is the credential, everything else is under `order`.
+    const row = data.find((r) => r.order_number === order.order.order_number)
     expect(row?.cancelled_reason).toBe('too_slow')
   })
 
@@ -370,7 +374,7 @@ describe.runIf(staffConfigured())('what sells and when', () => {
   it('counts a placed order and excludes a cancelled one', async () => {
     // A cancelled order sold nothing, and its stock went back on the shelf —
     // counting it here would disagree with the usage screen beside it.
-    const customer = await signedInClient(customerEmail)
+    const customer = (await signedInClient(customerEmail)).client
 
     const before = await manager.rpc('staff_top_items', { p_days: 1 })
     const soldBefore = Number(before.data?.[0]?.qty_sold ?? 0)

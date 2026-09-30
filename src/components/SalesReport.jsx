@@ -177,6 +177,7 @@ export default function SalesReport() {
               <CancelledOrders
                 rows={cancelled.data}
                 days={CANCELLED_DAYS}
+                total={totals.cancelled}
                 loading={cancelled.loading}
                 errorCode={cancelled.errorCode}
                 onRetry={() => cancelled.reload()}

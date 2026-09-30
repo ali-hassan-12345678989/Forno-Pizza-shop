@@ -53,8 +53,16 @@ const basil = row('Fresh Basil', 0, {
   lastCountedAt: '2026-09-30T09:05:00Z',
 })
 const buns = row('Burger Bun', 0) // never used, never counted
+/* Nothing sold it, and the shelf still came up short. The most suspicious
+   reading this screen can produce, and the one the default filter used to
+   hide — found by feature-testing the real page, not by any test. */
+const oil = row('Olive Oil', 0, {
+  variance: -350,
+  countsTaken: 1,
+  lastCountedAt: '2026-09-30T10:00:00Z',
+})
 
-const rows = [dough, cheese, basil, buns]
+const rows = [dough, cheese, basil, buns, oil]
 const names = (list) => list.map((r) => r.name)
 
 describe('which rows the table shows', () => {
@@ -66,11 +74,26 @@ describe('which rows the table shows', () => {
   })
 
   it('filters to what actually moved', () => {
-    expect(names(visibleRows(rows, { onlyUsed: true }))).toEqual(['Pizza Dough', 'Mozzarella'])
+    expect(names(visibleRows(rows, { onlyUsed: true }))).toContain('Pizza Dough')
+    expect(names(visibleRows(rows, { onlyUsed: true }))).toContain('Mozzarella')
+    expect(names(visibleRows(rows, { onlyUsed: true }))).not.toContain('Burger Bun')
+  })
+
+  it('keeps a shelf that is off the books even when nothing sold it', () => {
+    // Stock gone with no orders to account for it is the most suspicious thing
+    // this screen can show, and the default filter used to hide exactly that
+    // row while the summary line above it said one shelf did not match.
+    expect(names(visibleRows(rows, { onlyUsed: true }))).toContain('Olive Oil')
+  })
+
+  it('does not extend that reprieve to a shelf that counted clean', () => {
+    // Basil balanced. It has no usage and no discrepancy, so "only what moved"
+    // should still hide it — otherwise the filter stops meaning anything.
+    expect(names(visibleRows(rows, { onlyUsed: true }))).not.toContain('Fresh Basil')
   })
 
   it('filters to shelves that did not match the books', () => {
-    expect(names(visibleRows(rows, { onlyVariance: true }))).toEqual(['Mozzarella'])
+    expect(names(visibleRows(rows, { onlyVariance: true }))).toEqual(['Mozzarella', 'Olive Oil'])
   })
 
   it('does not treat a clean count as a discrepancy', () => {
@@ -83,8 +106,9 @@ describe('which rows the table shows', () => {
     // Buns were never counted. It must not appear in a variance list, and it
     // must not be mistaken for a shelf that matched.
     expect(names(visibleRows(rows, { onlyVariance: true }))).not.toContain('Burger Bun')
-    expect(countedCount(rows)).toBe(2)
-    expect(varianceCount(rows)).toBe(1)
+    // Three shelves were counted (cheese, basil, oil); two of them disagreed.
+    expect(countedCount(rows)).toBe(3)
+    expect(varianceCount(rows)).toBe(2)
   })
 
   it('applies the search and the filter together, not one instead of the other', () => {
@@ -114,8 +138,8 @@ describe('the counts in the summary line', () => {
   })
 
   it('counts shelves checked, not shelves that disagreed', () => {
-    expect(countedCount(rows)).toBe(2)
-    expect(varianceCount(rows)).toBe(1)
+    expect(countedCount(rows)).toBe(3)
+    expect(varianceCount(rows)).toBe(2)
   })
 
   it('reports nothing counted as zero rather than failing', () => {

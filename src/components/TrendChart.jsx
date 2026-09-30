@@ -20,7 +20,11 @@ import './TrendChart.css'
  * Thirty labels along the foot of a chart this size is a grey smear.
  */
 export default function TrendChart({ points, label, formatValue, formatLabel }) {
-  if (!points || points.length === 0) return null
+  /* Two buckets minimum. One column has no shape to show — it is its own peak
+     and its own floor — and drawn across the full width it renders as a solid
+     slab of colour that reads as a broken chart rather than as a quiet week.
+     The table underneath already carries that single figure. */
+  if (!points || points.length < 2) return null
 
   const max = Math.max(...points.map((p) => p.value))
   const peakAt = points.findIndex((p) => p.value === max)

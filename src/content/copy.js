@@ -871,6 +871,12 @@ export const COPY = {
       colReason: 'Reason',
       colTotal: 'Total',
       orderNumber: (n) => `#${n}`,
+      /* The list scrolls inside its own box, so this says how many are in
+         there — a bounded list with no count reads as the whole story. */
+      showing: (shown, total) =>
+        shown < total
+          ? `Showing the ${shown} most recent of ${total}`
+          : `${shown} listed, newest first`,
 
       /* Must match the check constraint on orders.cancelled_reason. A word
          here that the database will not accept is a breakdown row nobody can

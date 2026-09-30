@@ -42,8 +42,26 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Bounded on purpose, and scrolled inside itself.
+   staff_cancelled_orders() returns up to 200 rows, and rendering all of them
+   inline turned this page 25,000 pixels tall the first time it was opened
+   against real data — found by screenshotting it, not by any assertion. The
+   breakdown above already covers every one of those rows, so the list is the
+   detail you drop into rather than the thing the page becomes. */
 .cancelled-scroll {
-  overflow-x: auto;
+  overflow: auto;
+  max-block-size: 22rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--card);
+}
+
+/* Sticky, so the columns stay named however far down the list you scroll. */
+.cancelled-table thead th {
+  position: sticky;
+  inset-block-start: 0;
+  background: var(--card);
+  z-index: 1;
 }
 
 .cancelled-table {
@@ -94,4 +112,10 @@
 .cancelled-unknown {
   color: var(--ink-3);
   font-style: italic;
+}
+
+.cancelled-showing {
+  margin: 0 0 0.4rem;
+  font-size: 0.78rem;
+  color: var(--ink-3);
 }
